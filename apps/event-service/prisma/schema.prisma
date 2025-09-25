@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+/**** EVENTS ****/
+model Event {
+  id                  Int   @id @default(autoincrement())
+  organizationId      Int   @map("organization_id")
+  name                String   @db.VarChar(255)
+  description         String?  @db.Text
+  accessCode          String   @unique @map("access_code") @db.VarChar(100)
+  isPubliclyJoinable  Boolean  @map("is_publicly_joinable")
+  inscriptionDeadline DateTime @map("inscription_deadline") @db.Timestamp()
+  evaluationsOpened   Boolean  @map("evaluations_opened")
+  startDate           DateTime @map("start_date") @db.Timestamp()
+  endDate             DateTime @map("end_date") @db.Timestamp()
+  active              Boolean
+  createdAt           DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt           DateTime @map("updated_at") @updatedAt @db.Timestamp()
+
+  participants EventMember[]
+  courses Course[]
+
+  @@map("events")
+}
+
+model EventMember {
+  userId  Int @map("user_id")
+  eventId Int @map("event_id")
+  roleId  Int @map("role_id")
+  active  Boolean
+  createdAt DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamp()
+
+  event   Event  @relation(fields: [eventId], references: [id])
+
+
+  @@id([userId, eventId, roleId])
+  @@map("event_members")
+}
+
+/**** COURSE ****/
+model Course {
+  id             Int               @id @default(autoincrement())
+  eventId        Int               @map("event_id")
+  code           String               @db.VarChar(100)
+  description    String?              @db.Text
+  active         Boolean              @map("active") @default(true)
+  createdAt      DateTime             @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt      DateTime             @map("updated_at") @updatedAt @db.Timestamp()
+
+  event          Event                @relation(fields: [eventId], references: [id])
+
+  @@map("courses")
+}

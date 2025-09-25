@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+/**** PROJECTS, DOCUMENTS & PARTICIPANTS ****/
+model Project {
+  id          Int  @id @default(autoincrement())
+  eventId     Int  @map("event_id")
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+  eventNumber String? @map("event_number") @db.VarChar(150)
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamp()
+
+  documents        ProjectDocument[]
+  participants     ProjectParticipant[]
+  jurorsAssigned ProjectAssignment[]
+
+  @@map("projects")
+}
+
+model ProjectDocument {
+  id        Int  @id @default(autoincrement())
+  projectId Int  @map("project_id")
+  url       String  @db.VarChar(255)
+  createdAt DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamp()
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@map("project_documents")
+}
+
+model ProjectParticipant {
+  userId    Int  @map("user_id")
+  projectId Int  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id])
+  courses   ProjectParticipantCourses[]
+
+  @@id([userId, projectId])
+  @@map("project_participants")
+}
+
+model ProjectParticipantCourses {
+  projectParticipantUserId  Int @map("project_participant_user_id")
+  projectParticipantProjectId Int @map("project_participant_project_id")
+  courseId                  Int @map("course_id")
+
+  participant ProjectParticipant @relation(fields: [projectParticipantUserId, projectParticipantProjectId], references: [userId, projectId])
+
+  @@id([projectParticipantUserId, projectParticipantProjectId, courseId])
+  @@map("project_participant_courses")
+}
+
+model ProjectAssignment {
+  projectId     Int @map("project_id")
+
+  // The combination of these three fields is the 'Juror' id, the person who is assigned to evaluate a project
+  memberUserId  Int @map("member_user_id")
+  memberEventId Int @map("member_event_id")
+  memberRoleId  Int @map("member_role_id")
+  
+  assignedAt    DateTime @map("assigned_at") @default(now()) @db.Timestamp()
+  updatedAt     DateTime @map("updated_at") @updatedAt @db.Timestamp()
+
+  project     Project     @relation(fields: [projectId], references: [id])
+
+  @@id([projectId, memberUserId, memberEventId, memberRoleId])
+  @@map("project_assignments")
+}
+

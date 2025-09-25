@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+
+/**** USERS & PLATFORM STAFF ****/
+model User {
+  id        Int   @id @default(autoincrement())
+  firstName String  @map("first_name") @db.VarChar(100)
+  lastName  String?  @map("last_name") @db.VarChar(100)
+  email     String   @unique @db.VarChar(255)
+  username  String   @unique @db.VarChar(150)
+  password  String   @db.VarChar(255)
+  phone     String?  @unique @db.VarChar(10)
+  active    Boolean
+  createdAt DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamp()
+
+  platformRoles         PlatformStaff[]
+  tokens                UserToken[]
+
+  @@map("users")
+}
+
+model PlatformStaff {
+  userId    Int   @map("user_id")
+  roleId    Int   @map("role_id")
+  active    Boolean
+  createdAt DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamp()
+  user      User     @relation(fields: [userId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("platform_staff")
+}
+
+model UserToken {
+  id        String        @id @default(uuid()) @db.Uuid
+  token     String        @unique @db.Text
+  userId    Int        @map("user_id")
+  type      UserTokenType
+  expiresAt DateTime      @map("expires_at") @db.Timestamp()
+  usedAt    DateTime?      @map("used_at") @db.Timestamp()
+  createdAt DateTime      @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt DateTime      @map("updated_at") @updatedAt @db.Timestamp()
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_tokens")
+}
+
+/**** ROLES & PERMISSIONS ****/
+model Role {
+  id          Int   @id @default(autoincrement())
+  name        String   @db.VarChar(50)
+  description String   @db.Text
+  scope       String   @db.VarChar(20)
+  createdAt   DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamp()
+
+  permissions         Permission[]         @relation("role_permissions")
+  platformStaff       PlatformStaff[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          Int    @id @default(autoincrement())
+  action      String    @db.VarChar(255)
+  resource    String    @db.VarChar(100)
+  description String?   @db.Text
+  createdAt   DateTime  @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt   DateTime  @map("updated_at") @updatedAt @db.Timestamp()
+  roles       Role[]    @relation("role_permissions")
+
+  @@map("permissions")
+}
+
+enum UserTokenType {
+  RESET_PASSWORD
+  ACCOUNT_SETUP
+  REFRESH_TOKEN
+}

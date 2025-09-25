@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package auth;
+
+// Auth Service definition
+service AuthService {
+
+  // ---- AUTH MODULE ----
+  // Sends a login request
+  rpc Login (LoginRequest) returns (LoginResponse) {}
+  // Refreshes the session of a user
+  rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
+
+
+  // ---- USERS MODULE ----
+  // Creates a new user
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
+
+  // ---- ROLES MODULE ----
+
+  // ---- PERMISSIONS MODULE ----
+
+}
+
+// ---- AUTH MODULE REQUEST/RESPONSE ----
+
+// The request message containing the user's credentials.
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// The response message containing the authentication tokens.
+message LoginResponse {
+  string accessToken = 1;
+  string refreshToken = 2;
+}
+
+// The request message for refreshing a token.
+message RefreshRequest {
+  string refreshToken = 1;
+}
+
+// The response message containing the new access token.
+message RefreshResponse {
+  string accessToken = 1;
+}
+
+// ---- USER MODULE REQUEST/RESPONSE ----
+
+// The request message for creating a new user.
+message CreateUserRequest {
+  string firstName = 1;
+  string lastName = 2;
+  string email = 3;
+  string username = 4;
+  string phone = 5;
+}
+
+// The response message containing the newly created user.
+message CreateUserResponse {
+  int32 id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string username = 5;
+  string phone = 6;
+  bool active = 7;
+}
