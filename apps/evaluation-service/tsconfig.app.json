@@ -4,6 +4,13 @@
     "declaration": false,
     "outDir": "../../dist/apps/evaluation-service"
   },
+  "paths": {
+    "@evaluations/*": ["src/modules/evaluations/*"],
+    "@criterions/*": ["src/modules/criterions/*"],
+    "@common/*": ["src/common/*"],
+    "@app/common": ["../../libs/common/src"],
+    "@app/common/*": ["../../libs/common/src/*"]
+  },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
