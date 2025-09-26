@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package projects.v1;
+
+service ProjectsService {
+  rpc CreateProject (CreateProjectRequest)   returns (ProjectResponse);
+  rpc GetProject    (GetProjectRequest)      returns (ProjectResponse);
+  rpc ListProjectsByEvent (ListProjectsByEventRequest) returns (ListProjectsResponse);
+
+  // Documentos: gRPC no es ideal para binarios grandes → patrón de URL firmada
+  rpc IssueUploadUrl (IssueUploadUrlRequest) returns (IssueUploadUrlResponse);
+  rpc AddProjectDocumentFromUrl (AddProjectDocumentFromUrlRequest) returns (ProjectDocumentResponse);
+  rpc ListProjectDocuments (ListProjectDocumentsRequest) returns (ListProjectDocumentsResponse);
+
+  // Participantes
+  rpc AddParticipant (AddParticipantRequest) returns (ParticipantResponse);
+  rpc ListParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
+
+  // Asignación de jurados
+  rpc AssignJuror (AssignJurorRequest) returns (AssignmentResponse);
+
+  rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
+}
+
+/************** Messages **************/
+message Project {
+  int32 id = 1;
+  int32 eventId = 2;
+  string name = 3;
+  optional string description = 4;
+  optional string eventNumber = 5;
+  string createdAt = 6; // ISO
+  string updatedAt = 7; // ISO
+}
+
+message ProjectDocument {
+  int32 id = 1;
+  int32 projectId = 2;
+  string url = 3;
+  string createdAt = 4;
+  string updatedAt = 5;
+}
+
+message Participant {
+  int32 userId = 1;
+  int32 projectId = 2;
+  repeated int32 courseIds = 3;
+}
+
+message Assignment {
+  int32 projectId = 1;
+  int32 memberUserId = 2;
+  int32 memberEventId = 3;
+  int32 memberRoleId = 4;
+  string assignedAt = 5;
+  string updatedAt = 6;
+}
+
+/************** Requests/Responses **************/
+message CreateProjectRequest {
+  int32 eventId = 1;
+  string name = 2;
+  optional string description = 3;
+  optional string eventNumber = 4;
+}
+message ProjectResponse { Project project = 1; }
+
+message GetProjectRequest { int32 id = 1; }
+
+message ListProjectsByEventRequest {
+  int32 eventId = 1;
+  optional string q = 2;
+  int32 page = 3;
+  int32 pageSize = 4;
+}
+message ListProjectsResponse {
+  repeated Project items = 1;
+  int32 total = 2;
+}
+
+message IssueUploadUrlRequest { int32 projectId = 1; string contentType = 2; }
+message IssueUploadUrlResponse { string uploadUrl = 1; string publicUrl = 2; }
+
+message AddProjectDocumentFromUrlRequest { int32 projectId = 1; string url = 2; }
+message ProjectDocumentResponse { ProjectDocument document = 1; }
+
+message ListProjectDocumentsRequest { int32 projectId = 1; }
+message ListProjectDocumentsResponse { repeated ProjectDocument items = 1; }
+
+message AddParticipantRequest {
+  int32 projectId = 1;
+  int32 userId = 2;
+  repeated int32 courseIds = 3;
+}
+message ParticipantResponse { Participant participant = 1; }
+
+message ListParticipantsRequest { int32 projectId = 1; }
+message ListParticipantsResponse { repeated Participant items = 1; }
+
+message AssignJurorRequest {
+  int32 projectId = 1;
+  int32 memberUserId = 2;
+  int32 memberEventId = 3;
+  int32 memberRoleId = 4;
+}
+message AssignmentResponse { Assignment assignment = 1; }
+
+message DeleteProjectRequest { int32 id = 1; }
+message DeleteProjectResponse { bool ok = 1; }
