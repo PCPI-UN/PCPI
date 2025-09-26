@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package events;
+
+// Event Service definition
+service EventService {
+  // ---- EVENTS MODULE ----
+
+  // Creates a new event
+  rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse) {}
+
+  // Updates an existing event
+  rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse) {}
+
+  // Gets an event by ID
+  rpc GetEvent (GetEventRequest) returns (GetEventResponse) {}
+
+  // Lists all events
+  rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
+
+  // Deletes an event
+  rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
+}
+
+// ---- EVENTS MODULE REQUEST/RESPONSE ----
+
+// The request message for creating a new event.
+message CreateEventRequest {
+  string name = 1;
+  string description = 2;
+  string accessCode = 3;
+  bool isPubliclyJoinable = 4;
+  string inscriptionDeadline = 5; // ISO string (ej: "2025-10-01T00:00:00Z")
+  bool evaluationsOpened = 6;
+  string startDate = 7;           // ISO string
+  string endDate = 8;             // ISO string
+}
+
+// The response message containing the newly created event.
+message CreateEventResponse {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+  string createdAt = 11;
+  string updatedAt = 12;
+}
+
+// The request message for updating an event.
+message UpdateEventRequest {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+}
+
+// The response message for updating an event.
+message UpdateEventResponse {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+  string updatedAt = 11;
+}
+
+// The request message for getting an event by ID.
+message GetEventRequest {
+  int32 id = 1;
+}
+
+// The response message containing the event.
+message GetEventResponse {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+  string createdAt = 11;
+  string updatedAt = 12;
+}
+
+// The request message for listing events.
+message ListEventsRequest {
+  int32 pageSize = 1;
+  string pageToken = 2;
+  bool onlyActive = 3;
+}
+
+// The response message containing the list of events.
+message ListEventsResponse {
+  repeated GetEventResponse events = 1;
+  string nextPageToken = 2;
+}
+
+// The request message for deleting an event.
+message DeleteEventRequest {
+  int32 id = 1;
+}
+
+// The response message for deleting an event.
+message DeleteEventResponse {
+  bool ok = 1;
+}
