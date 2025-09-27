@@ -8,9 +8,7 @@ export class ListParticipantsUC {
         // Asegura que el proyecto exista
         const project = await this.repo.findById(input.projectId);
         if (!project) throw new Error('Project not found');
-        // console.log('Listing participants for projectId:', input.projectId);
-        // const lista = this.repo.listParticipants(input.projectId);
-        // console.log('Participants list:', lista);
+        
         return this.repo.listParticipants(input.projectId);
     }
 }

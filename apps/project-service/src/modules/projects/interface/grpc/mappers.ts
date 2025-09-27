@@ -45,3 +45,9 @@ export const protoToJurorKey = (jk: any): JurorKey => ({
   memberEventId: jk.memberEventId,
   memberRoleId: jk.memberRoleId,
 });
+
+export const toProtoParticipant = (p: any) => ({
+  userId: p.userId,
+  projectId: p.projectId,
+  studentCode: p.studentCode ?? 0, // Proto no soporta null
+});

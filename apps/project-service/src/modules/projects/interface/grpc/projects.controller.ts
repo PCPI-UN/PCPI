@@ -6,7 +6,7 @@ import { GetProjectUC } from '../../application/use-cases/get-project.uc';
 import { AddProjectDocumentUC } from '../../application/use-cases/add-document.uc';
 import { ListDocumentsUC } from '../../application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
-import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey } from './mappers';
+import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant } from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
@@ -140,8 +140,8 @@ async addParticipantRpc(req: any) {
 
 @GrpcMethod('ProjectsService', 'ListParticipants')
 async listParticipantsRpc(req: { projectId: number }) {
-  const participants = await this.listParticipantsUC.execute({ projectId: req.projectId });
-  return { participants: participants.map(p => ({ ...p, studentCode: p.studentCode ?? 0 })) };
+  const participants = await this.listParticipantsUC.execute({ projectId: req.projectId }); 
+  return { items: participants.map(toProtoParticipant) };
 }
 
 }
