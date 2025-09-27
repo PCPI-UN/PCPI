@@ -12,6 +12,8 @@ import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
 import { ReassignProjectJurorUC } from '../../application/use-cases/reassign-project-juror.uc';
 import { ListProjectJurorsUC } from '../../application/use-cases/list-project-jurors.uc';
+import { AddParticipantUC } from '../../application/use-cases/add-participant.uc';
+import { ListParticipantsUC } from '../../application/use-cases/list-participants.uc';
 
 @Controller()
 export class ProjectsController {
@@ -27,6 +29,8 @@ export class ProjectsController {
     private readonly assignJurorBulkUC: AssignJurorBulkUC,
     private readonly reassignProjectJurorUC: ReassignProjectJurorUC,
     private readonly listProjectJurorsUC: ListProjectJurorsUC, 
+    private readonly addParticipantUC: AddParticipantUC,
+    private readonly listParticipantsUC: ListParticipantsUC,
     
 
   ) {}
@@ -124,5 +128,20 @@ async reassignProjectJurorRpc(req: any) {
     return { jurors: jurors.map(protoToJurorKey) };
   }
 
+  @GrpcMethod('ProjectsService', 'AddParticipant')
+async addParticipantRpc(req: any) {
+  const participant = await this.addParticipantUC.execute({
+    projectId: req.projectId,
+    userId: req.userId,
+    studentCode: req.studentCode ?? undefined,
+  });
+  return { participant };
+}
+
+@GrpcMethod('ProjectsService', 'ListParticipants')
+async listParticipantsRpc(req: { projectId: number }) {
+  const participants = await this.listParticipantsUC.execute({ projectId: req.projectId });
+  return { participants: participants.map(p => ({ ...p, studentCode: p.studentCode ?? 0 })) };
+}
 
 }

@@ -21,3 +21,9 @@ export interface JurorKey {
   memberEventId: number;
   memberRoleId: number;
 }
+
+export interface ProjectParticipant {
+  userId: number;
+  projectId: number;
+  studentCode?: number | null; 
+}

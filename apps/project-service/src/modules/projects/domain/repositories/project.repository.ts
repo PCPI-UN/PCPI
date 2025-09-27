@@ -1,4 +1,4 @@
-import {JurorKey, Project, ProjectDocument, ProjectState } from '../entities/project.entity';
+import {JurorKey, Project, ProjectDocument, ProjectState, ProjectParticipant } from '../entities/project.entity';
 
 export interface ProjectRepository {
   create(input: {
@@ -38,4 +38,8 @@ export interface ProjectRepository {
   upsertAssignment(projectId: number, juror: JurorKey): Promise<void>;
   removeAssignment(projectId: number, juror: JurorKey): Promise<boolean>; // true si borró algo
   listAssignments(projectId: number): Promise<JurorKey[]>; // opcional útil
+
+  addParticipant(input: { projectId: number; userId: number; studentCode?: number | null }): Promise<ProjectParticipant>;
+  listParticipants(projectId: number): Promise<ProjectParticipant[]>;
+
 }

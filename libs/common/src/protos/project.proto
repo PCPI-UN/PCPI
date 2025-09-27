@@ -13,8 +13,8 @@ service ProjectsService {
   rpc ListProjectDocuments (ListProjectDocumentsRequest) returns (ListProjectDocumentsResponse);
 
   // Participantes
-  // rpc AddParticipant (AddParticipantRequest) returns (ParticipantResponse);
-  // rpc ListParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
+  rpc AddParticipant (AddParticipantRequest) returns (AddParticipantResponse);
+  rpc ListParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
 
   rpc UpdateProject (UpdateProjectRequest) returns (ProjectResponse);      
   rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);     
@@ -144,12 +144,19 @@ message ListProjectDocumentsResponse { repeated ProjectDocument items = 1; }
 message AddParticipantRequest {
   int32 projectId = 1;
   int32 userId = 2;
-  repeated int32 courseIds = 3;
+  int32 studentCode = 3;
 }
-message ParticipantResponse { Participant participant = 1; }
+message AddParticipantResponse {  ProjectParticipant participant = 1; }
 
-message ListParticipantsRequest { int32 projectId = 1; }
-message ListParticipantsResponse { repeated Participant items = 1; }
+message ListParticipantsRequest {  int32 projectId = 1; }
+
+message ListParticipantsResponse {  repeated ProjectParticipant items = 1;}
+
+message ProjectParticipant {
+  int32 userId = 1;
+  int32 projectId = 2;
+  int32 studentCode = 3; 
+}
 
 
 message DeleteProjectRequest { int32 id = 1; }

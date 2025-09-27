@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { Project } from '../../domain/entities/project.entity';
-import { ProjectDocument, ProjectState, JurorKey } from '../../domain/entities/project.entity';
+import { ProjectDocument, ProjectState, JurorKey, ProjectParticipant } from '../../domain/entities/project.entity';
 
 
 type CreateProjectInput = {
@@ -154,4 +154,30 @@ export class PrismaProjectRepository implements ProjectRepository {
       memberRoleId: r.memberRoleId,
     }));
   }
+
+  async addParticipant(input: { projectId: number; userId: number; studentCode?: number | null }): Promise<ProjectParticipant> {
+  // Idempotente: si ya existe (PK compuesta), actualiza solo studentCode cuando venga
+  return (await this.prisma.projectParticipant.upsert({
+    where: {
+      userId_projectId: { userId: input.userId, projectId: input.projectId }, // Prisma crea este where único por la PK compuesta
+    },
+    update: {
+      ...(input.studentCode !== undefined ? { studentCode: input.studentCode } : {}),
+    },
+    create: {
+      userId: input.userId,
+      projectId: input.projectId,
+      studentCode: input.studentCode ?? null,
+    },
+  })) as unknown as ProjectParticipant;
+}
+
+async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
+  return (await this.prisma.projectParticipant.findMany({
+    where: { projectId },
+    orderBy: { userId: 'asc' },
+    select: { userId: true, projectId: true, studentCode: true },
+  })) as unknown as ProjectParticipant[];
+}
+
 }
