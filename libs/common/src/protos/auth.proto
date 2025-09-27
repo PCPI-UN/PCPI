@@ -10,11 +10,22 @@ service AuthService {
   rpc Login (LoginRequest) returns (LoginResponse) {}
   // Refreshes the session of a user
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
+  // Sets the password for a user account
+  rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse) {}
+  // Validates a token
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
 
 
   // ---- USERS MODULE ----
-  // Creates a new user
-  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
+  // Creates a new user with platform roles
+  rpc CreatePlatformUser (CreatePlatformUserRequest) returns (User) {}
+  // Creates a basic user without roles, always inactive.
+  rpc CreateBasicUser (CreateBasicUserRequest) returns (User) {}
+  // Retrieves a user by their ID
+  rpc GetUser (GetUserRequest) returns (User) {}
+  rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
+  rpc UpdateUser (UpdateUserRequest) returns (User) {}
+  rpc DeactivateUser (DeactivateUserRequest) returns (DeactivateUserResponse) {}
 
   // ---- ROLES MODULE ----
 
@@ -46,24 +57,125 @@ message RefreshResponse {
   string accessToken = 1;
 }
 
+// The request message for setting a user's password.
+message SetPasswordRequest {
+  string token = 1;
+  string password = 2;
+}
+
+message SetPasswordResponse {
+  bool success = 1;
+}
+
+// The request message for validating a token.
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+// The response message for a token validation.
+message ValidateTokenResponse {
+  bool valid = 1;
+  int32 userId = 2;
+}
+
 // ---- USER MODULE REQUEST/RESPONSE ----
 
-// The request message for creating a new user.
-message CreateUserRequest {
+// The request message for creating a new user with platform roles.
+message CreatePlatformUserRequest {
   string firstName = 1;
   string lastName = 2;
   string email = 3;
-  string username = 4;
-  string phone = 5;
+  string phone = 4;
+  repeated int32 roleIds = 5;
 }
 
-// The response message containing the newly created user.
-message CreateUserResponse {
+// The response message containing the newly created platform user.
+message CreatePlatformUserResponse {
   int32 id = 1;
   string firstName = 2;
   string lastName = 3;
   string email = 4;
-  string username = 5;
-  string phone = 6;
-  bool active = 7;
+  string phone = 5;
+  bool active = 6;
+  string status = 7;
+}
+
+// The request message for creating a basic user.
+message CreateBasicUserRequest {
+  string firstName = 1;
+  string lastName = 2;
+  string email = 3;
+  string phone = 4;
+}
+
+// The response message containing the newly created basic user.
+message CreateBasicUserResponse {
+  int32 id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string phone = 5;
+  bool active = 6;
+  string status = 7;
+}
+
+// The request message for retrieving a user.
+message GetUserRequest {
+  int32 id = 1;
+}
+
+// The request message for retrieving a list of users.
+message GetUsersRequest {
+  optional int32 page = 1;
+  optional int32 limit = 2;
+  optional bool includeInactive = 3;
+}
+
+message UpdateUserRequest {
+  int32 id = 1;
+  optional string firstName = 2;
+  optional string lastName = 3;
+  optional string phone = 4;
+}
+
+message DeactivateUserRequest {
+  int32 id = 1;
+}
+
+message DeactivateUserResponse {
+  bool success = 1;
+}
+
+// The response message containing the user details.
+message GetUserResponse {
+  int32 id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string phone = 5;
+  bool active = 6;
+  string status = 7;
+}
+
+message User {
+  int32 id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string phone = 5;
+  bool active = 6;
+  string status = 7;
+}
+
+message PaginationMeta {
+  int32 totalItems = 1;
+  int32 itemsOnPage = 2;
+  int32 itemsPerPage = 3;
+  int32 totalPages = 4;
+  int32 currentPage = 5;
+}
+
+message GetUsersResponse {
+  repeated User users = 1;
+  PaginationMeta meta = 2;
 }
