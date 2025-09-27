@@ -38,18 +38,8 @@ message CreateEventRequest {
 
 // The response message containing the newly created event.
 message CreateEventResponse {
-  int32 id = 1;
-  string name = 2;
-  string description = 3;
-  string accessCode = 4;
-  bool isPubliclyJoinable = 5;
-  string inscriptionDeadline = 6;
-  bool evaluationsOpened = 7;
-  string startDate = 8;
-  string endDate = 9;
-  bool active = 10;
-  string createdAt = 11;
-  string updatedAt = 12;
+  bool ok = 1;
+  string message = 2;
 }
 
 // The request message for updating an event.
@@ -68,17 +58,8 @@ message UpdateEventRequest {
 
 // The response message for updating an event.
 message UpdateEventResponse {
-  int32 id = 1;
-  string name = 2;
-  string description = 3;
-  string accessCode = 4;
-  bool isPubliclyJoinable = 5;
-  string inscriptionDeadline = 6;
-  bool evaluationsOpened = 7;
-  string startDate = 8;
-  string endDate = 9;
-  bool active = 10;
-  string updatedAt = 11;
+    bool ok = 1;
+    string message = 2;
 }
 
 // The request message for getting an event by ID.

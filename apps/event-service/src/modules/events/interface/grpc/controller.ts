@@ -18,22 +18,31 @@ export class EventsController {
   ) {}
 
   @GrpcMethod('EventService', 'CreateEvent')
-  async createEventRpc(req: any) {
-    const e = await this.createUC.execute(req);
-    return { event: toProtoEvent(e) };
-  }
+async createEventRpc(req: any) {
+  await this.createUC.execute(req);
+  return {
+    ok: true,
+    message: 'Evento creado satisfactoriamente',
+  };
+}
 
   @GrpcMethod('EventService', 'UpdateEvent')
-  async updateEventRpc(req: any) {
-    const e = await this.updateUC.execute(req);
-    return { event: toProtoEvent(e) };
-  }
+async updateEventRpc(req: any) {
+  await this.updateUC.execute(req);
+  return {
+    ok: true,
+    message: 'Evento editado satisfactoriamente',
+  };
+}
 
-  @GrpcMethod('EventService', 'GetEvent')
-  async getEventRpc(req: { id: number }) {
-    const e = await this.getUC.execute(req);
-    return { event: toProtoEvent(e) };
-  }
+
+@GrpcMethod('EventService', 'GetEvent')
+async getEventRpc(req: { id: number }) {
+  const e = await this.getUC.execute(req);
+  return toProtoEvent(e);  
+}
+
+
 
   @GrpcMethod('EventService', 'ListEvents')
   async listEventsRpc(req: any) {

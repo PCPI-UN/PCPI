@@ -3,17 +3,18 @@ import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { EventRepository } from '../../application/ports/event.repository';
 import { Event } from '../../domain/entities/event.entity';
 
+// 👇 Tipo auxiliar interno para crear eventos
 type CreateEventInput = {
-  organizationId: number;
+  organizationId?: number;
   name: string;
-  description?: string;
+  description?: string | null;
   accessCode: string;
   isPubliclyJoinable: boolean;
   inscriptionDeadline: Date;
   evaluationsOpened: boolean;
   startDate: Date;
   endDate: Date;
-  active: boolean;
+  active?: boolean; // default true
 };
 
 type ListOpts = { q?: string; page?: number; pageSize?: number; onlyActive?: boolean };
@@ -34,7 +35,7 @@ export class PrismaEventRepository implements EventRepository {
         evaluationsOpened: data.evaluationsOpened,
         startDate: data.startDate,
         endDate: data.endDate,
-        active: data.active,
+        active: data.active ?? true,
       },
     })) as unknown as Event;
   }
@@ -67,24 +68,22 @@ export class PrismaEventRepository implements EventRepository {
     return { items: items as unknown as Event[], total };
   }
 
-async update(id: number, data: Partial<Event>): Promise<Event> {
-  return (await this.prisma.event.update({
-    where: { id },
-    data: {
-      name: data.name ?? undefined,
-      description: data.description ?? undefined,   
-      accessCode: data.accessCode ?? undefined,    
-      isPubliclyJoinable: data.isPubliclyJoinable ?? undefined,
-      inscriptionDeadline: data.inscriptionDeadline ?? undefined,
-      evaluationsOpened: data.evaluationsOpened ?? undefined,
-      startDate: data.startDate ?? undefined,
-      endDate: data.endDate ?? undefined,
-      active: data.active ?? undefined,
-    },
-  })) as unknown as Event;
-}
-
-
+  async update(id: number, data: Partial<Event>): Promise<Event> {
+    return (await this.prisma.event.update({
+      where: { id },
+      data: {
+        name: data.name ?? undefined,
+        description: data.description ?? undefined,
+        accessCode: data.accessCode ?? undefined,
+        isPubliclyJoinable: data.isPubliclyJoinable ?? undefined,
+        inscriptionDeadline: data.inscriptionDeadline ?? undefined,
+        evaluationsOpened: data.evaluationsOpened ?? undefined,
+        startDate: data.startDate ?? undefined,
+        endDate: data.endDate ?? undefined,
+        active: data.active ?? undefined,
+      },
+    })) as unknown as Event;
+  }
 
   async delete(id: number): Promise<void> {
     await this.prisma.event.delete({ where: { id } });

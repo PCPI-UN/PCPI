@@ -10,16 +10,19 @@ export class CreateEventUC {
     if (!input.name?.trim()) throw new Error('Name is required');
 
     const event = await this.repo.create({
+      organizationId: input.organizationId, // si lo manejas en el DTO
       name: input.name,
       description: input.description,
       accessCode: input.accessCode,
       isPubliclyJoinable: input.isPubliclyJoinable ?? false,
-      inscriptionDeadline: input.inscriptionDeadline ? new Date(input.inscriptionDeadline) : undefined,
+      inscriptionDeadline: new Date(input.inscriptionDeadline), // ✅ conversión
       evaluationsOpened: input.evaluationsOpened ?? false,
-      startDate: new Date(input.startDate),
-      endDate: new Date(input.endDate),
+      startDate: new Date(input.startDate), // ✅ conversión
+      endDate: new Date(input.endDate),     // ✅ conversión
+      active: true, // default en schema, pero puedes fijarlo explícitamente
     });
 
     return event;
   }
 }
+

@@ -1,8 +1,9 @@
 export interface Event {
   id: number;
+  organizationId?: number | null;
   name: string;
   description?: string | null;
-  accessCode?: string | null;
+  accessCode: string;
   isPubliclyJoinable: boolean;
   inscriptionDeadline: Date;
   evaluationsOpened: boolean;
@@ -12,3 +13,4 @@ export interface Event {
   createdAt: Date;
   updatedAt: Date;
 }
+
