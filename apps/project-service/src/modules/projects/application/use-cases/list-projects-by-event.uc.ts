@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ProjectRepository } from '../ports/project.repository';
+import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { ListProjectsByEventDTO } from '../dto/list-projects.dto';
 
 @Injectable()
@@ -11,6 +11,7 @@ export class ListProjectsByEventUC {
     const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 20;
 
     return this.repo.listByEvent(input.eventId, {
+      courseId: input.courseId, 
       q: input.q,
       page,
       pageSize,

@@ -8,6 +8,11 @@ import { ListProjectsByEventUC } from './application/use-cases/list-projects-by-
 import { AddProjectDocumentUC } from './application/use-cases/add-document.uc';
 import { ListDocumentsUC } from './application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from './application/use-cases/delete-project.uc';
+import { UpdateProjectUC } from './application/use-cases/update-project.uc';
+import { ApproveProjectUC } from './application/use-cases/approve-project.uc';
+import { AssignJurorBulkUC } from './application/use-cases/assign-juror-bulk.uc';
+import { ReassignProjectJurorUC } from './application/use-cases/reassign-project-juror.uc';
+import { ListProjectJurorsUC } from './application/use-cases/list-project-jurors.uc';
 
 
 @Module({
@@ -16,12 +21,12 @@ import { DeleteProjectUC } from './application/use-cases/delete-project.uc';
     PrismaService,
     { provide: 'ProjectRepository', useClass: PrismaProjectRepository },
 
-    CreateProjectUC,
-    GetProjectUC,
-    ListProjectsByEventUC,
-    AddProjectDocumentUC,
-    ListDocumentsUC,
-    DeleteProjectUC,
+    CreateProjectUC,GetProjectUC,
+    ListProjectsByEventUC,AddProjectDocumentUC,
+    ListDocumentsUC,DeleteProjectUC,
+    UpdateProjectUC, ApproveProjectUC,
+    AssignJurorBulkUC, ReassignProjectJurorUC,
+    ListProjectJurorsUC,
   ],
 })
 export class ProjectsModule {}

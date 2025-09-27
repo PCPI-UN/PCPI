@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package projects.v1;
+package project;
 
 service ProjectsService {
   rpc CreateProject (CreateProjectRequest)   returns (ProjectResponse);
@@ -13,24 +13,42 @@ service ProjectsService {
   rpc ListProjectDocuments (ListProjectDocumentsRequest) returns (ListProjectDocumentsResponse);
 
   // Participantes
-  rpc AddParticipant (AddParticipantRequest) returns (ParticipantResponse);
-  rpc ListParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
+  // rpc AddParticipant (AddParticipantRequest) returns (ParticipantResponse);
+  // rpc ListParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
 
-  // Asignación de jurados
-  rpc AssignJuror (AssignJurorRequest) returns (AssignmentResponse);
+  rpc UpdateProject (UpdateProjectRequest) returns (ProjectResponse);      
+  rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);     
+  rpc AssignJurorToProjects (AssignJurorToProjectsRequest) returns (AssignJurorToProjectsResponse); 
+  rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
+  rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
 
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
 }
 
+enum ProjectState {
+  PROJECT_STATE_UNSPECIFIED = 0;
+  UNDER_REVIEW = 1;
+  APPROVED = 2;
+  REJECTED = 3;
+}
+
 /************** Messages **************/
+message JurorKey {
+  int32 memberUserId = 1;
+  int32 memberEventId = 2;
+  int32 memberRoleId = 3;
+}
+
 message Project {
   int32 id = 1;
   int32 eventId = 2;
   string name = 3;
   optional string description = 4;
   optional string eventNumber = 5;
-  string createdAt = 6; // ISO
-  string updatedAt = 7; // ISO
+  string createdAt = 6; 
+  string updatedAt = 7; 
+  int32 courseId = 8;
+  ProjectState state = 9;
 }
 
 message ProjectDocument {
@@ -62,6 +80,8 @@ message CreateProjectRequest {
   string name = 2;
   optional string description = 3;
   optional string eventNumber = 4;
+  int32 courseId = 5;
+  ProjectState state = 6; // opcional en la práctica; si no se envía, default en UC
 }
 message ProjectResponse { Project project = 1; }
 
@@ -72,11 +92,45 @@ message ListProjectsByEventRequest {
   optional string q = 2;
   int32 page = 3;
   int32 pageSize = 4;
+  int32 courseId = 5;
 }
 message ListProjectsResponse {
   repeated Project items = 1;
   int32 total = 2;
 }
+
+message UpdateProjectRequest {
+  int32 id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string eventNumber = 4;
+  optional int32 courseId = 5;
+  optional ProjectState state = 6;
+}
+
+message ApproveProjectRequest { int32 id = 1; }
+
+message AssignJurorToProjectsRequest {
+  JurorKey juror = 1;
+  repeated int32 projectIds = 2;
+  bool skipEventMismatch = 3; // si true, omite proyectos con event distinto
+}
+
+message AssignJurorToProjectsResponse {
+  int32 assigned = 1;
+  repeated FailedAssignment failures = 2;
+}
+message FailedAssignment {int32 projectId = 1;string reason = 2;}
+
+message ReassignProjectJurorRequest {
+  int32 projectId = 1;
+  JurorKey fromJuror = 2;
+  JurorKey toJuror = 3;
+}
+message ReassignProjectJurorResponse { bool ok = 1; bool changed = 2; }
+
+message ListProjectJurorsRequest { int32 projectId = 1; }
+message ListProjectJurorsResponse { repeated JurorKey jurors = 1; }
 
 message IssueUploadUrlRequest { int32 projectId = 1; string contentType = 2; }
 message IssueUploadUrlResponse { string uploadUrl = 1; string publicUrl = 2; }
@@ -97,13 +151,6 @@ message ParticipantResponse { Participant participant = 1; }
 message ListParticipantsRequest { int32 projectId = 1; }
 message ListParticipantsResponse { repeated Participant items = 1; }
 
-message AssignJurorRequest {
-  int32 projectId = 1;
-  int32 memberUserId = 2;
-  int32 memberEventId = 3;
-  int32 memberRoleId = 4;
-}
-message AssignmentResponse { Assignment assignment = 1; }
 
 message DeleteProjectRequest { int32 id = 1; }
 message DeleteProjectResponse { bool ok = 1; }

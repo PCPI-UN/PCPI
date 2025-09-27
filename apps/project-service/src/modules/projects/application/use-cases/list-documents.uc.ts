@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { ProjectRepository } from '../ports/project.repository';
+import { ProjectRepository } from '../../domain/repositories/project.repository';
 
 @Injectable()
 export class ListDocumentsUC {

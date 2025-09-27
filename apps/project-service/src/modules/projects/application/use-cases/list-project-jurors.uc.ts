@@ -1,14 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
-import { GetProjectDTO } from '../dto/get-project.dto';
+import { ListProjectJurorsDTO } from '../dto/list-project-jurors.dto';
 
 @Injectable()
-export class GetProjectUC {
+export class ListProjectJurorsUC {
   constructor(@Inject('ProjectRepository') private readonly repo: ProjectRepository) {}
 
-  async execute(input: GetProjectDTO) {
-    const project = await this.repo.findById(input.id);
+  async execute(input: ListProjectJurorsDTO) {
+    const project = await this.repo.findById(input.projectId);
     if (!project) throw new Error('Project not found');
-    return project;
+    return this.repo.listAssignments(input.projectId); // devuelve JurorKey[]
   }
 }

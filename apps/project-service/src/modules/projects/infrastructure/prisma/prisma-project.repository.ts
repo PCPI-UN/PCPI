@@ -1,21 +1,20 @@
 import { Injectable } from '@nestjs/common';
-//apps\project-service\src\common\prisma\prisma.service.ts
-// Update the path below to the correct relative path where prisma.service.ts actually exists.
-// For example, if it's in 'src/common/prisma/prisma.service', use:
 import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { ProjectRepository } from '../../application/ports/project.repository';
+import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { Project } from '../../domain/entities/project.entity';
-import { ProjectDocument } from '../../domain/entities/project.entity';
+import { ProjectDocument, ProjectState, JurorKey } from '../../domain/entities/project.entity';
 
 
 type CreateProjectInput = {
   eventId: number;
+  courseId: number;
   name: string;
   description?: string;
   eventNumber?: string;
+  state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
 };
 
-type ListOpts = { q?: string; page?: number; pageSize?: number };
+type ListOpts = { courseId?: number; q?: string; page?: number; pageSize?: number };
 
 @Injectable()
 export class PrismaProjectRepository implements ProjectRepository {
@@ -25,9 +24,11 @@ export class PrismaProjectRepository implements ProjectRepository {
     return this.prisma.project.create({
       data: {
         eventId: data.eventId,
+        courseId: data.courseId,
         name: data.name,
         description: data.description ?? null,
         eventNumber: data.eventNumber ?? null,
+        state: data.state, 
       },
     }) as unknown as Project;
   }
@@ -36,12 +37,18 @@ export class PrismaProjectRepository implements ProjectRepository {
     return (await this.prisma.project.findUnique({ where: { id } })) as unknown as Project | null;
   }
 
+  async findManyByIds(ids: number[]): Promise<Project[]> {
+    if (!ids.length) return [];
+    return (await this.prisma.project.findMany({ where: { id: { in: ids } } })) as unknown as Project[];
+  }
+
   async listByEvent(eventId: number, opts?: ListOpts): Promise<{ items: Project[]; total: number }> {
     const page = opts?.page && opts.page > 0 ? opts.page : 1;
     const pageSize = opts?.pageSize && opts.pageSize > 0 ? opts.pageSize : 20;
 
     const where: any = {
       eventId,
+      ...(opts?.courseId ? { courseId: opts.courseId } : {}),
       ...(opts?.q ? { name: { contains: opts.q, mode: 'insensitive' as const } } : {}),
     };
 
@@ -56,6 +63,34 @@ export class PrismaProjectRepository implements ProjectRepository {
     ]);
 
     return { items: items as unknown as Project[], total };
+  }
+
+  async updateProject(input: {
+    id: number;
+    name?: string;
+    description?: string | null;
+    eventNumber?: string | null;
+    courseId?: number;
+    state?: ProjectState;
+  }): Promise<Project> {
+    const data: any = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.description !== undefined) data.description = input.description;
+    if (input.eventNumber !== undefined) data.eventNumber = input.eventNumber;
+    if (input.courseId !== undefined) data.courseId = input.courseId;
+    if (input.state !== undefined) data.state = input.state;
+
+    return (await this.prisma.project.update({
+      where: { id: input.id },
+      data,
+    })) as unknown as Project;
+  }
+
+  async setProjectState(id: number, state: ProjectState): Promise<Project> {
+    return (await this.prisma.project.update({
+      where: { id },
+      data: { state },
+    })) as unknown as Project;
   }
 
   async delete(id: number): Promise<void> {
@@ -73,5 +108,50 @@ export class PrismaProjectRepository implements ProjectRepository {
       where: { projectId },
       orderBy: { createdAt: 'desc' },
     })) as unknown as ProjectDocument[];
+  }
+
+  async upsertAssignment(projectId: number, juror: JurorKey): Promise<void> {
+    await this.prisma.projectAssignment.upsert({
+      where: {
+        projectId_memberUserId_memberEventId_memberRoleId: {
+          projectId,
+          memberUserId: juror.memberUserId,
+          memberEventId: juror.memberEventId,
+          memberRoleId: juror.memberRoleId,
+        },
+      },
+      update: { updatedAt: new Date() },
+      create: {
+        projectId,
+        memberUserId: juror.memberUserId,
+        memberEventId: juror.memberEventId,
+        memberRoleId: juror.memberRoleId,
+      },
+    });
+  }
+
+  async removeAssignment(projectId: number, juror: JurorKey): Promise<boolean> {
+    const res = await this.prisma.projectAssignment.deleteMany({
+      where: {
+        projectId,
+        memberUserId: juror.memberUserId,
+        memberEventId: juror.memberEventId,
+        memberRoleId: juror.memberRoleId,
+      },
+    });
+    return res.count > 0;
+  }
+
+  async listAssignments(projectId: number): Promise<JurorKey[]> {
+    const rows = await this.prisma.projectAssignment.findMany({
+      where: { projectId },
+      select: { memberUserId: true, memberEventId: true, memberRoleId: true },
+      orderBy: [{ memberUserId: 'asc' }, { memberRoleId: 'asc' }],
+    });
+    return rows.map(r => ({
+      memberUserId: r.memberUserId,
+      memberEventId: r.memberEventId,
+      memberRoleId: r.memberRoleId,
+    }));
   }
 }
