@@ -8,6 +8,8 @@ import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { TokenServicePort } from '@auth/application/ports/token.service.port';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
+import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
+import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
 
 // Infrastructure Layer
 import { JwtServiceAdapter } from '@auth/infrastructure/jwt/jwt.service.adapter';
@@ -28,6 +30,8 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
   providers: [
     LoginUseCase,
     RefreshUseCase,
+    SetPasswordUseCase,
+    ValidateTokenUseCase,
     {
       provide: TokenServicePort,
       useClass: JwtServiceAdapter,
