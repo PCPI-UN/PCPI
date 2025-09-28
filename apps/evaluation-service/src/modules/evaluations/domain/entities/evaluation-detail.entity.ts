@@ -1,7 +1,7 @@
-export class EvaluationDetail{
+export class EvaluationDetail {
     constructor(
-        public evaluation_id: number,
-        public criterion_id: number,
-        public socre: number
+        public evaluationId: number,
+        public criterionId: number,
+        public score: number
     ) {}
 }

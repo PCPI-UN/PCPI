@@ -1,8 +1,14 @@
 export class CreateEvaluationDto {
-    project_id: number;
-    member_user_id: number;
-    member_event_id: number;
-    member_role_id: number;
+    projectId: number;
+    memberUserId: number;
+    memberEventId: number;
+    memberRoleId: number;
     grade: number;
-    comments: string;
+    comments?: string;
+    scores: EvaluationScoreDto[];
+}
+
+export class EvaluationScoreDto {
+    criterionId: number;
+    score: number;
 }
