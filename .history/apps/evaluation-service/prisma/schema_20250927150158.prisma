@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model Evaluation {
+  id            Int @id @default(autoincrement())
+  projectId     Int @map("project_id")
+
+  // The combination of these three fields is the 'Evaluator' id, the person who is evaluating a project
+  memberUserId  Int @map("member_user_id")
+  memberEventId Int @map("member_event_id")
+  memberRoleId  Int @map("member_role_id")
+
+  grade    Float
+  comments String?   @db.Text
+  date     DateTime  @default(now()) @db.Timestamp() 
+  createdAt DateTime @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamp()
+
+  scores EvaluationDetail[]
+
+  @@map("evaluations")
+}
+
+model EvaluationDetail {
+  evaluationId Int     @map("evaluation_id")
+  criterionId  Int     @map("criterion_id")
+  score        Float
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id])
+  criterion    Criterion  @relation(fields: [criterionId], references: [id])
+
+  @@id([evaluationId, criterionId])
+  @@map("evaluation_detail")
+}
+
+/**** CRITERION ****/
+
+model Criterion {
+  id          Int             @id @default(autoincrement())
+  eventId     Int             @map("event_id")
+  name        String             @db.VarChar(100)
+  description String?            @db.Text
+  weight      Float
+  active      Boolean
+  createdAt   DateTime           @map("created_at") @default(now()) @db.Timestamp()
+  updatedAt   DateTime           @map("updated_at") @updatedAt @db.Timestamp()
+  scores      EvaluationDetail[]
+  criterionsCourses CriterionCourse[]
+
+  @@map("criterions")
+}
+
