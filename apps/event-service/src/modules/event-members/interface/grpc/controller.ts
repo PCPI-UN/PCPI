@@ -13,7 +13,7 @@ export class EventMemberController {
     private readonly getUC: FindEventMemberByUserAndEventUseCase,
   ) {}
 
-  @GrpcMethod('EventMemberService', 'CreateEventMember')
+  @GrpcMethod('EventService', 'CreateEventMember')
   async CreateEventMemberRpc(req: any) {
     await this.createUC.execute(req);
     return {
@@ -22,13 +22,13 @@ export class EventMemberController {
     };
   }
 
-  @GrpcMethod('EventMemberService', 'DeleteEventMember')
+  @GrpcMethod('EventService', 'DeleteEventMember')
   async deleteEventMemberRpc(req: any) {
     await this.deleteUC.execute(req);
     return { ok: true };
   }
 
-  @GrpcMethod('EventMemberService', 'GetEventMember')
+  @GrpcMethod('EventService', 'GetEventMember')
   async getEventMemberRpc(req: { eventId: number; userId: number }) {
     const member = await this.getUC.execute(req);
     return member ? toProtoEventMember(member) : { userId: 0, eventId: 0, roleId: 0 }; // Default if null

@@ -1,12 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventMemberRepository } from '../ports/event-member.repository';
 import { EventRepository } from '../../../events/application/ports/event.repository';
-import { DeleteEventMemberDTO } from '../dto/delete-event-member.dto'; // Adjust path
+import { DeleteEventMemberDTO } from '../dto/delete-event-member.dto';
 
 @Injectable()
 export class DeleteEventMemberUseCase {
   constructor(
+    @Inject('EventMemberRepository')
     private readonly eventMemberRepository: EventMemberRepository,
+    @Inject('EventRepository')
     private readonly eventRepository: EventRepository,
   ) {}
 

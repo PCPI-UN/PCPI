@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { EventMemberRepository } from '../ports/event-member.repository';
 import { EventRepository } from '../../../events/application/ports/event.repository';
 import { CreateEventMember } from '../dto/create-event-member.dto';
@@ -7,7 +7,9 @@ import { EventMember } from '../../domain/entities/event-member.entity';
 @Injectable()
 export class CreateEventMemberUseCase {
   constructor(
+    @Inject('EventMemberRepository')
     private readonly eventMemberRepository: EventMemberRepository,
+    @Inject('EventRepository')
     private readonly eventRepository: EventRepository,
   ) {}
 

@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { EventsModule } from './modules/events/events.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
+import { EventServiceModule } from './event-service.module';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    EventsModule,
+    EventServiceModule,
     {
       transport: Transport.GRPC,
       options: {

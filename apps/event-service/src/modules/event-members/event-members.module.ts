@@ -7,10 +7,11 @@ import { EventMemberRepository } from './application/ports/event-member.reposito
 import { PrismaEventMemberRepository } from './infrastructure/prisma/prisma-event-member.repository';
 import { EventsModule } from '../events/events.module';
 import { FindEventMemberByUserAndEventUseCase } from './application/use-cases/get-event-member.use-case';
+import { PrismaEventRepository } from '../events/infrastructure/prisma/prisma-event.repository';
 
 @Module({
-  imports: [EventsModule], // Importar si se necesita el repositorio de eventos
-  controllers: [EventMemberController], // <-- El controlador DEBE estar aquí
+  imports: [],
+  controllers: [EventMemberController],
   providers: [
     PrismaService,
     CreateEventMemberUseCase,
@@ -19,6 +20,10 @@ import { FindEventMemberByUserAndEventUseCase } from './application/use-cases/ge
     {
       provide: 'EventMemberRepository',
       useClass: PrismaEventMemberRepository,
+    },
+    {
+      provide: 'EventRepository',
+      useClass: PrismaEventRepository,
     },
   ],
 })
