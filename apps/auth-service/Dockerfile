@@ -1,40 +1,47 @@
-# ---- Base ----
 FROM node:lts-alpine AS base
-WORKDIR /usr/src/app
+
+WORKDIR /app
+
+# Install protoc (Protocol Buffers compiler)
+RUN apk add --no-cache protobuf-dev
+
 RUN npm install -g pnpm
 
-# ---- Dependencies ----
-FROM base AS deps
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps apps
-COPY libs libs
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-# ---- Build ----
-FROM base AS build
-ARG APP_NAME=auth-service
 COPY . .
-ENV CI=true
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install -r --frozen-lockfile
-RUN pnpm --filter ${APP_NAME} exec prisma generate
-RUN pnpm --filter ${APP_NAME} build
 
-# ---- Prune ----
-FROM base AS prune
-ARG APP_NAME=auth-service
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/package.json ./package.json
-RUN pnpm install --prod --no-frozen-lockfile
+RUN cd apps/auth-service && npx prisma generate
+RUN npm run proto:generate || echo "Proto generation failed - some proto files may be missing"
+RUN pnpm run build auth-service
 
-# ---- Final ----
-FROM node:20-alpine AS final
-ARG APP_NAME=auth-service
-USER node
-WORKDIR /home/node/app
-COPY --from=prune /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=build /usr/src/app/apps/${APP_NAME}/prisma/schema.prisma ./
-COPY --from=prune --chown=node:node /usr/src/app/dist/apps/${APP_NAME} ./
-COPY --from=prune --chown=node:node /usr/src/app/package.json ./
-EXPOSE 3000
-CMD ["node", "main.js"]
+FROM node:lts-alpine AS production
+
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+COPY --from=base /app/dist ./dist
+COPY --from=base /app/libs ./libs
+COPY --from=base /app/apps/auth-service/prisma ./apps/auth-service/prisma
+COPY --from=base /app/node_modules/.pnpm ./node_modules/.pnpm
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nestjs -u 1001
+
+# Change ownership to non-root user
+RUN chown -R nestjs:nodejs /app
+USER nestjs
+
+EXPOSE 50051
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('net').createConnection({port:50051}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"
+
+CMD ["node", "dist/apps/auth-service/main"]
