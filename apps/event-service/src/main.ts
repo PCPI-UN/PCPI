@@ -9,7 +9,7 @@ async function bootstrap() {
     {
       transport: Transport.GRPC,
       options: {
-        package: 'events',
+        package: 'event',
         protoPath: join(__dirname, '../../../libs/common/src/protos/event.proto'),
         url: '0.0.0.0:50052',
       },

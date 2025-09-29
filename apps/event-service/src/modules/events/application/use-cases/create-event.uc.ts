@@ -25,4 +25,3 @@ export class CreateEventUC {
     return event;
   }
 }
-
