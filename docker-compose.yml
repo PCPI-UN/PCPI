@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pcpi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pcpi_db
+      POSTGRES_USER: pcpi_user
+      POSTGRES_PASSWORD: pcpi_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pcpi-network
+
+volumes:
+  postgres_data:
+
+networks:
+  pcpi-network:
+    driver: bridge

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { InvitationsModule } from './modules/invitations/invitations.module';
 import { ConfigModule } from '@nestjs/config';
+import { InvitationsModule } from './modules/invitations/invitations.module';
 
 @Module({
   imports: [
@@ -8,7 +8,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       envFilePath: './apps/invitation-service/.env',
     }),
-    InvitationsModule
+    InvitationsModule,
   ],
   controllers: [],
   providers: [],
