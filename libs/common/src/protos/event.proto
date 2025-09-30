@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package events;
+package event;  // Debe coincidir con el package en main.ts
 
 // Event Service definition
 service EventService {
@@ -20,6 +20,17 @@ service EventService {
 
   // Deletes an event
   rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
+
+  // ---- EVENT MEMBERS MODULE ----
+
+  // Adds a new member to an event
+  rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
+
+  // Deletes a member from an event
+  rpc DeleteEventMember (DeleteEventMemberRequest) returns (DeleteEventMemberResponse) {}
+
+  // Finds a member by user and event
+  rpc GetEventMember (GetEventMemberRequest) returns (GetEventMemberResponse) {}
 }
 
 // ---- EVENTS MODULE REQUEST/RESPONSE ----
@@ -30,7 +41,7 @@ message CreateEventRequest {
   string description = 2;
   string accessCode = 3;
   bool isPubliclyJoinable = 4;
-  string inscriptionDeadline = 5; // ISO string (ej: "2025-10-01T00:00:00Z")
+  string inscriptionDeadline = 5; // ISO string (e.g., "2025-10-01T00:00:00Z")
   bool evaluationsOpened = 6;
   string startDate = 7;           // ISO string
   string endDate = 8;             // ISO string
@@ -38,18 +49,8 @@ message CreateEventRequest {
 
 // The response message containing the newly created event.
 message CreateEventResponse {
-  int32 id = 1;
-  string name = 2;
-  string description = 3;
-  string accessCode = 4;
-  bool isPubliclyJoinable = 5;
-  string inscriptionDeadline = 6;
-  bool evaluationsOpened = 7;
-  string startDate = 8;
-  string endDate = 9;
-  bool active = 10;
-  string createdAt = 11;
-  string updatedAt = 12;
+  bool ok = 1;
+  string message = 2;
 }
 
 // The request message for updating an event.
@@ -68,17 +69,8 @@ message UpdateEventRequest {
 
 // The response message for updating an event.
 message UpdateEventResponse {
-  int32 id = 1;
-  string name = 2;
-  string description = 3;
-  string accessCode = 4;
-  bool isPubliclyJoinable = 5;
-  string inscriptionDeadline = 6;
-  bool evaluationsOpened = 7;
-  string startDate = 8;
-  string endDate = 9;
-  bool active = 10;
-  string updatedAt = 11;
+  bool ok = 1;
+  string message = 2;
 }
 
 // The request message for getting an event by ID.
@@ -124,3 +116,47 @@ message DeleteEventRequest {
 message DeleteEventResponse {
   bool ok = 1;
 }
+
+// ---- EVENT MEMBERS MODULE REQUEST/RESPONSE ----
+
+// The request message for adding a new event member.
+message CreateEventMemberRequest {
+  int32 eventId = 1;  // References the event from EventService
+  int32 userId = 2;   // References the user from AuthService
+  int32 roleId = 3;   // References a role ID (e.g., from a roles table)
+}
+
+// The response message for adding a new event member.
+message CreateEventMemberResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+// The request message for deleting an event member.
+message DeleteEventMemberRequest {
+  int32 eventId = 1;  // References the event from EventService
+  int32 userId = 2;   // References the user from AuthService
+}
+
+// The response message for deleting an event member.
+message DeleteEventMemberResponse {
+  bool ok = 1;
+}
+
+// The request message for finding an event member.
+message GetEventMemberRequest {
+  int32 eventId = 1;  // References the event from EventService
+  int32 userId = 2;   // References the user from AuthService
+}
+
+// The response message containing the event member.
+message GetEventMemberResponse {
+  int32 userId = 1;
+  int32 eventId = 2;
+  int32 roleId = 3;
+  bool active = 4;
+  string createdAt = 5;  // ISO string
+  string updatedAt = 6;  // ISO string
+}
+
+message Empty {}
