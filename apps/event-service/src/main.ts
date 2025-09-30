@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { EventServiceModule } from './event-service.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
+import { EventServiceModule } from './event-service.module';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -10,16 +10,14 @@ async function bootstrap() {
       transport: Transport.GRPC,
       options: {
         package: 'event',
-        protoPath: join(
-          process.cwd(),
-          'libs/common/src/protos/event.proto',
-        ),
-        url: `${process.env.GRPC_HOST || '0.0.0.0'}:${
-          process.env.GRPC_PORT || 50053
-        }`,
+        protoPath: join(__dirname, '../../../libs/common/src/protos/event.proto'),
+        url: '0.0.0.0:50052',
       },
     },
   );
+
   await app.listen();
+  console.log('🚀 Event service running on gRPC port 50052');
 }
+
 bootstrap();

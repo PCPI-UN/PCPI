@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -8,13 +7,21 @@ datasource db {
   url       = env("DATABASE_URL")
 }
 
+enum ProjectState {
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
 /**** PROJECTS, DOCUMENTS & PARTICIPANTS ****/
 model Project {
   id          Int  @id @default(autoincrement())
   eventId     Int  @map("event_id")
+  courseId    Int  @map("course_id")
   name        String  @db.VarChar(255)
   description String? @db.Text
   eventNumber String? @map("event_number") @db.VarChar(150)
+  state       ProjectState @map("state")
   createdAt   DateTime @map("created_at") @default(now()) @db.Timestamp()
   updatedAt   DateTime @map("updated_at") @updatedAt @db.Timestamp()
 
@@ -39,22 +46,11 @@ model ProjectDocument {
 model ProjectParticipant {
   userId    Int  @map("user_id")
   projectId Int  @map("project_id")
+  studentCode Int? @db.Integer()
   project   Project @relation(fields: [projectId], references: [id])
-  courses   ProjectParticipantCourses[]
 
   @@id([userId, projectId])
   @@map("project_participants")
-}
-
-model ProjectParticipantCourses {
-  projectParticipantUserId  Int @map("project_participant_user_id")
-  projectParticipantProjectId Int @map("project_participant_project_id")
-  courseId                  Int @map("course_id")
-
-  participant ProjectParticipant @relation(fields: [projectParticipantUserId, projectParticipantProjectId], references: [userId, projectId])
-
-  @@id([projectParticipantUserId, projectParticipantProjectId, courseId])
-  @@map("project_participant_courses")
 }
 
 model ProjectAssignment {

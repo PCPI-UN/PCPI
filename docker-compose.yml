@@ -1,25 +1,199 @@
-version: '3.8'
-
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: pcpi-postgres
-    restart: unless-stopped
+  # PostgreSQL Databases
+  auth-db:
+    image: postgres:16-alpine
+    container_name: pcpi-auth-db
     environment:
-      POSTGRES_DB: pcpi_db
-      POSTGRES_USER: pcpi_user
-      POSTGRES_PASSWORD: pcpi_password
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: auth_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     networks:
       - pcpi-network
+    restart: unless-stopped
 
-volumes:
-  postgres_data:
+  evaluation-db:
+    image: postgres:16-alpine
+    container_name: pcpi-evaluation-db
+    environment:
+      POSTGRES_DB: evaluation_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - evaluation_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+
+  event-db:
+    image: postgres:16-alpine
+    container_name: pcpi-event-db
+    environment:
+      POSTGRES_DB: event_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - event_db_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+
+  invitation-db:
+    image: postgres:16-alpine
+    container_name: pcpi-invitation-db
+    environment:
+      POSTGRES_DB: invitation_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - invitation_db_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+
+  project-db:
+    image: postgres:16-alpine
+    container_name: pcpi-project-db
+    environment:
+      POSTGRES_DB: project_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - project_db_data:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+
+  # NestJS Services
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth-service/Dockerfile
+    container_name: pcpi-auth-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@auth-db:5432/auth_service
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50051
+      NODE_ENV: production
+    ports:
+      - "50051:50051"
+    depends_on:
+      - auth-db
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+    volumes:
+      - ./apps/auth-service/prisma:/app/apps/auth-service/prisma
+    command: sh -c "cd apps/auth-service && npx prisma db push && cd /app && node dist/apps/auth-service/main"
+
+  evaluation-service:
+    build:
+      context: .
+      dockerfile: apps/evaluation-service/Dockerfile
+    container_name: pcpi-evaluation-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@evaluation-db:5432/evaluation_service
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50052
+      NODE_ENV: production
+    ports:
+      - "50052:50052"
+    depends_on:
+      - evaluation-db
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+    volumes:
+      - ./apps/evaluation-service/prisma:/app/apps/evaluation-service/prisma
+    command: sh -c "cd apps/evaluation-service && npx prisma db push && cd /app && node dist/apps/evaluation-service/main"
+
+  event-service:
+    build:
+      context: .
+      dockerfile: apps/event-service/Dockerfile
+    container_name: pcpi-event-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@event-db:5432/event_service
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50053
+      NODE_ENV: production
+    ports:
+      - "50053:50053"
+    depends_on:
+      - event-db
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+    volumes:
+      - ./apps/event-service/prisma:/app/apps/event-service/prisma
+    command: sh -c "cd apps/event-service && npx prisma db push && cd /app && node dist/apps/event-service/main"
+
+  invitation-service:
+    build:
+      context: .
+      dockerfile: apps/invitation-service/Dockerfile
+    container_name: pcpi-invitation-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@invitation-db:5432/invitation_service
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50054
+      NODE_ENV: production
+    ports:
+      - "50054:50054"
+    depends_on:
+      - invitation-db
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+    volumes:
+      - ./apps/invitation-service/prisma:/app/apps/invitation-service/prisma
+    command: sh -c "cd apps/invitation-service && npx prisma db push && cd /app && node dist/apps/invitation-service/main"
+
+  project-service:
+    build:
+      context: .
+      dockerfile: apps/project-service/Dockerfile
+    container_name: pcpi-project-service
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@project-db:5432/project_service
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50055
+      NODE_ENV: production
+    ports:
+      - "50055:50055"
+    depends_on:
+      - project-db
+    networks:
+      - pcpi-network
+    restart: unless-stopped
+    volumes:
+      - ./apps/project-service/prisma:/app/apps/project-service/prisma
+    command: sh -c "cd apps/project-service && npx prisma db push && cd /app && node dist/apps/project-service/main"
 
 networks:
   pcpi-network:
     driver: bridge
+    name: pcpi-network
+
+volumes:
+  auth_db_data:
+    name: pcpi-auth-db-data
+  evaluation_db_data:
+    name: pcpi-evaluation-db-data
+  event_db_data:
+    name: pcpi-event-db-data
+  invitation_db_data:
+    name: pcpi-invitation-db-data
+  project_db_data:
+    name: pcpi-project-db-data
