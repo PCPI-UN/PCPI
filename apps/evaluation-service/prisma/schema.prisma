@@ -50,7 +50,20 @@ model Criterion {
   createdAt   DateTime           @map("created_at") @default(now()) @db.Timestamp()
   updatedAt   DateTime           @map("updated_at") @updatedAt @db.Timestamp()
   scores      EvaluationDetail[]
+  criterionsCourses CriterionCourse[]
 
   @@map("criterions")
+}
+
+/**** CRITERION COURSE JUNCTION TABLE ****/
+
+model CriterionCourse {
+  criterionId Int @map("criterion_id")
+  courseId    Int @map("course_id")
+  
+  criterion   Criterion @relation(fields: [criterionId], references: [id])
+
+  @@id([criterionId, courseId])
+  @@map("criterions_courses")
 }
 

@@ -2,7 +2,15 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": false,
-    "outDir": "../../dist/apps/evaluation-service"
+    "outDir": "../../dist/apps/evaluation-service",
+    "baseUrl": "./",
+    "paths": {
+      "@common/*": ["src/common/*"],
+      "@app/common": ["../../libs/common/src"],
+      "@app/common/*": ["../../libs/common/src/*"],
+      "@criterions/*": ["src/modules/criterions/*"],
+      "@evaluations/*": ["src/modules/evaluations/*"],
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
