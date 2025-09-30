@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@common/prisma/prisma.service';
+import { PrismaService } from '../../../../common/prisma/prisma.service'; // Cambiar a 4 niveles arriba
 import { InvitationRoleRepositoryPort } from '../../domain/repositories/invitation-role.repository.port';
 import { InvitationRole } from '../../domain/entities/invitation-role.entity';
 import { InvitationRoleMapper } from './mappers/invitation-role.mapper';
+
 
 @Injectable()
 export class PrismaInvitationRoleRepository implements InvitationRoleRepositoryPort {

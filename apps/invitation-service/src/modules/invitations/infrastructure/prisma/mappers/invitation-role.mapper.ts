@@ -1,8 +1,7 @@
-import { InvitationRole as PrismaInvitationRole } from '@prisma/client';
 import { InvitationRole } from '../../../domain/entities/invitation-role.entity';
 
 export class InvitationRoleMapper {
-  static toDomain(prismaInvitationRole: PrismaInvitationRole): InvitationRole {
+  static toDomain(prismaInvitationRole: any): InvitationRole { 
     return new InvitationRole(
       prismaInvitationRole.invitationId,
       prismaInvitationRole.roleId,

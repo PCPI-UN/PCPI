@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '@common/prisma/prisma.module';
+import { PrismaModule } from '../../common/prisma/prisma.module'; 
+
 
 // Application 
 import { CreateInvitationUseCase } from './application/use-cases/create-invitation.use-case';
