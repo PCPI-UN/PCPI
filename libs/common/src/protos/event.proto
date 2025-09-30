@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package event;  // Debe coincidir con el package en main.ts
+package event;
 
 // Event Service definition
 service EventService {
