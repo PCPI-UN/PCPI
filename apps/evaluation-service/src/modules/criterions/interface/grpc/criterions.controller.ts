@@ -20,7 +20,7 @@ import {
   GetCriterionRequest,
   ListCriterionsRequest,
   DeleteCriterionRequest,
-} from '@/common/generated/criterions';
+} from '@app/common/generated/criterions';
 
 @Controller()
 export class CriterionsController {
@@ -29,7 +29,7 @@ export class CriterionsController {
     private readonly updateCriterionUseCase: UpdateCriterionUseCase,
     private readonly listCriterionsUseCase: ListCriterionsUseCase,
     private readonly deleteCriterionUseCase: DeleteCriterionUseCase,
-  ) {}
+  ) { }
 
   @GrpcMethod(CRITERIONS_SERVICE_NAME, 'CreateCriterion')
   async createCriterion(request: CreateCriterionRequest): Promise<CreateCriterionResponse> {
@@ -84,17 +84,17 @@ export class CriterionsController {
     try {
       const criterions = await this.listCriterionsUseCase.execute(request);
 
-    const criterionResponses = criterions.map((criterion: any) => ({
-      id: criterion.id,
-      eventId: criterion.eventId,
-      name: criterion.name,
-      description: criterion.description || '',
-      weight: criterion.weight,
-      active: criterion.active,
-      courseIds: [], // Will be populated by the use case
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
+      const criterionResponses = criterions.map((criterion: any) => ({
+        id: criterion.id,
+        eventId: criterion.eventId,
+        name: criterion.name,
+        description: criterion.description || '',
+        weight: criterion.weight,
+        active: criterion.active,
+        courseIds: [], // Will be populated by the use case
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
 
       return {
         criterions: criterionResponses,
