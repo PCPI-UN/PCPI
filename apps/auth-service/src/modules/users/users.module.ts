@@ -1,29 +1,43 @@
 import { Module } from '@nestjs/common';
-import { CreateUserUseCase } from '@users/application/use-cases/create-user.use-case';
-import { UserRepositoryPort } from '@users/domain/repositories/user.repository.port';
-import { PrismaUserRepository } from '@users/infrastructure/prisma/prisma.repository';
+import { UsersController } from './interface/grpc/users.controller';
+import { CreatePlatformUserUseCase } from './application/use-cases/create-platform-user.use-case';
+import { UserRepositoryPort } from './domain/repositories/user.repository.port';
+import { PrismaUserRepository } from './infrastructure/prisma/prisma.repository';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { BcryptAdapter } from '@common/hash/bcrypt.adapter';
-import { UsersController } from '@users/interface/grpc/users.controller';
+import { RolesModule } from '@roles/roles.module';
+import { UserTokenRepositoryPort } from './domain/repositories/user-token.repository.port';
+import { PrismaUserTokenRepository } from './infrastructure/prisma/prisma-user-token.repository';
+import { CreateBasicUserUseCase } from './application/use-cases/create-basic-user.use-case';
+import { GetUserUseCase } from './application/use-cases/get-user.use-case';
+import { GetUsersUseCase } from './application/use-cases/get-users.use-case';
+import { UpdateUserUseCase } from './application/use-cases/update-user.use-case';
+import { DeactivateUserUseCase } from './application/use-cases/deactivate-user.use-case';
 import { PrismaModule } from '@common/prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [RolesModule, PrismaModule],
   controllers: [UsersController],
   providers: [
-    CreateUserUseCase,
+    CreatePlatformUserUseCase,
+    CreateBasicUserUseCase,
+    GetUserUseCase,
+    GetUsersUseCase,
+    UpdateUserUseCase,
+    DeactivateUserUseCase,
     {
       provide: UserRepositoryPort,
       useClass: PrismaUserRepository,
+    },
+    {
+      provide: UserTokenRepositoryPort,
+      useClass: PrismaUserTokenRepository,
     },
     {
       provide: PasswordHasherPort,
       useClass: BcryptAdapter,
     },
   ],
-  exports: [
-    CreateUserUseCase,
-    UserRepositoryPort,
-  ],
+  exports: [UserRepositoryPort, UserTokenRepositoryPort, PasswordHasherPort],
 })
 export class UsersModule {}

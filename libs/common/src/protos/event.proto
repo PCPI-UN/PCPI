@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package event;  // Debe coincidir con el package en main.ts
+
+// Event Service definition
+service EventService {
+  // ---- EVENTS MODULE ----
+
+  // Creates a new event
+  rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse) {}
+
+  // Updates an existing event
+  rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse) {}
+
+  // Gets an event by ID
+  rpc GetEvent (GetEventRequest) returns (GetEventResponse) {}
+
+  // Lists all events
+  rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
+
+  // Deletes an event
+  rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
+
+  // ---- EVENT MEMBERS MODULE ----
+
+  // Adds a new member to an event
+  rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
+
+  // Deletes a member from an event
+  rpc DeleteEventMember (DeleteEventMemberRequest) returns (DeleteEventMemberResponse) {}
+
+  // Finds a member by user and event
+  rpc GetEventMember (GetEventMemberRequest) returns (GetEventMemberResponse) {}
+}
+
+// ---- EVENTS MODULE REQUEST/RESPONSE ----
+
+// The request message for creating a new event.
+message CreateEventRequest {
+  string name = 1;
+  string description = 2;
+  string accessCode = 3;
+  bool isPubliclyJoinable = 4;
+  string inscriptionDeadline = 5; // ISO string (e.g., "2025-10-01T00:00:00Z")
+  bool evaluationsOpened = 6;
+  string startDate = 7;           // ISO string
+  string endDate = 8;             // ISO string
+}
+
+// The response message containing the newly created event.
+message CreateEventResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+// The request message for updating an event.
+message UpdateEventRequest {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+}
+
+// The response message for updating an event.
+message UpdateEventResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+// The request message for getting an event by ID.
+message GetEventRequest {
+  int32 id = 1;
+}
+
+// The response message containing the event.
+message GetEventResponse {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+  string createdAt = 11;
+  string updatedAt = 12;
+}
+
+// The request message for listing events.
+message ListEventsRequest {
+  int32 pageSize = 1;
+  string pageToken = 2;
+  bool onlyActive = 3;
+}
+
+// The response message containing the list of events.
+message ListEventsResponse {
+  repeated GetEventResponse events = 1;
+  string nextPageToken = 2;
+}
+
+// The request message for deleting an event.
+message DeleteEventRequest {
+  int32 id = 1;
+}
+
+// The response message for deleting an event.
+message DeleteEventResponse {
+  bool ok = 1;
+}
+
+// ---- EVENT MEMBERS MODULE REQUEST/RESPONSE ----
+
+// The request message for adding a new event member.
+message CreateEventMemberRequest {
+  int32 eventId = 1;  // References the event from EventService
+  int32 userId = 2;   // References the user from AuthService
+  int32 roleId = 3;   // References a role ID (e.g., from a roles table)
+}
+
+// The response message for adding a new event member.
+message CreateEventMemberResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+// The request message for deleting an event member.
+message DeleteEventMemberRequest {
+  int32 eventId = 1;  // References the event from EventService
+  int32 userId = 2;   // References the user from AuthService
+}
+
+// The response message for deleting an event member.
+message DeleteEventMemberResponse {
+  bool ok = 1;
+}
+
+// The request message for finding an event member.
+message GetEventMemberRequest {
+  int32 eventId = 1;  // References the event from EventService
+  int32 userId = 2;   // References the user from AuthService
+}
+
+// The response message containing the event member.
+message GetEventMemberResponse {
+  int32 userId = 1;
+  int32 eventId = 2;
+  int32 roleId = 3;
+  bool active = 4;
+  string createdAt = 5;  // ISO string
+  string updatedAt = 6;  // ISO string
+}
+
+message Empty {}

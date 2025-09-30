@@ -1,5 +1,5 @@
-import { User as PrismaUser } from '@prisma/client';
-import { User } from '../../../domain/entities/user.entity';
+import { User as PrismaUser, UserStatus as PrismaUserStatus } from '@prisma/client';
+import { User, UserStatus } from '../../../domain/entities/user.entity';
 
 export class UserMapper {
   static toDomain(prismaUser: PrismaUser): User {
@@ -8,10 +8,10 @@ export class UserMapper {
       prismaUser.firstName,
       prismaUser.lastName ?? '',
       prismaUser.email,
-      prismaUser.username,
       prismaUser.password,
       prismaUser.phone ?? '',
       prismaUser.active,
+      prismaUser.status as UserStatus,
     );
   }
 
@@ -21,10 +21,10 @@ export class UserMapper {
       firstName: domainUser.firstName,
       lastName: domainUser.lastName,
       email: domainUser.email,
-      username: domainUser.username,
       password: domainUser.password,
       phone: domainUser.phone,
       active: domainUser.active,
+      status: domainUser.status as PrismaUserStatus,
     };
   }
 }
