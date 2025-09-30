@@ -1,37 +1,36 @@
 import { User } from '@users/domain/entities/user.entity';
 import { UserRepositoryPort } from '@users/domain/repositories/user.repository.port';
-import { CreateUserDto } from '@users/application/dto/create-user.dto';
+import { CreatePlatformUserDto } from '@users/application/dto/create-platform-user.dto';
 import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
+import { ValidateRolesExistUseCase } from '@roles/application/use-cases/validate-roles-exist.use-case';
+import { AssignPlatformRoleUseCase } from '@roles/application/use-cases/assign-platform-role.use-case';
+import { PrismaService } from '@common/prisma/prisma.service';
+import { TransactionClient } from '@common/prisma/types/transaction-client.type';
 
 @Injectable()
-export class CreateUserUseCase {
+export class CreatePlatformUserUseCase {
   constructor(
     private readonly userRepository: UserRepositoryPort,
     private readonly passwordHasher: PasswordHasherPort,
+    private readonly validateRolesExistUseCase: ValidateRolesExistUseCase,
+    private readonly assignPlatformRoleUseCase: AssignPlatformRoleUseCase,
+    private readonly prisma: PrismaService,
   ) {}
 
-  async execute(createUserDto: CreateUserDto): Promise<User> {
-    const { email, username, phone, ...rest } = createUserDto;
+  async execute(createPlatformUserDto: CreatePlatformUserDto): Promise<User> {
+    const { email, phone, roleIds, ...rest } = createPlatformUserDto;
+
+    await this.validateRolesExistUseCase.execute(roleIds);
 
     const emailExists = await this.userRepository.existsByEmail(email);
     if (emailExists) {
       throw new RpcException({
         code: status.ALREADY_EXISTS,
         message: 'Another user with this email already exists',
-      });
-    }
-
-    const usernameExists = await this.userRepository.existsByUsername(
-      username,
-    );
-    if (usernameExists) {
-      throw new RpcException({
-        code: status.ALREADY_EXISTS,
-        message: 'Another user with this username already exists',
       });
     }
 
@@ -45,8 +44,6 @@ export class CreateUserUseCase {
       }
     }
 
-    // No one in the app knows the password of a new user. In order to be able to login, the user
-    // must set the credentials by himself.
     const randomPassword = randomBytes(16).toString('hex');
     const hashedPassword = await this.passwordHasher.hash(randomPassword);
 
@@ -55,12 +52,20 @@ export class CreateUserUseCase {
       rest.firstName,
       rest.lastName,
       email,
-      username,
       hashedPassword,
       phone,
-      true,
     );
 
-    return this.userRepository.save(newUser);
+    return this.prisma.$transaction(async (tx: TransactionClient) => {
+      const savedUser = await this.userRepository.save(newUser, tx);
+
+      await this.assignPlatformRoleUseCase.execute(
+        savedUser.id,
+        roleIds,
+        tx,
+      );
+
+      return savedUser;
+    });
   }
 }
