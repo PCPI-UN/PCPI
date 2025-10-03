@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package event;  // Debe coincidir con el package en main.ts
+package event;
 
 // Event Service definition
 service EventService {
@@ -159,4 +159,8 @@ message GetEventMemberResponse {
   string updatedAt = 6;  // ISO string
 }
 
+<<<<<<< HEAD
 message Empty {}
+=======
+message Empty {}
+>>>>>>> origin/dev
