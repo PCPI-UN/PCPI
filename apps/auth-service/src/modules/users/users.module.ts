@@ -14,6 +14,7 @@ import { GetUsersUseCase } from './application/use-cases/get-users.use-case';
 import { UpdateUserUseCase } from './application/use-cases/update-user.use-case';
 import { DeactivateUserUseCase } from './application/use-cases/deactivate-user.use-case';
 import { PrismaModule } from '@common/prisma/prisma.module';
+import { GetUserByEmailUseCase } from './application/use-cases/get-user-by-email.use-case';
 
 @Module({
   imports: [RolesModule, PrismaModule],
@@ -22,6 +23,7 @@ import { PrismaModule } from '@common/prisma/prisma.module';
     CreatePlatformUserUseCase,
     CreateBasicUserUseCase,
     GetUserUseCase,
+    GetUserByEmailUseCase,
     GetUsersUseCase,
     UpdateUserUseCase,
     DeactivateUserUseCase,

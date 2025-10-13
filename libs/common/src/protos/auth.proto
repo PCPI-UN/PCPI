@@ -12,8 +12,10 @@ service AuthService {
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
   // Sets the password for a user account
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse) {}
-  // Validates a token
+  // Validates a one-time-use token (account setup, change password)
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
+  // Validates a JWT (access or refresh token)
+  rpc ValidateJwt(ValidateTokenRequest) returns (ValidateTokenResponse) {}
 
 
   // ---- USERS MODULE ----
@@ -23,6 +25,8 @@ service AuthService {
   rpc CreateBasicUser (CreateBasicUserRequest) returns (User) {}
   // Retrieves a user by their ID
   rpc GetUser (GetUserRequest) returns (User) {}
+  // Retrieves a user by their email
+  rpc GetUserByEmail (GetUserByEmailRequest) returns (User) {}
   rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
   rpc UpdateUser (UpdateUserRequest) returns (User) {}
   rpc DeactivateUser (DeactivateUserRequest) returns (DeactivateUserResponse) {}
@@ -122,6 +126,11 @@ message CreateBasicUserResponse {
 // The request message for retrieving a user.
 message GetUserRequest {
   int32 id = 1;
+}
+
+// The request message for retrieving a user by email.
+message GetUserByEmailRequest {
+  string email = 1;
 }
 
 // The request message for retrieving a list of users.

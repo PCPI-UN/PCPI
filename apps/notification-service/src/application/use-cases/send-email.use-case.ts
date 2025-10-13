@@ -1,0 +1,32 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { SendEmailDto } from '../dto/send-email.dto';
+import { SendEmailResponse } from '@app/common/generated/notification';
+import { EmailServicePort } from '@/application/ports/email.service.port';
+
+@Injectable()
+export class SendEmailUseCase {
+  private readonly logger = new Logger(SendEmailUseCase.name);
+
+  constructor(private readonly emailService: EmailServicePort) {}
+
+  async execute(sendEmailDto: SendEmailDto): Promise<SendEmailResponse> {
+    this.logger.log('Attempting to send email...', {
+      to: sendEmailDto.to,
+      template: sendEmailDto.template,
+    });
+
+    const result = await this.emailService.sendEmail({
+      to: sendEmailDto.to,
+      template: sendEmailDto.template,
+      templateParams: sendEmailDto.context,
+    });
+
+    if (!result.success) {
+      this.logger.error('Failed to send email', { to: sendEmailDto.to });
+    } else {
+      this.logger.log('Email sent successfully', { to: sendEmailDto.to });
+    }
+
+    return result;
+  }
+}

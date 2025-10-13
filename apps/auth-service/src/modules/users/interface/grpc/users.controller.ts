@@ -19,6 +19,8 @@ import { UpdateUserDto } from '@users/application/dto/update-user.dto';
 import { UpdateUserUseCase } from '@users/application/use-cases/update-user.use-case';
 import { DeactivateUserDto } from '@users/application/dto/deactivate-user.dto';
 import { DeactivateUserUseCase } from '@users/application/use-cases/deactivate-user.use-case';
+import { GetUserByEmailUseCase } from '@users/application/use-cases/get-user-by-email.use-case';
+import { GetUserByEmailDto } from '@users/application/dto/get-user-by-email.dto';
 
 @Controller()
 export class UsersController {
@@ -26,6 +28,7 @@ export class UsersController {
     private readonly createPlatformUserUseCase: CreatePlatformUserUseCase,
     private readonly createBasicUserUseCase: CreateBasicUserUseCase,
     private readonly getUserUseCase: GetUserUseCase,
+    private readonly getUserByEmailUseCase: GetUserByEmailUseCase,
     private readonly getUsersUseCase: GetUsersUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deactivateUserUseCase: DeactivateUserUseCase,
@@ -46,6 +49,12 @@ export class UsersController {
   @GrpcMethod(AUTH_SERVICE_NAME, 'GetUser')
   async getUser(request: GetUserDto): Promise<UserProto> {
     const user = await this.getUserUseCase.execute(request);
+    return UserMapper.toGetUserResponse(user);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'GetUserByEmail')
+  async getUserByEmail(request: GetUserByEmailDto): Promise<UserProto> {
+    const user = await this.getUserByEmailUseCase.execute(request);
     return UserMapper.toGetUserResponse(user);
   }
 

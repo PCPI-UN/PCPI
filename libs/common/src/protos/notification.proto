@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package notification;
+
+service NotificationService {
+  rpc SendEmail (SendEmailRequest) returns (SendEmailResponse);
+}
+
+message SendEmailRequest {
+  string to = 1;
+  string template = 3; // e.g., "user-invitation", "password-reset"
+  map<string, string> context = 4; // Data to populate the template, e.g., {"name": "John", "link": "..."}
+}
+
+message SendEmailResponse {
+  bool success = 1;
+}

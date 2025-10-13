@@ -34,12 +34,14 @@ message GetInvitationByTokenRequest {
 // The request message for accepting an invitation
 message AcceptInvitationRequest {
   string token = 1;
-  int32 invitedUserId = 2;
+  optional string password = 2; // For new users setting their password
 }
 
 // The response message for accepting an invitation
 message AcceptInvitationResponse {
   bool success = 1;
+  string accessToken = 2;
+  string refreshToken = 3;
 }
 
 // The request message for rejecting an invitation
