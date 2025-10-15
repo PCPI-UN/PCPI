@@ -6,7 +6,9 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "proto:generate": "mkdirp libs/common/src/generated && protoc -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true,esModuleInterop=true ./libs/common/src/protos/*.proto",
+    "proto:generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true --ts_proto_opt=esModuleInterop=true ./libs/common/src/protos/*.proto",
+    "proto:generate:win": "for %f in (libs/common/src/protos/*.proto) do protoc -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true,esModuleInterop=true %f",
+    "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package evaluation;
+
+service EvaluationService {
+  rpc EvaluateProject(EvaluateProjectRequest) returns (EvaluateProjectResponse);
+  rpc CreateEvaluation(CreateEvaluationRequest) returns (CreateEvaluationResponse);
+  rpc FindEvaluationById(FindEvaluationByIdRequest) returns (FindEvaluationByIdResponse);
+  rpc FindEvaluationsByProject(FindEvaluationsByProjectRequest) returns (FindEvaluationsByProjectResponse);
+  rpc FindEvaluationsByEvaluator(FindEvaluationsByEvaluatorRequest) returns (FindEvaluationsByEvaluatorResponse);
+  rpc CheckEvaluationExists(CheckEvaluationExistsRequest) returns (CheckEvaluationExistsResponse);
+}
+
+message EvaluationScore {
+  int32 criterionId = 1;
+  double score = 2;
+}
+
+message EvaluateProjectRequest {
+  int32 projectId = 1;
+  int32 memberUserId = 2;
+  int32 memberEventId = 3;
+  int32 memberRoleId = 4;
+  string comments = 5;
+  repeated EvaluationScore scores = 6;
+}
+
+message EvaluateProjectResponse {
+  int32 id = 1;
+  int32 projectId = 2;
+  int32 memberUserId = 3;
+  int32 memberEventId = 4;
+  int32 memberRoleId = 5;
+  double grade = 6;
+  string comments = 7;
+  string date = 8;
+  repeated EvaluationDetailResponse scores = 9;
+}
+
+message CreateEvaluationRequest {
+  int32 projectId = 1;
+  int32 memberUserId = 2;
+  int32 memberEventId = 3;
+  int32 memberRoleId = 4;
+  double grade = 5;
+  string comments = 6;
+  repeated EvaluationScore scores = 7;
+}
+
+message CreateEvaluationResponse {
+  int32 id = 1;
+  int32 projectId = 2;
+  int32 memberUserId = 3;
+  int32 memberEventId = 4;
+  int32 memberRoleId = 5;
+  double grade = 6;
+  string comments = 7;
+  string date = 8;
+  repeated EvaluationDetailResponse scores = 9;
+}
+
+message FindEvaluationByIdRequest {
+  int32 id = 1;
+}
+
+message FindEvaluationByIdResponse {
+  int32 id = 1;
+  int32 projectId = 2;
+  int32 memberUserId = 3;
+  int32 memberEventId = 4;
+  int32 memberRoleId = 5;
+  double grade = 6;
+  string comments = 7;
+  string date = 8;
+  repeated EvaluationDetailResponse scores = 9;
+}
+
+message FindEvaluationsByProjectRequest {
+  int32 projectId = 1;
+}
+
+message FindEvaluationsByProjectResponse {
+  repeated EvaluationResponse evaluations = 1;
+}
+
+message FindEvaluationsByEvaluatorRequest {
+  int32 memberUserId = 1;
+  int32 memberEventId = 2;
+  int32 memberRoleId = 3;
+}
+
+message FindEvaluationsByEvaluatorResponse {
+  repeated EvaluationResponse evaluations = 1;
+}
+
+message CheckEvaluationExistsRequest {
+  int32 projectId = 1;
+  int32 memberUserId = 2;
+  int32 memberEventId = 3;
+  int32 memberRoleId = 4;
+}
+
+message CheckEvaluationExistsResponse {
+  bool exists = 1;
+}
+
+message EvaluationResponse {
+  int32 id = 1;
+  int32 projectId = 2;
+  int32 memberUserId = 3;
+  int32 memberEventId = 4;
+  int32 memberRoleId = 5;
+  double grade = 6;
+  string comments = 7;
+  string date = 8;
+  repeated EvaluationDetailResponse scores = 9;
+}
+
+message EvaluationDetailResponse {
+  int32 evaluationId = 1;
+  int32 criterionId = 2;
+  double score = 3;
+}
