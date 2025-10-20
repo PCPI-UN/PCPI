@@ -7,6 +7,7 @@ import { ListCoursesUseCase } from './application/use-cases/list-course.uc';
 import { UpdateCourseUseCase } from './application/use-cases/update-course.uc';
 import { DeleteCourseUseCase } from './application/use-cases/delete-course.uc';
 import { CoursesController } from './interface/grpc/controllers';
+import { ListCoursesByEventUseCase } from './application/use-cases/list-courses-by-event.uc';
 
 @Module({
   controllers: [CoursesController],
@@ -19,6 +20,8 @@ import { CoursesController } from './interface/grpc/controllers';
     { provide: ListCoursesUseCase,  useFactory: (repo: PrismaCourseRepository) => new ListCoursesUseCase(repo),  inject: ['CourseRepository'] },
     { provide: UpdateCourseUseCase, useFactory: (repo: PrismaCourseRepository) => new UpdateCourseUseCase(repo), inject: ['CourseRepository'] },
     { provide: DeleteCourseUseCase, useFactory: (repo: PrismaCourseRepository) => new DeleteCourseUseCase(repo), inject: ['CourseRepository'] },
+    { provide: ListCoursesByEventUseCase, useFactory: (repo: PrismaCourseRepository) => new ListCoursesByEventUseCase(repo), inject: ['CourseRepository'] },
+    
   ],
   exports: [],
 })

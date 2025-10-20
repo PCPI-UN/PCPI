@@ -6,7 +6,7 @@ import { UpdateCourseUseCase } from '../../application/use-cases/update-course.u
 import { GetCourseUseCase } from '../../application/use-cases/get-course.uc';
 import { ListCoursesUseCase } from '../../application/use-cases/list-course.uc';
 import { DeleteCourseUseCase } from '../../application/use-cases/delete-course.uc';
-
+import { ListCoursesByEventUseCase } from '../../application/use-cases/list-courses-by-event.uc';
 import { toProtoCourse } from './mappers';
 
 @Controller()
@@ -17,6 +17,7 @@ export class CoursesController {
     private readonly getUC: GetCourseUseCase,
     private readonly listUC: ListCoursesUseCase,
     private readonly deleteUC: DeleteCourseUseCase,
+    private readonly listByEventUC: ListCoursesByEventUseCase,
   ) {}
 
   @GrpcMethod('EventService', 'CreateCourse')
@@ -70,4 +71,22 @@ export class CoursesController {
     await this.deleteUC.execute(req); // tu UC recibe { id }
     return { ok: true };
   }
+    @GrpcMethod('EventService', 'ListCoursesByEvent')
+  async listCoursesByEventRpc(req: any) {
+    
+
+    const { items } = await this.listByEventUC.execute({
+      eventId: Number(req.eventId),
+      onlyActive: !!req.onlyActive,
+      page: req.page,
+      pageSize: req.pageSize,
+      q: req.q,
+    });
+
+    return {
+      courses: items.map(toProtoCourse),
+      nextPageToken: '',
+    };
+  }
+
 }
