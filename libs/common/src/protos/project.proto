@@ -8,13 +8,14 @@ service ProjectsService {
   rpc ListProjectsByEvent (ListProjectsByEventRequest) returns (ListProjectsResponse);
 
   // Documentos: gRPC no es ideal para binarios grandes → patrón de URL firmada
-  rpc IssueUploadUrl (IssueUploadUrlRequest) returns (IssueUploadUrlResponse);
+  // rpc IssueUploadUrl (IssueUploadUrlRequest) returns (IssueUploadUrlResponse);
   rpc AddProjectDocumentFromUrl (AddProjectDocumentFromUrlRequest) returns (ProjectDocumentResponse);
   rpc ListProjectDocuments (ListProjectDocumentsRequest) returns (ListProjectDocumentsResponse);
 
   // Participantes
   rpc AddParticipant (AddParticipantRequest) returns (AddParticipantResponse);
   rpc ListParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
+  rpc AddPendingParticipant (AddPendingParticipantRequest) returns (AddPendingParticipantResponse);
 
   rpc UpdateProject (UpdateProjectRequest) returns (ProjectResponse);      
   rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);     
@@ -59,19 +60,24 @@ message ProjectDocument {
   string updatedAt = 5;
 }
 
-message Participant {
+message ProjectParticipant {
   int32 userId = 1;
   int32 projectId = 2;
-  repeated int32 courseIds = 3;
+  int32 studentCode = 3; 
 }
 
-message Assignment {
-  int32 projectId = 1;
-  int32 memberUserId = 2;
-  int32 memberEventId = 3;
-  int32 memberRoleId = 4;
-  string assignedAt = 5;
-  string updatedAt = 6;
+message PendingProjectParticipant {
+  int32 pendingId = 1;
+  int32 projectId = 2;
+  string firstName = 3;
+  string lastName = 4;
+  string email = 5;
+  int32 studentCode = 6;
+  string status = 7;
+  string invitedAt = 8;
+  string joinedAt = 9;
+  string createdAt = 10;
+  string updatedAt = 11;
 }
 
 /************** Requests/Responses **************/
@@ -98,7 +104,6 @@ message ListProjectsResponse {
   repeated Project items = 1;
   int32 total = 2;
 }
-
 message UpdateProjectRequest {
   int32 id = 1;
   optional string name = 2;
@@ -110,23 +115,16 @@ message UpdateProjectRequest {
 
 message ApproveProjectRequest { int32 id = 1; }
 
-message AssignJurorToProjectsRequest {
-  JurorKey juror = 1;
-  repeated int32 projectIds = 2;
+message AssignJurorToProjectsRequest {JurorKey juror = 1;repeated int32 projectIds = 2;
   bool skipEventMismatch = 3; // si true, omite proyectos con event distinto
-}
-
+  }
 message AssignJurorToProjectsResponse {
   int32 assigned = 1;
   repeated FailedAssignment failures = 2;
 }
 message FailedAssignment {int32 projectId = 1;string reason = 2;}
 
-message ReassignProjectJurorRequest {
-  int32 projectId = 1;
-  JurorKey fromJuror = 2;
-  JurorKey toJuror = 3;
-}
+message ReassignProjectJurorRequest {int32 projectId = 1;JurorKey fromJuror = 2;JurorKey toJuror = 3;}
 message ReassignProjectJurorResponse { bool ok = 1; bool changed = 2; }
 
 message ListProjectJurorsRequest { int32 projectId = 1; }
@@ -141,23 +139,23 @@ message ProjectDocumentResponse { ProjectDocument document = 1; }
 message ListProjectDocumentsRequest { int32 projectId = 1; }
 message ListProjectDocumentsResponse { repeated ProjectDocument items = 1; }
 
-message AddParticipantRequest {
-  int32 projectId = 1;
-  int32 userId = 2;
-  int32 studentCode = 3;
-}
+message AddParticipantRequest {  int32 projectId = 1;  int32 userId = 2;  optional int32 studentCode = 3;}
 message AddParticipantResponse {  ProjectParticipant participant = 1; }
 
 message ListParticipantsRequest {  int32 projectId = 1; }
-
 message ListParticipantsResponse {  repeated ProjectParticipant items = 1;}
 
-message ProjectParticipant {
-  int32 userId = 1;
-  int32 projectId = 2;
-  int32 studentCode = 3; 
+message AddPendingParticipantRequest {
+  int32 projectId = 1;
+  string firstName = 2;
+  optional string lastName = 3;
+  string email = 4;
+  optional int32 studentCode = 5;
+  string status = 6;
 }
-
+message AddPendingParticipantResponse {
+  PendingProjectParticipant participant = 1;
+}
 
 message DeleteProjectRequest { int32 id = 1; }
 message DeleteProjectResponse { bool ok = 1; }

@@ -6,7 +6,7 @@ import { GetProjectUC } from '../../application/use-cases/get-project.uc';
 import { AddProjectDocumentUC } from '../../application/use-cases/add-document.uc';
 import { ListDocumentsUC } from '../../application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
-import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant } from './mappers';
+import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant } from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
@@ -14,6 +14,7 @@ import { ReassignProjectJurorUC } from '../../application/use-cases/reassign-pro
 import { ListProjectJurorsUC } from '../../application/use-cases/list-project-jurors.uc';
 import { AddParticipantUC } from '../../application/use-cases/add-participant.uc';
 import { ListParticipantsUC } from '../../application/use-cases/list-participants.uc';
+import { AddPendingParticipantUC } from '../../application/use-cases/add-pending-participant.us';
 
 @Controller()
 export class ProjectsController {
@@ -31,6 +32,7 @@ export class ProjectsController {
     private readonly listProjectJurorsUC: ListProjectJurorsUC, 
     private readonly addParticipantUC: AddParticipantUC,
     private readonly listParticipantsUC: ListParticipantsUC,
+    private readonly addPendingParticipantUC: AddPendingParticipantUC,
     
 
   ) {}
@@ -143,5 +145,19 @@ async listParticipantsRpc(req: { projectId: number }) {
   const participants = await this.listParticipantsUC.execute({ projectId: req.projectId }); 
   return { items: participants.map(toProtoParticipant) };
 }
+
+@GrpcMethod('ProjectsService', 'AddPendingParticipant')
+async addPendingParticipantRpc(req: any) {
+  const pendingParticipant = await this.addPendingParticipantUC.execute({
+    projectId: req.projectId,
+    firstName: req.firstName,
+    lastName: req.lastName ?? undefined,
+    email: req.email,
+    studentCode: req.studentCode ?? undefined,
+    status: protoToStatus(req.status),
+  });
+  return { participant: toProtoPendingParticipant(pendingParticipant) };
+}
+
 
 }

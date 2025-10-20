@@ -15,6 +15,7 @@ import { ReassignProjectJurorUC } from './application/use-cases/reassign-project
 import { ListProjectJurorsUC } from './application/use-cases/list-project-jurors.uc';
 import { AddParticipantUC } from './application/use-cases/add-participant.uc';
 import { ListParticipantsUC } from './application/use-cases/list-participants.uc';
+import { AddPendingParticipantUC } from './application/use-cases/add-pending-participant.us';
 
 
 @Module({
@@ -27,7 +28,7 @@ import { ListParticipantsUC } from './application/use-cases/list-participants.uc
     AddProjectDocumentUC,ListDocumentsUC,DeleteProjectUC,
     UpdateProjectUC, ApproveProjectUC,AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
-    ListParticipantsUC,
+    ListParticipantsUC,AddPendingParticipantUC
   ],
 })
 export class ProjectsModule {}

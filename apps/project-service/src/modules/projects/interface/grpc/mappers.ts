@@ -20,6 +20,24 @@ export const protoToState = (n?: number): ProjectState => {
   }
 };
 
+const statusToProto = (s: any): number => {
+  switch (s) {
+    case 'PENDING': return 1;
+    case 'INVITED': return 2;
+    case 'JOINED':  return 3;
+    default:        return 0; // UNSPECIFIED
+  }
+};
+
+export const protoToStatus = (n?: number): any => {
+  switch (n) {
+    case 1: return 'PENDING';
+    case 2: return 'INVITED';
+    case 3: return 'JOINED';
+    default: return 'PENDING';
+  }
+};
+
 export const toProtoProject = (p: any) => ({
   id: p.id,
   eventId: p.eventId ?? p.event_id,
@@ -50,4 +68,18 @@ export const toProtoParticipant = (p: any) => ({
   userId: p.userId,
   projectId: p.projectId,
   studentCode: p.studentCode ?? 0, // Proto no soporta null
+});
+
+export const toProtoPendingParticipant = (p: any) => ({
+  pendingId: p.pendingId,
+  projectId: p.projectId,
+  firstName: p.firstName,
+  lastName: p.lastName ?? '',
+  email: p.email,
+  studentCode: p.studentCode ?? 0, // Proto no soporta null
+  status: statusToProto(p.status),
+  invitedAT: p.invitedAt?.toISOString?.() ?? p.invited_at,
+  joinedAt: p.joinedAt?.toISOString?.() ?? p.joined_at,
+  createdAt: p.createdAt?.toISOString?.() ?? p.created_at,
+  updatedAt: p.updatedAt?.toISOString?.() ?? p.updated_at,
 });

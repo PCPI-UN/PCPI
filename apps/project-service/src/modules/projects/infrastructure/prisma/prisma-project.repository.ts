@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
-import { Project } from '../../domain/entities/project.entity';
+import { PendingProjectParticipant, Project } from '../../domain/entities/project.entity';
 import { ProjectDocument, ProjectState, JurorKey, ProjectParticipant } from '../../domain/entities/project.entity';
 
 
@@ -12,6 +12,15 @@ type CreateProjectInput = {
   description?: string;
   eventNumber?: string;
   state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+};
+
+type AddPendingParticipantInput = {
+  projectId: number;
+  firstName: string;
+  lastName?: string | null;
+  email: string;
+  studentCode?: number | null;
+  status: 'PENDING' | 'INVITED' | 'JOINED';
 };
 
 type ListOpts = { courseId?: number; q?: string; page?: number; pageSize?: number };
@@ -178,6 +187,40 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
     orderBy: { userId: 'asc' },
     select: { userId: true, projectId: true, studentCode: true },
   })) as unknown as ProjectParticipant[];
+}
+
+  async addPendingParticipant(input: AddPendingParticipantInput): Promise<PendingProjectParticipant> {
+  const existing = await this.prisma.pendingProjectParticipant.findFirst({
+    where: {
+      projectId: input.projectId,
+      email: input.email,
+    },
+  });
+
+  if (existing) {
+    // Actualizar
+    return this.prisma.pendingProjectParticipant.update({
+      where: { pendingId: existing.pendingId },
+      data: {
+        firstName: input.firstName,
+        lastName: input.lastName ?? null,
+        studentCode: input.studentCode ?? null,
+        status: input.status,
+      },
+    });
+  } else {
+    // Crear
+    return this.prisma.pendingProjectParticipant.create({
+      data: {
+        projectId: input.projectId,
+        firstName: input.firstName,
+        lastName: input.lastName ?? null,
+        email: input.email,
+        studentCode: input.studentCode ?? null,
+        status: input.status,
+      },
+    });
+  }
 }
 
 }
