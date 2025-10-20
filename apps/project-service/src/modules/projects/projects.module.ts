@@ -16,6 +16,7 @@ import { ListProjectJurorsUC } from './application/use-cases/list-project-jurors
 import { AddParticipantUC } from './application/use-cases/add-participant.uc';
 import { ListParticipantsUC } from './application/use-cases/list-participants.uc';
 import { AddPendingParticipantUC } from './application/use-cases/add-pending-participant.us';
+import { ListPendingParticipantsUC } from './application/use-cases/list-pending-participants.uc';
 
 
 @Module({
@@ -28,7 +29,7 @@ import { AddPendingParticipantUC } from './application/use-cases/add-pending-par
     AddProjectDocumentUC,ListDocumentsUC,DeleteProjectUC,
     UpdateProjectUC, ApproveProjectUC,AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
-    ListParticipantsUC,AddPendingParticipantUC
+    ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC
   ],
 })
 export class ProjectsModule {}

@@ -50,5 +50,6 @@ export interface ProjectRepository {
     studentCode?: number | null;
     status: StudentStatus;
   }): Promise<PendingProjectParticipant>;
+  listPendingParticipants(projectId: number): Promise<PendingProjectParticipant[]>;
 
 }

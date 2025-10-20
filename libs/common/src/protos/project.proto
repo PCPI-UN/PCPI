@@ -16,6 +16,7 @@ service ProjectsService {
   rpc AddParticipant (AddParticipantRequest) returns (AddParticipantResponse);
   rpc ListParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
   rpc AddPendingParticipant (AddPendingParticipantRequest) returns (AddPendingParticipantResponse);
+  rpc ListPendingParticipants (ListPendingParticipantsRequest) returns (ListPendingParticipantsResponse);
 
   rpc UpdateProject (UpdateProjectRequest) returns (ProjectResponse);      
   rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);     
@@ -156,6 +157,9 @@ message AddPendingParticipantRequest {
 message AddPendingParticipantResponse {
   PendingProjectParticipant participant = 1;
 }
+
+message ListPendingParticipantsRequest {  int32 projectId = 1; }
+message ListPendingParticipantsResponse {  repeated PendingProjectParticipant items = 1;}
 
 message DeleteProjectRequest { int32 id = 1; }
 message DeleteProjectResponse { bool ok = 1; }

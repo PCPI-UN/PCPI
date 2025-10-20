@@ -223,4 +223,11 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
   }
 }
 
+  async listPendingParticipants(projectId: number): Promise<PendingProjectParticipant[]> {
+    return (await this.prisma.pendingProjectParticipant.findMany({
+      where: { projectId },
+      orderBy: { firstName: 'asc' },
+    })) as unknown as PendingProjectParticipant[];
+  }
+
 }

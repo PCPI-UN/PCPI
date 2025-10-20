@@ -15,6 +15,7 @@ import { ListProjectJurorsUC } from '../../application/use-cases/list-project-ju
 import { AddParticipantUC } from '../../application/use-cases/add-participant.uc';
 import { ListParticipantsUC } from '../../application/use-cases/list-participants.uc';
 import { AddPendingParticipantUC } from '../../application/use-cases/add-pending-participant.us';
+import { ListPendingParticipantsUC } from '../../application/use-cases/list-pending-participants.uc';
 
 @Controller()
 export class ProjectsController {
@@ -33,6 +34,7 @@ export class ProjectsController {
     private readonly addParticipantUC: AddParticipantUC,
     private readonly listParticipantsUC: ListParticipantsUC,
     private readonly addPendingParticipantUC: AddPendingParticipantUC,
+    private readonly listPendingParticipantsUC: ListPendingParticipantsUC,
     
 
   ) {}
@@ -159,5 +161,9 @@ async addPendingParticipantRpc(req: any) {
   return { participant: toProtoPendingParticipant(pendingParticipant) };
 }
 
-
+@GrpcMethod('ProjectsService', 'ListPendingParticipants')
+async listPendingParticipantsRpc(req: { projectId: number }) {
+  const pendingParticipants = await this.listPendingParticipantsUC.execute({ projectId: req.projectId }); 
+  return { items: pendingParticipants.map(toProtoPendingParticipant) };
+}
 }
