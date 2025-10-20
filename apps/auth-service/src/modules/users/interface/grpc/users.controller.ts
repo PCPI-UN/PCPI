@@ -21,6 +21,9 @@ import { DeactivateUserDto } from '@users/application/dto/deactivate-user.dto';
 import { DeactivateUserUseCase } from '@users/application/use-cases/deactivate-user.use-case';
 import { GetUserByEmailUseCase } from '@users/application/use-cases/get-user-by-email.use-case';
 import { GetUserByEmailDto } from '@users/application/dto/get-user-by-email.dto';
+import { ActivateUserUseCase } from '@users/application/use-cases/activate-user.use-case';
+import { ActivateUserDto } from '@users/application/dto/activate-user.dto';
+import { ActivateUserResponse } from '@app/common/generated/auth';
 
 @Controller()
 export class UsersController {
@@ -32,6 +35,7 @@ export class UsersController {
     private readonly getUsersUseCase: GetUsersUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deactivateUserUseCase: DeactivateUserUseCase,
+    private readonly activateUserUseCase: ActivateUserUseCase,
   ) {}
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'CreatePlatformUser')
@@ -44,6 +48,11 @@ export class UsersController {
   async createBasicUser(request: CreateBasicUserDto): Promise<UserProto> {
     const newUser = await this.createBasicUserUseCase.execute(request);
     return UserMapper.toCreateUserResponse(newUser);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'ActivateUser')
+  async activateUser(request: ActivateUserDto): Promise<ActivateUserResponse> {
+    return this.activateUserUseCase.execute(request);
   }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'GetUser')
