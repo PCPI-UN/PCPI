@@ -17,7 +17,11 @@ export class CreateProjectUC {
     if (!input.courseId || input.courseId <= 0) {
       throw new ValidationError('Invalid courseId');
     }
-
+    // Asegura que no exista otro proyecto con el mismo nombre en el mismo evento y curso
+    const existing = await this.repo.findProject(input.eventId, input.courseId, input.name.trim());
+    if (existing) {
+      throw new ValidationError('A project with the same name already exists for this event and course');
+    }
     const state = input.state ?? 'UNDER_REVIEW';
     return this.repo.create({
       eventId: input.eventId,

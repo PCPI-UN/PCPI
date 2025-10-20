@@ -16,7 +16,7 @@ export class AddPendingParticipantUC {
 
     const p = await this.repo.findById(input.projectId);
     if (!p) throw new NotFoundError('Project not found');
-
+    
     // Crea o actualiza (upsert) el pending participante
     return this.repo.addPendingParticipant({
       projectId: input.projectId,

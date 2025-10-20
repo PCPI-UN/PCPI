@@ -12,6 +12,7 @@ export interface ProjectRepository {
 
   findById(id: number): Promise<Project | null>;
   findManyByIds(ids: number[]): Promise<Project[]>;
+  findProject(eventId: number, courseId: number, name: string): Promise<Project | null>;
 
   listByEvent(
     eventId: number,

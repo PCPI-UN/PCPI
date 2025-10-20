@@ -51,6 +51,12 @@ export class PrismaProjectRepository implements ProjectRepository {
     return (await this.prisma.project.findMany({ where: { id: { in: ids } } })) as unknown as Project[];
   }
 
+  async findProject(eventId: number, courseId: number, name: string): Promise<Project | null> {
+    return (await this.prisma.project.findFirst({
+      where: { eventId, courseId, name },
+    })) as unknown as Project | null;
+  }
+
   async listByEvent(eventId: number, opts?: ListOpts): Promise<{ items: Project[]; total: number }> {
     const page = opts?.page && opts.page > 0 ? opts.page : 1;
     const pageSize = opts?.pageSize && opts.pageSize > 0 ? opts.pageSize : 20;
@@ -196,7 +202,8 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
       email: input.email,
     },
   });
-
+  // console.log('Existing pending participant:', existing);
+  // console.log('Input data:', input);
   if (existing) {
     // Actualizar
     return this.prisma.pendingProjectParticipant.update({

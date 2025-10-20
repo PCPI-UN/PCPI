@@ -7,6 +7,9 @@ service ProjectsService {
   rpc GetProject    (GetProjectRequest)      returns (ProjectResponse);
   rpc ListProjectsByEvent (ListProjectsByEventRequest) returns (ListProjectsResponse);
 
+  rpc CreateProjectWithPendingParticipants(CreateProjectWithParticipantsRequest)
+      returns (CreateProjectWithParticipantsResponse);
+
   // Documentos: gRPC no es ideal para binarios grandes → patrón de URL firmada
   // rpc IssueUploadUrl (IssueUploadUrlRequest) returns (IssueUploadUrlResponse);
   rpc AddProjectDocumentFromUrl (AddProjectDocumentFromUrlRequest) returns (ProjectDocumentResponse);
@@ -79,6 +82,14 @@ message PendingProjectParticipant {
   string joinedAt = 9;
   string createdAt = 10;
   string updatedAt = 11;
+}
+
+message PendingParticipantInput {
+  string firstName = 1;
+  optional string lastName = 2;
+  string email = 3;
+  optional int32 studentCode = 4;
+  string status = 5; // PENDING, INVITED, JOINED
 }
 
 /************** Requests/Responses **************/
@@ -160,6 +171,21 @@ message AddPendingParticipantResponse {
 
 message ListPendingParticipantsRequest {  int32 projectId = 1; }
 message ListPendingParticipantsResponse {  repeated PendingProjectParticipant items = 1;}
+
+message CreateProjectWithParticipantsRequest {
+  int32 eventId = 1;
+  string name = 2;
+  optional string description = 3;
+  optional string eventNumber = 4;
+  int32 courseId = 5;
+  ProjectState state = 6;
+  repeated PendingParticipantInput participants = 7;
+}
+
+message CreateProjectWithParticipantsResponse {
+  Project project = 1;
+  repeated PendingProjectParticipant participants = 2;
+}
 
 message DeleteProjectRequest { int32 id = 1; }
 message DeleteProjectResponse { bool ok = 1; }

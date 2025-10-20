@@ -166,4 +166,41 @@ async listPendingParticipantsRpc(req: { projectId: number }) {
   const pendingParticipants = await this.listPendingParticipantsUC.execute({ projectId: req.projectId }); 
   return { items: pendingParticipants.map(toProtoPendingParticipant) };
 }
+
+@GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
+async createProjectWithPendingParticipantsRpc(req: any) {
+  // console.log('Received CreateProjectWithPendingParticipants request:', req);
+  try {
+    
+    const project = await this.createProject.execute({
+      eventId: req.eventId,
+      courseId: req.courseId,                
+      name: req.name,
+      description: req.description,
+      eventNumber: req.eventNumber,
+      state: protoToState(req.state),         
+    });
+    console.log('Project created with ID:', project.id);
+    const pendingParticipants = [];
+    console.log('Processing pending participants:', req.participants);
+    if (req.participants && req.participants.length > 0) {
+      for (const p of req.participants) {
+        const pendingParticipant = await this.addPendingParticipantUC.execute({
+          projectId: project.id,
+          firstName: p.firstName,
+          lastName: p.lastName ?? undefined,
+          email: p.email,
+          studentCode: p.studentCode ?? undefined,
+          status: protoToStatus(p.status),
+        });
+        pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
+      }
+    }
+    return { project: toProtoProject(project), participants: pendingParticipants };
+  } catch (err) {
+  console.error('❌ Error creating project with pending participants:', err);
+  throw err; // vuelve a lanzar el error original (para que NestJS lo registre bien)
+}
+
+}
 }
