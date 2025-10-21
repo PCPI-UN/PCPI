@@ -8,10 +8,7 @@ export class AssignPlatformRoleUseCase {
   async execute(
     userId: number,
     roleIds: number[],
-    tx?: Omit<
-      PrismaService,
-      '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'
-    >,
+    tx?: any,
   ): Promise<void> {
     const prisma = tx ?? this.prisma;
 
