@@ -7,6 +7,8 @@ export enum InvitationStatus {
   
   export enum InvitationTargetType {
     EVENT = 'EVENT',
+    PLATFORM = 'PLATFORM',
+    PROJECT = 'PROJECT',
   }
   
   export class Invitation {
@@ -19,7 +21,7 @@ export enum InvitationStatus {
       public status: InvitationStatus,
       public expiresAt: number, // Unix timestamp
       public invitedByUserId: number,
-      public invitedUserId?: number | null,
+      public invitedUserId: number,
       public createdAt?: Date,
       public updatedAt?: Date,
     ) {}

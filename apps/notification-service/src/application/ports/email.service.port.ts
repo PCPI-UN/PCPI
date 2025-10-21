@@ -1,7 +1,7 @@
 export interface SendEmailParams {
-  template: string;
-  templateParams: Record<string, unknown>;
-  to?: string;
+  to: string;
+  subject: string;
+  body: string;
 }
 
 export abstract class EmailServicePort {

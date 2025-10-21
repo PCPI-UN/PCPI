@@ -9,6 +9,7 @@ import { GetInvitationByTokenDto } from '../../application/dto/get-invitation-by
 import { AcceptInvitationDto } from '../../application/dto/accept-invitation.dto';
 import { RejectInvitationDto } from '../../application/dto/reject-invitation.dto';
 import { Invitation } from '../../domain/entities/invitation.entity';
+import { GetInvitationByTokenResponse } from '@app/common/generated/invitation';
 
 const INVITATION_SERVICE_NAME = 'InvitationService';
 
@@ -27,7 +28,9 @@ export class InvitationController {
   }
 
   @GrpcMethod(INVITATION_SERVICE_NAME, 'GetInvitationByToken')
-  async getInvitationByToken(request: GetInvitationByTokenDto): Promise<Invitation> {
+  async getInvitationByToken(
+    request: GetInvitationByTokenDto,
+  ): Promise<GetInvitationByTokenResponse> {
     return await this.getInvitationByTokenUseCase.execute(request);
   }
 

@@ -228,6 +228,8 @@ services:
     command: pnpm run start:dev notification-service
     env_file:
       - ./apps/notification-service/.env
+    networks:
+      - pcpi-network
     ports:
       - '50056:50056'
     volumes:
