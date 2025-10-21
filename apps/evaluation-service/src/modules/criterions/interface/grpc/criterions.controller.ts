@@ -20,7 +20,7 @@ import {
   GetCriterionRequest,
   ListCriterionsRequest,
   DeleteCriterionRequest,
-} from '@app/common/generated/criterions';
+} from '@app/common/generated/evaluation';
 
 @Controller()
 export class CriterionsController {

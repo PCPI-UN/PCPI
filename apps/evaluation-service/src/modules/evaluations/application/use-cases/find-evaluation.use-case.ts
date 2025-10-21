@@ -1,6 +1,7 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { EvaluationRepositoryPort } from "@evaluations/domain/repositories/evaluation.repository.port";
 import { Evaluation } from "@evaluations/domain/entities/evaluation.entity";
+import { RpcException } from "@nestjs/microservices";
 
 @Injectable()
 export class FindByIdUseCase {
@@ -10,6 +11,14 @@ export class FindByIdUseCase {
     ) {}
 
     async execute(id: number): Promise<Evaluation | null> {
-        return this.evaluationRepository.findById(id);
+
+        const evaluation = await this.evaluationRepository.findById(id);
+        if (!evaluation) {
+            throw new RpcException({
+                code: 5, // 5 = NOT_FOUND in gRPC
+                message: 'Evaluation not found',
+            });
+        }
+        return evaluation;
     }
 }

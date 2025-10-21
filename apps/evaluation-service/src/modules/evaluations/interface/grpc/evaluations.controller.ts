@@ -66,7 +66,7 @@ export class EvaluationsController {
         const evaluations = await this.findEvaluationsByProjectUseCase.execute(request);
 
         const evaluationsWithScores = await Promise.all(
-            evaluations.map(async (evaluation) => {
+            evaluations.map(async (evaluation: { id: any; projectId: any; memberUserId: any; memberEventId: any; memberRoleId: any; grade: any; comments: any; date: any; }) => {
                 const scores = await this.evaluationRepository.findEvaluationDetails(evaluation.id);
                 return {
                     id: evaluation.id,
@@ -77,7 +77,7 @@ export class EvaluationsController {
                     grade: evaluation.grade,
                     comments: evaluation.comments,
                     date: evaluation.date.toISOString(),
-                    scores: scores.map(score => ({
+                    scores: scores.map((score: { evaluationId: any; criterionId: any; score: any; }) => ({
                         evaluationId: score.evaluationId,
                         criterionId: score.criterionId,
                         score: score.score,
@@ -96,7 +96,7 @@ export class EvaluationsController {
         const evaluations = await this.findEvaluationsByEvaluatorUseCase.execute(request);
 
         const evaluationsWithScores = await Promise.all(
-            evaluations.map(async (evaluation) => {
+            evaluations.map(async (evaluation: { id: any; projectId: any; memberUserId: any; memberEventId: any; memberRoleId: any; grade: any; comments: any; date: any; }) => {
                 const scores = await this.evaluationRepository.findEvaluationDetails(evaluation.id);
                 return {
                     id: evaluation.id,
@@ -107,7 +107,7 @@ export class EvaluationsController {
                     grade: evaluation.grade,
                     comments: evaluation.comments,
                     date: evaluation.date.toISOString(),
-                    scores: scores.map(score => ({
+                    scores: scores.map((score: { evaluationId: any; criterionId: any; score: any; }) => ({
                         evaluationId: score.evaluationId,
                         criterionId: score.criterionId,
                         score: score.score,

@@ -224,4 +224,8 @@ message ListCoursesByEventResponse {
   string nextPageToken = 2; // deja vacío por ahora
 }
 
+<<<<<<< HEAD
 message Empty {}
+=======
+message Empty {}
+>>>>>>> origin/dev
