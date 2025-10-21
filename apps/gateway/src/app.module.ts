@@ -5,6 +5,9 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { EvaluationsModule } from './modules/evaluations/evaluations.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -13,12 +16,18 @@ import { ConfigModule } from '@nestjs/config';
       envFilePath: './apps/gateway/.env',
     }),
     AuthModule,
+    UsersModule,
     EventsModule,
     ProjectsModule,
     EvaluationsModule,
     InvitationsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

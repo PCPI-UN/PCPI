@@ -16,6 +16,14 @@ RUN cd apps/evaluation-service && npx prisma generate
 RUN npm run proto:generate || echo "Proto generation failed - some proto files may be missing"
 RUN pnpm run build evaluation-service
 
+FROM base AS development
+
+WORKDIR /app
+
+USER root
+
+EXPOSE 50052
+
 FROM node:lts-alpine AS production
 
 WORKDIR /app

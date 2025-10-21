@@ -10,6 +10,7 @@ import { TokenServicePort } from '@auth/application/ports/token.service.port';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
 import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
+import { ValidateJwtUseCase } from '@auth/application/use-cases/validate-jwt.use-case';
 
 // Infrastructure Layer
 import { JwtServiceAdapter } from '@auth/infrastructure/jwt/jwt.service.adapter';
@@ -32,6 +33,7 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
     RefreshUseCase,
     SetPasswordUseCase,
     ValidateTokenUseCase,
+    ValidateJwtUseCase,
     {
       provide: TokenServicePort,
       useClass: JwtServiceAdapter,
