@@ -62,6 +62,9 @@ importers:
       passport-jwt:
         specifier: ^4.0.1
         version: 4.0.1
+      pnpm:
+        specifier: ^10.17.1
+        version: 10.17.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -3132,6 +3135,11 @@ packages:
   pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
+
+  pnpm@10.17.1:
+    resolution: {integrity: sha512-F8Vg/KSGeulHOjiZrYSogzSRTzeb5G1FXL+S5c9LOdNJhdRS0lg7rxmWf6dstcF7yeJFUp0LmHRXIapyAOyveg==}
+    engines: {node: '>=18.12'}
+    hasBin: true
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -7172,6 +7180,8 @@ snapshots:
       pathe: 2.0.3
 
   pluralize@8.0.0: {}
+
+  pnpm@10.17.1: {}
 
   prelude-ls@1.2.1: {}
 
