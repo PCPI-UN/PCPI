@@ -198,7 +198,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
       subject: 'Welcome to the Platform - Invitation',
       body: this.buildEmailBody(
         `Hi ${userName}`,
-        `You've been invited to join our platform!\n\n${roleText}.\n\nClick the link below to accept your invitation and set your password.`,
+        `You've been invited to join our platform!\n\n${roleText}.\n`,
         invitationLink,
       ),
     };
@@ -266,7 +266,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
       subject: 'Congratulations! Your Project Has Been Approved',
       body: this.buildEmailBody(
         `Hi ${userName}`,
-        `Congratulations! Your project "${project.name}" has been approved for the event "${event.name}"!\n\nYou are now invited to join the platform as a participant.\n\nClick the link below to accept your invitation and set your password.`,
+        `Congratulations! Your project "${project.name}" has been approved for the event "${event.name}"!\n\nYou are now invited to join the platform as a participant.\n`,
         invitationLink,
       ),
     };

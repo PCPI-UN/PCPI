@@ -19,7 +19,7 @@ export enum InvitationStatus {
       public targetType: InvitationTargetType,
       public targetId: number,
       public status: InvitationStatus,
-      public expiresAt: number, // Unix timestamp
+      public expiresAt: Date,
       public invitedByUserId: number,
       public invitedUserId: number,
       public createdAt?: Date,
@@ -27,7 +27,7 @@ export enum InvitationStatus {
     ) {}
   
     isExpired(): boolean {
-      return Date.now() > this.expiresAt * 1000;
+      return new Date() > this.expiresAt;
     }
   
     canBeAccepted(): boolean {
