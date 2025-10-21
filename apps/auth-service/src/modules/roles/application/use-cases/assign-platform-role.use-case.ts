@@ -23,6 +23,7 @@ export class AssignPlatformRoleUseCase {
 
     await prisma.platformStaff.createMany({
       data,
+      skipDuplicates: true,
     });
   }
 }

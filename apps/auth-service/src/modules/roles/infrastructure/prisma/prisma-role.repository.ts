@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@common/prisma/prisma.service';
 import { RoleRepositoryPort } from '@roles/domain/repositories/role.repository.port';
+import { Role } from '@roles/domain/entities/role.entity';
 
 @Injectable()
 export class PrismaRoleRepository implements RoleRepositoryPort {
@@ -14,5 +15,19 @@ export class PrismaRoleRepository implements RoleRepositoryPort {
         },
       },
     });
+  }
+
+  async findByIds(roleIds: number[]): Promise<Role[]> {
+    const roles = await this.prisma.role.findMany({
+      where: {
+        id: {
+          in: roleIds,
+        },
+      },
+    });
+
+    return roles.map(
+      (role) => new Role(role.id, role.name, role.description, role.scope),
+    );
   }
 }
