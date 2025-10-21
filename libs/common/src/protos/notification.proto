@@ -8,8 +8,8 @@ service NotificationService {
 
 message SendEmailRequest {
   string to = 1;
-  string template = 3; // e.g., "user-invitation", "password-reset"
-  map<string, string> context = 4; // Data to populate the template, e.g., {"name": "John", "link": "..."}
+  string subject = 2;
+  string body = 3; // HTML or plain text email body
 }
 
 message SendEmailResponse {

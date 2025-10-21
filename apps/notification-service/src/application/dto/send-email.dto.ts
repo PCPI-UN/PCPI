@@ -1,5 +1,5 @@
 import { SendEmailRequest } from '@app/common/generated/notification';
-import { IsEmail, IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class SendEmailDto implements SendEmailRequest {
   @IsEmail()
@@ -8,8 +8,9 @@ export class SendEmailDto implements SendEmailRequest {
 
   @IsString()
   @IsNotEmpty()
-  template: string;
+  subject: string;
 
-  @IsObject()
-  context: { [key: string]: string };
+  @IsString()
+  @IsNotEmpty()
+  body: string;
 }

@@ -21,23 +21,25 @@ export class EmailJsAdapter implements EmailServicePort, OnModuleInit {
   }
 
   async sendEmail(params: SendEmailParams): Promise<{ success: boolean }> {
-    this.logger.log('Sending email...', { params });
-    const { template, templateParams, to } = params;
+    this.logger.log('Sending email...', { to: params.to, subject: params.subject });
+    const { to, subject, body } = params;
 
-    const templateId = this.configService.get<string>(
-      `EMAILJS_TEMPLATE_${template.toUpperCase()}_ID`,
-    );
+    // Use a generic template ID from config
+    const templateId = this.configService.get<string>('EMAIL_TEMPLATE_ID');
 
     if (!templateId) {
-      throw new Error(`Template ID for template "${template}" not found.`);
+      throw new Error('EmailJS template ID not configured');
     }
 
-    templateParams.to = to;
     try {
       const response = await emailjs.send(
         this.serviceId,
         templateId,
-        templateParams,
+        {
+          to,
+          subject,
+          body,
+        },
       );
 
       if (response.status !== 200) {
