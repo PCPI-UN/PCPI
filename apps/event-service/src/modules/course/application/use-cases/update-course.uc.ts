@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CourseRepository } from '../ports/course.repository';
+import { CourseRepository } from '../../domain/repositories/course.repository';
 import { UpdateCourseDTO } from '../dto/update-course.dto';
 
 @Injectable()

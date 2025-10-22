@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { EventRepository } from '../../application/ports/event.repository';
+import { EventRepository } from '../../domain/repositories/event.repository';
 import { Event } from '../../domain/entities/event.entity';
 
 // 👇 Tipo auxiliar interno para crear eventos

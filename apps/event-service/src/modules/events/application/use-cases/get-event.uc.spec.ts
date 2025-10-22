@@ -1,5 +1,5 @@
 import { GetEventUC } from './get-event.uc';
-import { EventRepository } from '../ports/event.repository';
+import { EventRepository } from '../../domain/repositories/event.repository';
 import { GetEventDTO } from '../dto/get-event.dto';
 
 describe('GetEventUC', () => {

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { CourseRepository } from '../ports/course.repository';
+import { CourseRepository } from '../../domain/repositories/course.repository';
 import { ListCoursesByEventDTO } from '../dto/list-courses-by-event.dto';
 
 @Injectable()

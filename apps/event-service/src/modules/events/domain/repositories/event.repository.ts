@@ -1,4 +1,4 @@
-import { Event } from '../../domain/entities/event.entity';
+import { Event } from '../entities/event.entity';
 
 export interface EventRepository {
   create(input: {

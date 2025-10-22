@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { EventMemberRepository } from '../../application/ports/event-member.repository';
+import { EventMemberRepository } from '../../domain/repositories/event-member.repository';
 import { EventMember } from '../../domain/entities/event-member.entity';
 
 @Injectable()
