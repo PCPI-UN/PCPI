@@ -167,7 +167,6 @@ describe('CreateInvitationUseCase', () => {
         email: 'existing@example.com',
         targetType: InvitationTargetType.PLATFORM,
         targetId: 1,
-        expiresAt,
         invitedByUserId: 100,
         roleIds: [10],
       });
@@ -218,7 +217,6 @@ describe('CreateInvitationUseCase', () => {
         email: 'newuser@example.com',
         targetType: InvitationTargetType.PLATFORM,
         targetId: 1,
-        expiresAt,
         invitedByUserId: 100,
         roleIds: [10],
       });
@@ -263,7 +261,6 @@ describe('CreateInvitationUseCase', () => {
         email: 'john@example.com',
         targetType: InvitationTargetType.PLATFORM,
         targetId: 1,
-        expiresAt,
         invitedByUserId: 100,
         roleIds: [],
         firstName: 'John',
@@ -314,7 +311,6 @@ describe('CreateInvitationUseCase', () => {
         email: 'user@example.com',
         targetType: InvitationTargetType.PLATFORM,
         targetId: 1,
-        expiresAt,
         invitedByUserId: 100,
         roleIds: [10, 11],
       });
@@ -411,7 +407,6 @@ describe('CreateInvitationUseCase', () => {
         email: 'user@example.com',
         targetType: InvitationTargetType.EVENT,
         targetId: 5,
-        expiresAt,
         invitedByUserId: 100,
         roleIds: [20],
       });
@@ -466,7 +461,6 @@ describe('CreateInvitationUseCase', () => {
         email: 'user@example.com',
         targetType: InvitationTargetType.PROJECT,
         targetId: 10,
-        expiresAt,
         invitedByUserId: 100,
         roleIds: [],
       });
@@ -545,7 +539,6 @@ describe('CreateInvitationUseCase', () => {
         email: 'john.doe@example.com',
         targetType: InvitationTargetType.PLATFORM,
         targetId: 1,
-        expiresAt,
         invitedByUserId: 100,
         roleIds: [],
       });

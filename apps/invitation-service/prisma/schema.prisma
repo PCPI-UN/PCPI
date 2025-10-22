@@ -26,7 +26,7 @@ model Invitation {
   targetType      InvitationTargetType @map("target_type")
   targetId        Int                  @map("target_id")
   status          InvitationStatus
-  expiresAt       Int                  @map("expires_at")
+  expiresAt       DateTime             @map("expires_at") @db.Timestamp()
   invitedByUserId Int                  @map("invited_by_user_id")
   invitedUserId   Int                  @map("invited_user_id")
   createdAt       DateTime             @map("created_at") @default(now()) @db.Timestamp()

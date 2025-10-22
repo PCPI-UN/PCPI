@@ -82,7 +82,6 @@ export class AcceptInvitationUseCase implements OnModuleInit {
         break;
 
       case InvitationTargetType.EVENT:
-        // Add user as event member with assigned roles
         for (const roleId of roleIds) {
           await firstValueFrom(
             this.eventService.createEventMember({
@@ -95,8 +94,6 @@ export class AcceptInvitationUseCase implements OnModuleInit {
         break;
 
       case InvitationTargetType.PROJECT:
-        // TODO: Future implementation for project invitations
-        // This will involve calling event-service and project-service
         throw new RpcException({
           code: status.UNIMPLEMENTED,
           message: 'Project invitation acceptance is not yet implemented',

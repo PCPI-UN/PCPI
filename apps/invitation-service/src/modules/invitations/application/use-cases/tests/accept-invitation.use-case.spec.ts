@@ -117,6 +117,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       const roles = [
@@ -166,6 +168,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       const roles = [new InvitationRole('inv-123', 10)];
@@ -202,6 +206,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -242,6 +248,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       const roles = [
@@ -288,6 +296,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -336,6 +346,8 @@ describe('AcceptInvitationUseCase', () => {
         pastDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -364,6 +376,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -392,6 +406,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -420,6 +436,8 @@ describe('AcceptInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);

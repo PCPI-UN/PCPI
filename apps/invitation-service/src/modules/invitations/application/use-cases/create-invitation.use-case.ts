@@ -1,4 +1,5 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit,  } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ClientGrpc } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { randomUUID } from 'crypto';
@@ -42,6 +43,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
     @Inject(NOTIFICATION_SERVICE_NAME)
     private readonly notificationClient: ClientGrpc,
+    private readonly configService: ConfigService,
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
     @Inject(PROJECT_SERVICE_NAME) private readonly projectClient: ClientGrpc,
   ) {}
@@ -59,7 +61,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
       this.projectClient.getService<ProjectsServiceClient>(PROJECT_SERVICE_NAME);
   }
 
-  async execute(dto: CreateInvitationDto): Promise<Invitation> {
+  async execute(dto: CreateInvitationDto): Promise<{ invitation: Invitation; invitationRoles: InvitationRole[] }> {
     const { email, firstName, lastName, roleIds, ...rest } = dto;
 
     // Step 1: Get or create user
@@ -80,8 +82,16 @@ export class CreateInvitationUseCase implements OnModuleInit {
       }
     }
 
+
+    const expiresInSeconds = this.configService.get<number>(
+      'INVITATION_EXPIRATION_SECONDS',
+      2 * 24 * 60 * 60 // 2 days by default!
+    );
+
     // Step 2: Create invitation record
     const token = randomUUID();
+    const now = new Date();
+    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
     const invitation = new Invitation(
       randomUUID(),
       token,
@@ -89,20 +99,24 @@ export class CreateInvitationUseCase implements OnModuleInit {
       rest.targetType,
       rest.targetId,
       InvitationStatus.PENDING,
-      rest.expiresAt,
+      expiresAt,
       rest.invitedByUserId,
       user.id,
+      now,
+      now,
     );
 
     const savedInvitation = await this.invitationRepository.save(invitation);
 
     // Step 3: Save invitation roles
+    const savedInvitationRoles: InvitationRole[] = [];
     if (roleIds && roleIds.length > 0) {
       const invitationRoles = roleIds.map(
         (roleId) => new InvitationRole(savedInvitation.id, roleId),
       );
       for (const invitationRole of invitationRoles) {
-        await this.invitationRoleRepository.save(invitationRole);
+        const saved = await this.invitationRoleRepository.save(invitationRole);
+        savedInvitationRoles.push(saved);
       }
     }
 
@@ -124,7 +138,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
       }),
     );
 
-    return savedInvitation;
+    return { invitation: savedInvitation, invitationRoles: savedInvitationRoles };
   }
 
   /**

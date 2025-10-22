@@ -22,8 +22,8 @@ export enum InvitationStatus {
       public expiresAt: Date,
       public invitedByUserId: number,
       public invitedUserId: number,
-      public createdAt?: Date,
-      public updatedAt?: Date,
+      public readonly createdAt: Date,
+      public updatedAt: Date,
     ) {}
   
     isExpired(): boolean {
