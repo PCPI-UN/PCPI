@@ -237,4 +237,19 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
     })) as unknown as PendingProjectParticipant[];
   }
 
+  async markPendingsInvited(projectId: number, emails: string[], invitedAt: Date) {
+    if (!emails.length) return 0;
+    const res = await this.prisma.pendingProjectParticipant.updateMany({
+      where: {
+        projectId,
+        email: { in: emails.map(e => e.trim().toLowerCase()) },
+      },
+      data: {
+        status: 'INVITED',
+        invitedAt,
+      },
+    });
+    return res.count; // cuántos registros actualizó
+  }
+
 }

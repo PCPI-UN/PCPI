@@ -17,10 +17,13 @@ import { AddParticipantUC } from './application/use-cases/add-participant.uc';
 import { ListParticipantsUC } from './application/use-cases/list-participants.uc';
 import { AddPendingParticipantUC } from './application/use-cases/add-pending-participant.us';
 import { ListPendingParticipantsUC } from './application/use-cases/list-pending-participants.uc';
+import { InvitationClientModule } from './infrastructure/grpc-clients/invitation.module';
+import { InvitationGrpcAdapter } from './infrastructure/grpc-clients/invitation.grpc-adapter';
 
 
 @Module({
   controllers: [ProjectsController],
+  imports: [InvitationClientModule],
   providers: [
     PrismaService,
     { provide: 'ProjectRepository', useClass: PrismaProjectRepository },
@@ -29,7 +32,9 @@ import { ListPendingParticipantsUC } from './application/use-cases/list-pending-
     AddProjectDocumentUC,ListDocumentsUC,DeleteProjectUC,
     UpdateProjectUC, ApproveProjectUC,AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
-    ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC
+    ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,
+        
   ],
+  exports: [ApproveProjectUC],
 })
 export class ProjectsModule {}

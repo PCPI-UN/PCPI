@@ -53,4 +53,6 @@ export interface ProjectRepository {
   }): Promise<PendingProjectParticipant>;
   listPendingParticipants(projectId: number): Promise<PendingProjectParticipant[]>;
 
+   markPendingsInvited(projectId: number, emails: string[], invitedAt: Date): Promise<number>;
+
 }
