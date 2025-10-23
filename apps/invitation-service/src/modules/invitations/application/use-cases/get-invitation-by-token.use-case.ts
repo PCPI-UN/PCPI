@@ -4,6 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { firstValueFrom } from 'rxjs';
 import { GetInvitationByTokenDto } from '../dto/get-invitation-by-token.dto';
 import { InvitationRepositoryPort } from '../../domain/repositories/invitation.repository.port';
+import { InvitationRoleRepositoryPort } from '../../domain/repositories/invitation-role.repository.port';
 import {
   AUTH_SERVICE_NAME,
   AuthServiceClient,
@@ -16,6 +17,7 @@ export class GetInvitationByTokenUseCase implements OnModuleInit {
 
   constructor(
     private readonly invitationRepository: InvitationRepositoryPort,
+    private readonly invitationRoleRepository: InvitationRoleRepositoryPort,
     @Inject(AUTH_SERVICE_NAME) private readonly client: ClientGrpc,
   ) {}
 
@@ -47,11 +49,16 @@ export class GetInvitationByTokenUseCase implements OnModuleInit {
       this.authService.getUser({ id: invitation.invitedUserId }),
     );
 
+    // Fetch invitation roles
+    const invitationRoles = await this.invitationRoleRepository.findByInvitationId(invitation.id);
+    const roleIds = invitationRoles.map(ir => ir.roleId);
+
     return {
       email: user.email,
       userStatus: user.status,
       firstName: user.firstName,
       lastName: user.lastName,
+      roleIds,
     };
   }
 }

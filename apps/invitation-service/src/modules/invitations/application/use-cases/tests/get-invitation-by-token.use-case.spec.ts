@@ -89,6 +89,8 @@ describe('GetInvitationByTokenUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       const mockUser = {
@@ -132,6 +134,8 @@ describe('GetInvitationByTokenUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       const mockUser = {
@@ -191,6 +195,8 @@ describe('GetInvitationByTokenUseCase', () => {
         pastDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -221,6 +227,8 @@ describe('GetInvitationByTokenUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -251,6 +259,8 @@ describe('GetInvitationByTokenUseCase', () => {
         futureDate,
         100,
         null as any, // Missing invitedUserId
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);

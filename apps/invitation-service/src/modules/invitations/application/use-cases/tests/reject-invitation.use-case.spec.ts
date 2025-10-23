@@ -57,6 +57,8 @@ describe('RejectInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -104,6 +106,8 @@ describe('RejectInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -134,6 +138,8 @@ describe('RejectInvitationUseCase', () => {
         futureDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
@@ -164,6 +170,8 @@ describe('RejectInvitationUseCase', () => {
         pastDate,
         100,
         200,
+        new Date(),
+        new Date(),
       );
 
       invitationRepository.findByToken.mockResolvedValue(invitation);

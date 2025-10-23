@@ -1,5 +1,4 @@
-import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsArray, Min, IsString, IsDate } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsOptional, IsArray, Min, IsString } from 'class-validator';
 import { InvitationTargetType } from '../../domain/entities/invitation.entity';
 
 export class CreateInvitationDto {
@@ -14,10 +13,6 @@ export class CreateInvitationDto {
   @IsInt()
   @Min(1)
   targetId: number;
-
-  @IsDate()
-  @Type(() => Date)
-  expiresAt: Date;
 
   @IsInt()
   @Min(1)
