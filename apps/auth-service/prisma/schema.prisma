@@ -15,7 +15,7 @@ model User {
   lastName  String?  @map("last_name") @db.VarChar(100)
   email     String   @unique @db.VarChar(255)
   password  String   @db.VarChar(255)
-  phone     String?  @unique @db.VarChar(10)
+  phone     String?  @db.VarChar(10)
   active    Boolean  @default(true)
   status    UserStatus @default(PENDING)
   createdAt DateTime @map("created_at") @default(now()) @db.Timestamp()

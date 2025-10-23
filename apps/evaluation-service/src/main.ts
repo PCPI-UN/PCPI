@@ -9,10 +9,10 @@ async function bootstrap() {
     {
       transport: Transport.GRPC,
       options: {
-        package: 'criterions',
+        package: 'evaluation',
         protoPath: join(
           process.cwd(),
-          'libs/common/src/protos/criterions.proto',
+          'libs/common/src/protos/evaluation.proto',
         ),
         url: `${process.env.GRPC_HOST || '0.0.0.0'}:${
           process.env.GRPC_PORT || 50052

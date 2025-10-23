@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: pcpi
+spec:
+  selector:
+    app: gateway
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      nodePort: 30000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: pcpi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: pcpi/gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: NODE_ENV
+            - name: AUTH_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: AUTH_SERVICE_URL
+            - name: EVALUATION_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVALUATION_SERVICE_URL
+            - name: EVENT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVENT_SERVICE_URL
+            - name: INVITATION_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: INVITATION_SERVICE_URL
+            - name: PROJECT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: PROJECT_SERVICE_URL
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10

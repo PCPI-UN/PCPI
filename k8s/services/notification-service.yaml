@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: pcpi
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - port: 50056
+      targetPort: 50056
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: pcpi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: pcpi/notification-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50056
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: NODE_ENV
+            - name: EMAIL_PUBLIC_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EMAIL_PUBLIC_KEY
+            - name: EMAIL_PRIVATE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EMAIL_PRIVATE_KEY
+            - name: EMAILJS_TEMPLATE_PROJECT-CONFIRMATION_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EMAILJS_TEMPLATE_PROJECT-CONFIRMATION_ID
+          readinessProbe:
+            tcpSocket:
+              port: 50056
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 50056
+            initialDelaySeconds: 15
+            periodSeconds: 10

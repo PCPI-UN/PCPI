@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-service
+  namespace: pcpi
+spec:
+  selector:
+    app: event-service
+  ports:
+    - port: 50053
+      targetPort: 50053
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-service
+  namespace: pcpi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-service
+  template:
+    metadata:
+      labels:
+        app: event-service
+    spec:
+      containers:
+        - name: event-service
+          image: pcpi/event-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50053
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVENT_DATABASE_URL
+            - name: GRPC_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVENT_GRPC_HOST
+            - name: GRPC_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVENT_GRPC_PORT
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: NODE_ENV
+          readinessProbe:
+            tcpSocket:
+              port: 50053
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 50053
+            initialDelaySeconds: 15
+            periodSeconds: 10
