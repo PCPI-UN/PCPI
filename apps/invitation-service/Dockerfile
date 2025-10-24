@@ -12,6 +12,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+RUN mkdir -p libs/common/src/generated
 RUN cd apps/invitation-service && npx prisma generate
 RUN npm run proto:generate || echo "Proto generation failed - some proto files may be missing"
 RUN pnpm run build invitation-service
@@ -20,6 +21,7 @@ FROM base AS development
 
 WORKDIR /app
 
+# Ensure protoc is available (inherited from base)
 USER root
 
 EXPOSE 50054
