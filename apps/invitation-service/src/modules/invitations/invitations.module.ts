@@ -1,26 +1,111 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../common/prisma/prisma.module'; 
+import { PrismaModule } from '../../common/prisma/prisma.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { AUTH_SERVICE_NAME, protobufPackage } from '@app/common/generated/auth';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { join } from 'path';
+import {
+  NOTIFICATION_SERVICE_NAME,
+  protobufPackage as notificationProtobufPackage,
+} from '@app/common/generated/notification';
+import {
+  protobufPackage as eventProtobufPackage,
+} from '@app/common/generated/event';
+import {
+  protobufPackage as projectProtobufPackage,
+} from '@app/common/generated/project';
+
+export const EVENT_SERVICE_NAME = 'EventService';
+export const PROJECT_SERVICE_NAME = 'ProjectsService';
 
 
-// Application 
+// Application
 import { CreateInvitationUseCase } from './application/use-cases/create-invitation.use-case';
 import { GetInvitationByTokenUseCase } from './application/use-cases/get-invitation-by-token.use-case';
 import { AcceptInvitationUseCase } from './application/use-cases/accept-invitation.use-case';
 import { RejectInvitationUseCase } from './application/use-cases/reject-invitation.use-case';
 
-// Domain 
+// Domain
 import { InvitationRepositoryPort } from './domain/repositories/invitation.repository.port';
 import { InvitationRoleRepositoryPort } from './domain/repositories/invitation-role.repository.port';
 
-// Infrastructure 
+// Infrastructure
 import { PrismaInvitationRepository } from './infrastructure/prisma/prisma-invitation.repository';
 import { PrismaInvitationRoleRepository } from './infrastructure/prisma/prisma-invitation-role.repository';
 
-// Interface 
+// Interface
 import { InvitationController } from './interface/grpc/invitation.controller';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    ClientsModule.registerAsync([
+      {
+        name: AUTH_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: protobufPackage,
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/auth.proto',
+            ),
+            url: configService.get<string>('AUTH_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: NOTIFICATION_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: notificationProtobufPackage,
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/notification.proto',
+            ),
+            url: configService.get<string>('NOTIFICATION_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: EVENT_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: eventProtobufPackage,
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/event.proto',
+            ),
+            url: configService.get<string>('EVENT_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: PROJECT_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: projectProtobufPackage,
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/project.proto',
+            ),
+            url: configService.get<string>('PROJECT_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
+  ],
   controllers: [InvitationController],
   providers: [
     // Use Cases
@@ -28,7 +113,7 @@ import { InvitationController } from './interface/grpc/invitation.controller';
     GetInvitationByTokenUseCase,
     AcceptInvitationUseCase,
     RejectInvitationUseCase,
-    
+
     // Repository Implementations
     {
       provide: InvitationRepositoryPort,

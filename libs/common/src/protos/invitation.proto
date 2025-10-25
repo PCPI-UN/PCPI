@@ -7,7 +7,7 @@ service InvitationService {
   // Creates a new invitation
   rpc CreateInvitation (CreateInvitationRequest) returns (Invitation) {}
   // Gets an invitation by token
-  rpc GetInvitationByToken (GetInvitationByTokenRequest) returns (Invitation) {}
+  rpc GetInvitationByToken (GetInvitationByTokenRequest) returns (GetInvitationByTokenResponse) {}
   // Accepts an invitation
   rpc AcceptInvitation (AcceptInvitationRequest) returns (AcceptInvitationResponse) {}
   // Rejects an invitation
@@ -21,9 +21,10 @@ message CreateInvitationRequest {
   string email = 1;
   string targetType = 2;
   int32 targetId = 3;
-  int32 expiresAt = 4;
   int32 invitedByUserId = 5;
   repeated int32 roleIds = 6;
+  optional string firstName = 7;
+  optional string lastName = 8;
 }
 
 // The request message for getting an invitation by token
@@ -31,17 +32,26 @@ message GetInvitationByTokenRequest {
   string token = 1;
 }
 
+// The response message for getting an invitation by token
+message GetInvitationByTokenResponse {
+  string email = 1;
+  string userStatus = 2; // Will be "PENDING" or "CONFIRMED"
+  optional string firstName = 3;
+  optional string lastName = 4;
+  repeated int32 roleIds = 5;
+}
+
 // The request message for accepting an invitation
 message AcceptInvitationRequest {
   string token = 1;
   optional string password = 2; // For new users setting their password
+  optional string firstName = 3;
+  optional string lastName = 4;
 }
 
 // The response message for accepting an invitation
 message AcceptInvitationResponse {
   bool success = 1;
-  string accessToken = 2;
-  string refreshToken = 3;
 }
 
 // The request message for rejecting an invitation
@@ -54,18 +64,30 @@ message RejectInvitationResponse {
   bool success = 1;
 }
 
+enum InvitationStatus {
+  PENDING = 0;
+  EXPIRED = 1;
+  REJECTED = 2;
+  ACCEPTED = 3;
+}
+
+enum InvitationTargetType {
+  EVENT = 0;
+  PLATFORM = 1;
+  PROJECT = 2;
+}
+
 // The invitation message
 message Invitation {
   string id = 1;
   string token = 2;
   string email = 3;
-  string targetType = 4;
+  InvitationTargetType targetType = 4;
   int32 targetId = 5;
-  string status = 6;
-  int32 expiresAt = 7;
+  InvitationStatus status = 6;
+  string expiresAt = 7;
   int32 invitedByUserId = 8;
   int32 invitedUserId = 9;
-  string createdAt = 10;
-  string updatedAt = 11;
-  repeated int32 roleIds = 12;
+  repeated int32 roleIds = 10;
+  string createdAt = 11;
 }

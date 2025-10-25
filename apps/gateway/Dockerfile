@@ -2,6 +2,9 @@ FROM node:lts-alpine AS base
 
 WORKDIR /app
 
+# Install protoc (Protocol Buffers compiler)
+RUN apk add --no-cache protobuf-dev
+
 RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
@@ -9,6 +12,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+RUN mkdir -p libs/common/src/generated
 RUN npm run proto:generate || echo "Proto generation failed - some proto files may be missing"
 RUN pnpm run build gateway
 
@@ -16,6 +20,7 @@ FROM base AS development
 
 WORKDIR /app
 
+# Ensure protoc is available (inherited from base)
 USER root
 
 EXPOSE 3000

@@ -2,38 +2,37 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from '../auth.service';
-import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
+    const publicKey =  configService.get<string>('JWT_PUBLIC_KEY', '')
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: true,
-      secretOrKey: 'this-is-not-used',
-      passReqToCallback: true,
+      ignoreExpiration: false,
+      secretOrKey: publicKey,
+      algorithms: ['RS256'],
     });
   }
 
-  async validate(req: Request, payload: any) {
-    const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-    if (!token) {
-      throw new UnauthorizedException();
+  async validate(payload: any) {
+    if (!payload.sub) {
+      throw new UnauthorizedException('Invalid token payload');
     }
 
     try {
-      const { valid, userId } = await this.authService.validateJwt(token);
-
-      if (!valid) {
-        throw new UnauthorizedException();
-      }
-      const user = await this.authService.getUser(userId);
+      const user = await this.authService.getUser(payload.sub);
       if (!user) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('User not found');
       }
       return user;
     } catch (e) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Failed to validate user');
     }
   }
 }
