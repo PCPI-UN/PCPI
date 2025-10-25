@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../common/prisma/prisma.module';
+import { ProjectServiceModule } from '../../common/clients/project-service.module';
 import { EvaluationsController } from './interface/grpc/evaluations.controller';
 import { EvaluationPrismaRepository } from './infrastructure/prisma/evaluation.prisma.repository';
 import { CreateEvaluationUseCase } from './application/use-cases/create-evaluation.use-case';
@@ -9,7 +10,7 @@ import { FindEvaluationsByEvaluatorUseCase } from './application/use-cases/find-
 import { CheckEvaluationExistsUseCase } from './application/use-cases/check-evaluation-exists.use-case';
 
 @Module({
-    imports: [PrismaModule],
+    imports: [PrismaModule, ProjectServiceModule],
     controllers: [EvaluationsController],
     providers: [
         {

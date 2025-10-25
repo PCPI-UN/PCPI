@@ -1,0 +1,112 @@
+services:
+  # PostgreSQL Databases - no exposed ports (internal only)
+  auth-db:
+    # In production, consider using managed databases instead
+    # For now, ensure strong passwords via environment variables
+    environment:
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+
+  evaluation-db:
+    environment:
+      POSTGRES_PASSWORD: ${EVALUATION_DB_PASSWORD}
+
+  event-db:
+    environment:
+      POSTGRES_PASSWORD: ${EVENT_DB_PASSWORD}
+
+  invitation-db:
+    environment:
+      POSTGRES_PASSWORD: ${INVITATION_DB_PASSWORD}
+
+  project-db:
+    environment:
+      POSTGRES_PASSWORD: ${PROJECT_DB_PASSWORD}
+
+  # NestJS Services - Production mode
+  auth-service:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${AUTH_DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-3600}
+      # Add other required env vars
+    ports:
+      - "50051:50051"
+    restart: always
+
+  evaluation-service:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${EVALUATION_DATABASE_URL}
+      # Add other required env vars
+    ports:
+      - "50052:50052"
+    restart: always
+
+  event-service:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${EVENT_DATABASE_URL}
+      # Add other required env vars
+    ports:
+      - "50053:50053"
+    restart: always
+
+  invitation-service:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${INVITATION_DATABASE_URL}
+      # Add other required env vars
+    ports:
+      - "50054:50054"
+    restart: always
+
+  project-service:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${PROJECT_DATABASE_URL}
+      # Add other required env vars
+    ports:
+      - "50055:50055"
+    restart: always
+
+  gateway:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
+      - EVALUATION_SERVICE_URL=${EVALUATION_SERVICE_URL:-evaluation-service:50052}
+      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
+      - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service:50054}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
+      - JWT_SECRET=${JWT_SECRET}
+      # Add other required env vars
+    ports:
+      - "3000:3000"
+    restart: always
+
+  notification-service:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+      - EMAIL_SERVICE_ID=${EMAIL_SERVICE_ID}
+      - EMAIL_TEMPLATE_ID=${EMAIL_TEMPLATE_ID}
+      - EMAIL_PUBLIC_KEY=${EMAIL_PUBLIC_KEY}
+      - EMAIL_PRIVATE_KEY=${EMAIL_PRIVATE_KEY}
+      # Add other required env vars
+    ports:
+      - '50056:50056'
+    restart: always

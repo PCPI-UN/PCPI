@@ -30,6 +30,8 @@ export class InvitationMapper {
       expiresAt: invitation.expiresAt,
       invitedByUserId: invitation.invitedByUserId,
       invitedUserId: invitation.invitedUserId,
+      createdAt: invitation.createdAt,
+      updatedAt: invitation.updatedAt,
     };
   }
 }

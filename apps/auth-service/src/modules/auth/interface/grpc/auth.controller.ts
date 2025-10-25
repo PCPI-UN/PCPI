@@ -6,6 +6,7 @@ import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
 import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
+import { ValidateJwtUseCase } from '@auth/application/use-cases/validate-jwt.use-case';
 
 // Proto Responses types
 import {
@@ -32,6 +33,7 @@ export class AuthController {
     private readonly refreshUseCase: RefreshUseCase,
     private readonly setPasswordUseCase: SetPasswordUseCase,
     private readonly validateTokenUseCase: ValidateTokenUseCase,
+    private readonly validateJwtUseCase: ValidateJwtUseCase,
   ) {}
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Login')
@@ -58,7 +60,17 @@ export class AuthController {
   async validateToken(
     request: ValidateTokenDto,
   ): Promise<ValidateTokenResponse> {
-    const { valid, userId } = await this.validateTokenUseCase.execute(request.token);
+    const { valid, userId } = await this.validateTokenUseCase.execute(
+      request.token,
+    );
+    return AuthMapper.toValidateTokenResponse(valid, userId);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'ValidateJwt')
+  async validateJwt(request: ValidateTokenDto): Promise<ValidateTokenResponse> {
+    const { valid, userId } = await this.validateJwtUseCase.execute(
+      request.token,
+    );
     return AuthMapper.toValidateTokenResponse(valid, userId);
   }
 }

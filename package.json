@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "proto:generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true --ts_proto_opt=esModuleInterop=true ./libs/common/src/protos/*.proto",
+    "proto:generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true --ts_proto_opt=useDate=true --ts_proto_opt=esModuleInterop=true ./libs/common/src/protos/*.proto",
     "proto:generate:win": "for %f in (libs/common/src/protos/*.proto) do protoc -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true,esModuleInterop=true %f",
     "build": "nest build",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
@@ -22,6 +22,7 @@
     "test:e2e": "jest --config ./apps/gateway/test/jest-e2e.json"
   },
   "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
     "@grpc/grpc-js": "^1.14.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -35,6 +36,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
     "nest": "^0.1.6",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -53,9 +55,10 @@
     "@swc/core": "^1.10.7",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.9",
-    "@types/express": "^5.0.0",
+    "@types/express": "^5.0.3",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
+    "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -74,29 +77,5 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": ".",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "./coverage",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/apps/",
-      "<rootDir>/libs/"
-    ],
-    "moduleNameMapper": {
-      "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1"
-    }
   }
 }

@@ -15,6 +15,8 @@ enum InvitationStatus {
 }
 enum InvitationTargetType {
   EVENT
+  PLATFORM
+  PROJECT
 }
 
 model Invitation {
@@ -22,11 +24,11 @@ model Invitation {
   token           String               @unique@db.Text
   email           String               @db.VarChar(255)
   targetType      InvitationTargetType @map("target_type")
-  targetId        Int               @map("target_id")
+  targetId        Int                  @map("target_id")
   status          InvitationStatus
-  expiresAt       Int               @map("expires_at")
-  invitedByUserId Int               @map("invited_by_user_id")
-  invitedUserId         Int?         @map("invited_user_id")
+  expiresAt       DateTime             @map("expires_at") @db.Timestamp()
+  invitedByUserId Int                  @map("invited_by_user_id")
+  invitedUserId   Int                  @map("invited_user_id")
   createdAt       DateTime             @map("created_at") @default(now()) @db.Timestamp()
   updatedAt       DateTime             @map("updated_at") @updatedAt @db.Timestamp()
 

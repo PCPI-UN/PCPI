@@ -2,7 +2,13 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": false,
-    "outDir": "../../dist/apps/invitation-service"
+    "outDir": "../../dist/apps/invitation-service",
+    "baseUrl": "./",
+    "paths": {
+      "@invitations/*": ["src/modules/invitations/*"],
+      "@app/common": ["../../libs/common/src"],
+      "@app/common/*": ["../../libs/common/src/*"],
+    }
   },
   
   "include": ["src/**/*"],

@@ -8,7 +8,8 @@ import { CreateInvitationDto } from '../../application/dto/create-invitation.dto
 import { GetInvitationByTokenDto } from '../../application/dto/get-invitation-by-token.dto';
 import { AcceptInvitationDto } from '../../application/dto/accept-invitation.dto';
 import { RejectInvitationDto } from '../../application/dto/reject-invitation.dto';
-import { Invitation } from '../../domain/entities/invitation.entity';
+import { GetInvitationByTokenResponse, Invitation } from '@app/common/generated/invitation';
+import { InvitationMapper } from '../../application/mappers/invitation.mapper';
 
 const INVITATION_SERVICE_NAME = 'InvitationService';
 
@@ -23,11 +24,14 @@ export class InvitationController {
 
   @GrpcMethod(INVITATION_SERVICE_NAME, 'CreateInvitation')
   async createInvitation(request: CreateInvitationDto): Promise<Invitation> {
-    return await this.createInvitationUseCase.execute(request);
+    const { invitation, invitationRoles } = await this.createInvitationUseCase.execute(request);
+    return InvitationMapper.toProto(invitation, invitationRoles);;
   }
 
   @GrpcMethod(INVITATION_SERVICE_NAME, 'GetInvitationByToken')
-  async getInvitationByToken(request: GetInvitationByTokenDto): Promise<Invitation> {
+  async getInvitationByToken(
+    request: GetInvitationByTokenDto,
+  ): Promise<GetInvitationByTokenResponse> {
     return await this.getInvitationByTokenUseCase.execute(request);
   }
 

@@ -6,14 +6,17 @@ services:
     environment:
       POSTGRES_DB: auth_service
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-postgres}
     volumes:
       - auth_db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     networks:
       - pcpi-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_service"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   evaluation-db:
     image: postgres:16-alpine
@@ -21,14 +24,17 @@ services:
     environment:
       POSTGRES_DB: evaluation_service
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${EVALUATION_DB_PASSWORD:-postgres}
     volumes:
       - evaluation_db_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
     networks:
       - pcpi-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d evaluation_service"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   event-db:
     image: postgres:16-alpine
@@ -36,14 +42,17 @@ services:
     environment:
       POSTGRES_DB: event_service
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${EVENT_DB_PASSWORD:-postgres}
     volumes:
       - event_db_data:/var/lib/postgresql/data
-    ports:
-      - "5434:5432"
     networks:
       - pcpi-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d event_service"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   invitation-db:
     image: postgres:16-alpine
@@ -51,14 +60,17 @@ services:
     environment:
       POSTGRES_DB: invitation_service
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${INVITATION_DB_PASSWORD:-postgres}
     volumes:
       - invitation_db_data:/var/lib/postgresql/data
-    ports:
-      - "5435:5432"
     networks:
       - pcpi-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d invitation_service"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   project-db:
     image: postgres:16-alpine
@@ -66,14 +78,17 @@ services:
     environment:
       POSTGRES_DB: project_service
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${PROJECT_DB_PASSWORD:-postgres}
     volumes:
       - project_db_data:/var/lib/postgresql/data
-    ports:
-      - "5436:5432"
     networks:
       - pcpi-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d project_service"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   # NestJS Services
   auth-service:
@@ -81,105 +96,78 @@ services:
       context: .
       dockerfile: apps/auth-service/Dockerfile
     container_name: pcpi-auth-service
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@auth-db:5432/auth_service
-      GRPC_HOST: 0.0.0.0
-      GRPC_PORT: 50051
-      NODE_ENV: production
-    ports:
-      - "50051:50051"
     depends_on:
-      - auth-db
+      auth-db:
+        condition: service_healthy
     networks:
       - pcpi-network
-    restart: unless-stopped
-    volumes:
-      - ./apps/auth-service/prisma:/app/apps/auth-service/prisma
-    command: sh -c "cd apps/auth-service && npx prisma db push && cd /app && node dist/apps/auth-service/main"
 
   evaluation-service:
     build:
       context: .
       dockerfile: apps/evaluation-service/Dockerfile
     container_name: pcpi-evaluation-service
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@evaluation-db:5432/evaluation_service
-      GRPC_HOST: 0.0.0.0
-      GRPC_PORT: 50052
-      NODE_ENV: production
-    ports:
-      - "50052:50052"
     depends_on:
-      - evaluation-db
+      evaluation-db:
+        condition: service_healthy
     networks:
       - pcpi-network
-    restart: unless-stopped
-    volumes:
-      - ./apps/evaluation-service/prisma:/app/apps/evaluation-service/prisma
-    command: sh -c "cd apps/evaluation-service && npx prisma db push && cd /app && node dist/apps/evaluation-service/main"
 
   event-service:
     build:
       context: .
       dockerfile: apps/event-service/Dockerfile
     container_name: pcpi-event-service
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@event-db:5432/event_service
-      GRPC_HOST: 0.0.0.0
-      GRPC_PORT: 50053
-      NODE_ENV: production
-    ports:
-      - "50053:50053"
     depends_on:
-      - event-db
+      event-db:
+        condition: service_healthy
     networks:
       - pcpi-network
-    restart: unless-stopped
-    volumes:
-      - ./apps/event-service/prisma:/app/apps/event-service/prisma
-    command: sh -c "cd apps/event-service && npx prisma db push && cd /app && node dist/apps/event-service/main"
 
   invitation-service:
     build:
       context: .
       dockerfile: apps/invitation-service/Dockerfile
     container_name: pcpi-invitation-service
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@invitation-db:5432/invitation_service
-      GRPC_HOST: 0.0.0.0
-      GRPC_PORT: 50054
-      NODE_ENV: production
-    ports:
-      - "50054:50054"
     depends_on:
-      - invitation-db
+      invitation-db:
+        condition: service_healthy
     networks:
       - pcpi-network
-    restart: unless-stopped
-    volumes:
-      - ./apps/invitation-service/prisma:/app/apps/invitation-service/prisma
-    command: sh -c "cd apps/invitation-service && npx prisma db push && cd /app && node dist/apps/invitation-service/main"
 
   project-service:
     build:
       context: .
       dockerfile: apps/project-service/Dockerfile
     container_name: pcpi-project-service
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@project-db:5432/project_service
-      GRPC_HOST: 0.0.0.0
-      GRPC_PORT: 50055
-      NODE_ENV: production
-    ports:
-      - "50055:50055"
     depends_on:
-      - project-db
+      project-db:
+        condition: service_healthy
     networks:
       - pcpi-network
-    restart: unless-stopped
-    volumes:
-      - ./apps/project-service/prisma:/app/apps/project-service/prisma
-    command: sh -c "cd apps/project-service && npx prisma db push && cd /app && node dist/apps/project-service/main"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    container_name: pcpi-gateway
+    depends_on:
+      - auth-service
+      - evaluation-service
+      - event-service
+      - invitation-service
+      - project-service
+      - notification-service
+    networks:
+      - pcpi-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: ./apps/notification-service/Dockerfile
+    container_name: pcpi-notification-service
+    networks:
+      - pcpi-network
 
 networks:
   pcpi-network:

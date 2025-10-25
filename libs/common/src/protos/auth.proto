@@ -12,8 +12,10 @@ service AuthService {
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
   // Sets the password for a user account
   rpc SetPassword(SetPasswordRequest) returns (SetPasswordResponse) {}
-  // Validates a token
+  // Validates a one-time-use token (account setup, change password)
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
+  // Validates a JWT (access or refresh token)
+  rpc ValidateJwt(ValidateTokenRequest) returns (ValidateTokenResponse) {}
 
 
   // ---- USERS MODULE ----
@@ -21,13 +23,21 @@ service AuthService {
   rpc CreatePlatformUser (CreatePlatformUserRequest) returns (User) {}
   // Creates a basic user without roles, always inactive.
   rpc CreateBasicUser (CreateBasicUserRequest) returns (User) {}
+  // Activates a pending user by setting their password
+  rpc ActivateUser(ActivateUserRequest) returns (ActivateUserResponse);
   // Retrieves a user by their ID
   rpc GetUser (GetUserRequest) returns (User) {}
+  // Retrieves a user by their email
+  rpc GetUserByEmail (GetUserByEmailRequest) returns (User) {}
   rpc GetUsers (GetUsersRequest) returns (GetUsersResponse) {}
   rpc UpdateUser (UpdateUserRequest) returns (User) {}
   rpc DeactivateUser (DeactivateUserRequest) returns (DeactivateUserResponse) {}
 
   // ---- ROLES MODULE ----
+  // Assigns platform roles to a user
+  rpc AssignPlatformRoles(AssignPlatformRolesRequest) returns (AssignPlatformRolesResponse) {}
+  // Retrieves roles by their IDs
+  rpc GetRolesByIds(GetRolesByIdsRequest) returns (GetRolesByIdsResponse) {}
 
   // ---- PERMISSIONS MODULE ----
 
@@ -78,14 +88,23 @@ message ValidateTokenResponse {
   int32 userId = 2;
 }
 
+message ActivateUserRequest {
+  int32 userId = 1;
+  string password = 2;
+}
+
+message ActivateUserResponse {
+  bool success = 1;
+}
+
 // ---- USER MODULE REQUEST/RESPONSE ----
 
 // The request message for creating a new user with platform roles.
 message CreatePlatformUserRequest {
   string firstName = 1;
-  string lastName = 2;
+  optional string lastName = 2;
   string email = 3;
-  string phone = 4;
+  optional string phone = 4;
   repeated int32 roleIds = 5;
 }
 
@@ -103,9 +122,9 @@ message CreatePlatformUserResponse {
 // The request message for creating a basic user.
 message CreateBasicUserRequest {
   string firstName = 1;
-  string lastName = 2;
+  optional string lastName = 2;
   string email = 3;
-  string phone = 4;
+  optional string phone = 4;
 }
 
 // The response message containing the newly created basic user.
@@ -122,6 +141,11 @@ message CreateBasicUserResponse {
 // The request message for retrieving a user.
 message GetUserRequest {
   int32 id = 1;
+}
+
+// The request message for retrieving a user by email.
+message GetUserByEmailRequest {
+  string email = 1;
 }
 
 // The request message for retrieving a list of users.
@@ -160,9 +184,9 @@ message GetUserResponse {
 message User {
   int32 id = 1;
   string firstName = 2;
-  string lastName = 3;
+  optional string lastName = 3;
   string email = 4;
-  string phone = 5;
+  optional string phone = 5;
   bool active = 6;
   string status = 7;
 }
@@ -178,4 +202,35 @@ message PaginationMeta {
 message GetUsersResponse {
   repeated User users = 1;
   PaginationMeta meta = 2;
+}
+
+// ---- ROLES MODULE REQUEST/RESPONSE ----
+
+// The request message for assigning platform roles to a user.
+message AssignPlatformRolesRequest {
+  int32 userId = 1;
+  repeated int32 roleIds = 2;
+}
+
+// The response message for assigning platform roles.
+message AssignPlatformRolesResponse {
+  bool success = 1;
+}
+
+// The request message for retrieving roles by IDs.
+message GetRolesByIdsRequest {
+  repeated int32 roleIds = 1;
+}
+
+// The response message containing the roles.
+message GetRolesByIdsResponse {
+  repeated Role roles = 1;
+}
+
+// Role model
+message Role {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string scope = 4;
 }

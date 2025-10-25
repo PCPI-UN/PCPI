@@ -1,27 +1,56 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
-import { EventServiceModule } from './event-service.module';
+import * as fs from 'fs';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
+  // 🔹 1. Determinar ruta del proto
+  const protoPath = join(__dirname, '../../../libs/common/src/protos/event.proto');
+
+  // 🔹 2. Debugging: verificar existencia y contenido del proto
+  console.log('---------------------------------------------');
+  console.log('🧠 [DEBUG] gRPC service startup');
+  console.log('📄 Proto path being loaded:', protoPath);
+  console.log('📂 Exists?:', fs.existsSync(protoPath));
+
+  if (fs.existsSync(protoPath)) {
+    const protoContent = fs.readFileSync(protoPath, 'utf8');
+    const hasEventService = /service\s+EventService/.test(protoContent);
+    const hasListCourses = /rpc\s+ListCourses\s*\(/.test(protoContent);
+    const hasCreateCourse = /rpc\s+CreateCourse\s*\(/.test(protoContent);
+    const hasUpdateCourse = /rpc\s+UpdateCourse\s*\(/.test(protoContent);
+
+    console.log('🔍 Contains EventService?', hasEventService);
+    console.log('🔍 Contains CreateCourse?', hasCreateCourse);
+    console.log('🔍 Contains ListCourses?', hasListCourses);
+    console.log('🔍 Contains UpdateCourse?', hasUpdateCourse);
+    console.log('---------------------------------------------');
+  } else {
+    console.warn('⚠️  [WARN] Proto file not found. Check protoPath above.');
+  }
+
+  // 🔹 3. Crear microservicio
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    EventServiceModule,
+    AppModule,
     {
       transport: Transport.GRPC,
       options: {
-        package: 'event',
-        protoPath: join(
-          process.cwd(),
-          'libs/common/src/protos/event.proto',
-        ),
-        url: `${process.env.GRPC_HOST || '0.0.0.0'}:${process.env.GRPC_PORT || 50053
-          }`,
+        package: 'event', // Debe coincidir con "package event;" del proto
+        protoPath,
+        url: '0.0.0.0:50052',
       },
     },
   );
 
-  await app.listen();
-  console.log('🚀 Event service running on gRPC port 50052');
+  // 🔹 4. Registrar eventos de inicio
+  app.listen().then(() => {
+    console.log('🚀 Event service running on gRPC port 50052');
+    console.log('---------------------------------------------');
+    console.log('✅ [DEBUG] Microservice started successfully');
+    console.log('🛰️  Waiting for gRPC calls...');
+    console.log('---------------------------------------------');
+  });
 }
 
 bootstrap();

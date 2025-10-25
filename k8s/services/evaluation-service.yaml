@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: evaluation-service
+  namespace: pcpi
+spec:
+  selector:
+    app: evaluation-service
+  ports:
+    - port: 50052
+      targetPort: 50052
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evaluation-service
+  namespace: pcpi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: evaluation-service
+  template:
+    metadata:
+      labels:
+        app: evaluation-service
+    spec:
+      containers:
+        - name: evaluation-service
+          image: pcpi/evaluation-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50052
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVALUATION_DATABASE_URL
+            - name: GRPC_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVALUATION_GRPC_HOST
+            - name: GRPC_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: EVALUATION_GRPC_PORT
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: pcpi-config
+                  key: NODE_ENV
+          readinessProbe:
+            tcpSocket:
+              port: 50052
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 50052
+            initialDelaySeconds: 15
+            periodSeconds: 10

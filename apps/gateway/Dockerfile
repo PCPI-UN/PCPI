@@ -1,35 +1,51 @@
-# ---- Base ----
 FROM node:lts-alpine AS base
-WORKDIR /usr/src/app
+
+WORKDIR /app
+
+# Install protoc (Protocol Buffers compiler)
+RUN apk add --no-cache protobuf-dev
+
 RUN npm install -g pnpm
 
-# ---- Dependencies ----
-FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm fetch
+RUN pnpm install --frozen-lockfile
 
-# ---- Build ----
-FROM base AS build
-ARG APP_NAME=gateway
-COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
-RUN pnpm install -r --offline --frozen-lockfile
-RUN pnpm --filter ${APP_NAME} build
 
-# ---- Prune ----
-FROM base AS prune
-ARG APP_NAME=gateway
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/package.json ./package.json
-RUN pnpm install --prod --no-frozen-lockfile
+RUN mkdir -p libs/common/src/generated
+RUN npm run proto:generate || echo "Proto generation failed - some proto files may be missing"
+RUN pnpm run build gateway
 
-# ---- Final ----
-FROM node:lts-alpine AS final
-ARG APP_NAME=gateway
-USER node
-WORKDIR /home/node/app
-COPY --from=prune /usr/src/app/node_modules ./node_modules
-COPY --from=prune --chown=node:node /usr/src/app/dist/apps/${APP_NAME} ./
-COPY --from=prune --chown=node:node /usr/src/app/package.json ./
+FROM base AS development
+
+WORKDIR /app
+
+# Ensure protoc is available (inherited from base)
+USER root
+
 EXPOSE 3000
-CMD ["node", "main.js"]
+
+FROM node:lts-alpine AS production
+
+WORKDIR /app
+
+RUN npm install -g pnpm
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+COPY --from=base /app/dist ./dist
+COPY --from=base /app/libs ./libs
+COPY --from=base /app/node_modules/.pnpm ./node_modules/.pnpm
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nestjs -u 1001
+
+# Change ownership to non-root user
+RUN chown -R nestjs:nodejs /app
+USER nestjs
+
+EXPOSE 3000
+
+CMD ["node", "dist/apps/gateway/main"]
