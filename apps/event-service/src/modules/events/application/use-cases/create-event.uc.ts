@@ -1,27 +1,32 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { EventRepository } from '../../domain/repositories/event.repository';
-import { CreateEventDTO } from '../dto/create-event.dto';
+import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 
 @Injectable()
 export class CreateEventUC {
-  constructor(@Inject('EventRepository') private readonly repo: EventRepository) {}
+  constructor(
+    @Inject('EventRepository') private readonly repo: any, // ✅ Debe coincidir con el token STRING
+  ) {}
 
-  async execute(input: CreateEventDTO) {
-    if (!input.name?.trim()) throw new Error('Name is required');
+  async execute(input: any) {
+    if (!input.name?.trim()) throw new Error('Event name is required');
 
-    const event = await this.repo.create({
-      organizationId: input.organizationId, // si lo manejas en el DTO
+    
+
+    const role = input.role ?? 'ADMIN';
+    console.log("el rol es:",role)
+    if (role !== 'ADMIN') throw new ForbiddenException('User not allowed to create events');
+
+    return this.repo.create({
+      organizationId: input.organizationId,
       name: input.name,
       description: input.description,
       accessCode: input.accessCode,
       isPubliclyJoinable: input.isPubliclyJoinable ?? false,
-      inscriptionDeadline: new Date(input.inscriptionDeadline), // ✅ conversión
+      inscriptionDeadline: new Date(input.inscriptionDeadline),
       evaluationsOpened: input.evaluationsOpened ?? false,
-      startDate: new Date(input.startDate), // ✅ conversión
-      endDate: new Date(input.endDate),     // ✅ conversión
-      active: true, // default en schema, pero puedes fijarlo explícitamente
+      startDate: new Date(input.startDate),
+      endDate: new Date(input.endDate),
+      active: true,
+      createdByUserId: input.createdByUserId ?? 1,
     });
-
-    return event;
   }
 }

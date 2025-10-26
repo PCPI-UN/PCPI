@@ -12,7 +12,10 @@ import { DeleteEventUC } from './application/use-cases/delete-event.uc';
   controllers: [EventsController],
   providers: [
     PrismaService,
-    { provide: 'EventRepository', useClass: PrismaEventRepository },
+    {
+      provide: 'EventRepository', // 👈 token STRING
+      useClass: PrismaEventRepository, // 👈 clase concreta
+    },
     CreateEventUC,
     UpdateEventUC,
     GetEventUC,

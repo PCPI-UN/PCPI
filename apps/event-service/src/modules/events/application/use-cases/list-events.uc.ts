@@ -1,20 +1,35 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { EventRepository } from '../../domain/repositories/event.repository';
-import { ListEventsDTO } from '../dto/list-events.dto';
+import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ListEventsUC {
-  constructor(@Inject('EventRepository') private readonly repo: EventRepository) {}
+  constructor(
+    @Inject('EventRepository') private readonly repo: any,
+  ) {}
 
-  async execute(input: ListEventsDTO) {
+  async execute(input: any) {
     const page = input.page && input.page > 0 ? input.page : 1;
     const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 20;
 
-    return this.repo.list({
-      q: input.q,
+    // 🔹 usa findAll (no list)
+    const allEvents = await this.repo.findAll();
+
+    // 🔹 aplica paginación y búsqueda si quieres
+    const filtered = input.q
+  ? allEvents.filter((e: any) =>
+      e.name.toLowerCase().includes(input.q.toLowerCase()) ||
+      e.description?.toLowerCase().includes(input.q.toLowerCase()),
+    )
+  : allEvents;
+
+
+    const start = (page - 1) * pageSize;
+    const paged = filtered.slice(start, start + pageSize);
+
+    return {
+      total: filtered.length,
       page,
       pageSize,
-      onlyActive: input.onlyActive,
-    });
+      data: paged,
+    };
   }
 }

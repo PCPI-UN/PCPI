@@ -86,6 +86,7 @@ message ValidateTokenRequest {
 message ValidateTokenResponse {
   bool valid = 1;
   int32 userId = 2;
+  repeated string roles = 3;
 }
 
 message ActivateUserRequest {

@@ -45,15 +45,17 @@ message Course {
 // =====================
 
 message CreateEventRequest {
-  string name = 1;
-  string description = 2;
+  int32 organizationId = 1;
+  string name = 2;
   string accessCode = 3;
   bool isPubliclyJoinable = 4;
   string inscriptionDeadline = 5;
   bool evaluationsOpened = 6;
   string startDate = 7;
   string endDate = 8;
-}
+  string description = 9;
+} 
+
 
 message CreateEventResponse {
   bool ok = 1;

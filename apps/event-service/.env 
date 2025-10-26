@@ -1,0 +1,4 @@
+DATABASE_URL=postgresql://postgres:postgres@event-db:5432/event_service
+GRPC_HOST=0.0.0.0
+GRPC_PORT=50053
+NODE_ENV=development
