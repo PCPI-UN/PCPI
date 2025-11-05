@@ -26,6 +26,7 @@ async function bootstrap() {
     console.log('🔍 Contains ListCourses?', hasListCourses);
     console.log('🔍 Contains UpdateCourse?', hasUpdateCourse);
     console.log('---------------------------------------------');
+
   } else {
     console.warn('⚠️  [WARN] Proto file not found. Check protoPath above.');
   }
@@ -38,7 +39,9 @@ async function bootstrap() {
       options: {
         package: 'event', // Debe coincidir con "package event;" del proto
         protoPath,
-        url: '0.0.0.0:50052',
+        url: `${process.env.GRPC_HOST || '0.0.0.0'}:${
+          process.env.GRPC_PORT || 50053
+        }`,
       },
     },
   );
