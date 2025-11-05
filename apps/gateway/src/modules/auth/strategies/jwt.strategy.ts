@@ -10,7 +10,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
   ) {
-    const publicKey =  configService.get<string>('JWT_PUBLIC_KEY', '')
+    const publicKey = Buffer.from(
+      configService.get<string>('JWT_PUBLIC_KEY', ''),
+      'base64',
+    ).toString('ascii');
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -30,6 +33,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
+
       return user;
     } catch (e) {
       throw new UnauthorizedException('Failed to validate user');
