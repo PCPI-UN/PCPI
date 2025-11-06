@@ -1,30 +1,29 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
-import { InvitationGrpcAdapter } from './invitation.grpc-adapter';
 
 @Module({
   imports: [
     ClientsModule.register([
       {
-        name: 'INVITATION_CLIENT',
+        name: 'INVITATION_SERVICE',
         transport: Transport.GRPC,
         options: {
-          package: 'invitation', 
+          package: 'invitation',
           protoPath: join(process.cwd(), 'libs/common/src/protos/invitation.proto'),
-          url: process.env.INVITATION_GRPC_URL ?? 'localhost:50052',
+          url: 'invitation-service:50054',
           loader: {
-            keepCase: false,
+            keepCase: true,
             longs: String,
             enums: String,
             defaults: true,
             oneofs: true,
+            arrays: true,
           },
         },
       },
     ]),
   ],
-  providers: [InvitationGrpcAdapter],
-  exports: [InvitationGrpcAdapter],
+  exports: [ClientsModule],
 })
 export class InvitationClientModule {}

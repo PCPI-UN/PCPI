@@ -17,8 +17,8 @@ import { AddParticipantUC } from './application/use-cases/add-participant.uc';
 import { ListParticipantsUC } from './application/use-cases/list-participants.uc';
 import { AddPendingParticipantUC } from './application/use-cases/add-pending-participant.us';
 import { ListPendingParticipantsUC } from './application/use-cases/list-pending-participants.uc';
-import { InvitationClientModule } from './infrastructure/grpc-clients/invitation.module';
-import { InvitationGrpcAdapter } from './infrastructure/grpc-clients/invitation.grpc-adapter';
+import { InvitationClientModule } from './invitation-client.module';
+
 
 
 @Module({
