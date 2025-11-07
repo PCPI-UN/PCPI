@@ -1,19 +1,36 @@
 import { Event } from '../../domain/entities/event.entity';
+import { EventStatus as PbEventStatus } from 'libs/common/src/generated/event'; // <-- cambia este path
+import { EventStatus as DomainEventStatus } from '../../domain/events/event-status.enum';
+import { getEventStatus } from '../../domain/events/get-event-status.util';
 
-export const toProtoEvent = (e: Event) => ({
-  id: e.id,
-  name: e.name ?? '',
-  description: e.description ?? '',
-  accessCode: e.accessCode ?? '',
-  isPubliclyJoinable: e.isPubliclyJoinable ?? false,
-  inscriptionDeadline: e.inscriptionDeadline
-    ? e.inscriptionDeadline.toISOString()
-    : '',
-  evaluationsOpened: e.evaluationsOpened ?? false,
-  startDate: e.startDate ? e.startDate.toISOString() : '',
-  endDate: e.endDate ? e.endDate.toISOString() : '',
-  active: e.active ?? true,
-  createdAt: e.createdAt ? e.createdAt.toISOString() : '',
-  updatedAt: e.updatedAt ? e.updatedAt.toISOString() : '',
-  location: e.location ?? '',
-});
+const mapStatus = (s: DomainEventStatus): PbEventStatus => {
+  switch (s) {
+    case DomainEventStatus.UPCOMING:  return PbEventStatus.EVENT_STATUS_UPCOMING;
+    case DomainEventStatus.AVAILABLE: return PbEventStatus.EVENT_STATUS_AVAILABLE;
+    case DomainEventStatus.CLOSED:    return PbEventStatus.EVENT_STATUS_CLOSED;
+    default:                          return PbEventStatus.EVENT_STATUS_UNSPECIFIED;
+  }
+};
+
+export const toProtoEvent = (e: Event) => {
+  const domainStatus = getEventStatus(e.startDate, e.endDate);
+
+  return {
+    id: e.id,
+    name: e.name ?? '',
+    description: e.description ?? '',
+    accessCode: e.accessCode ?? '',
+    isPubliclyJoinable: e.isPubliclyJoinable ?? false,
+    inscriptionDeadline: e.inscriptionDeadline
+      ? e.inscriptionDeadline.toISOString()
+      : '',
+    evaluationsOpened: e.evaluationsOpened ?? false,
+    startDate: e.startDate ? e.startDate.toISOString() : '',
+    endDate: e.endDate ? e.endDate.toISOString() : '',
+    active: e.active ?? true,
+    createdAt: e.createdAt ? e.createdAt.toISOString() : '',
+    updatedAt: e.updatedAt ? e.updatedAt.toISOString() : '',
+    location: e.location ?? '',
+    status: mapStatus(domainStatus), // ✅ aquí colocamos el estado final
+  };
+};

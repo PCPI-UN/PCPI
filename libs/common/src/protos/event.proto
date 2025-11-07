@@ -100,7 +100,9 @@ message GetEventResponse {
   bool active = 10;
   string createdAt = 11;
   string updatedAt = 12;
-    string location = 13;
+  string location = 13;
+  EventStatus status = 17;
+
 
 
   // 👇 lista de cursos del evento
@@ -229,6 +231,13 @@ message ListCoursesByEventRequest {
 message ListCoursesByEventResponse {
   repeated Course courses = 1;
   string nextPageToken = 2; // deja vacío por ahora
+}
+
+enum EventStatus {
+  EVENT_STATUS_UNSPECIFIED = 0;
+  EVENT_STATUS_UPCOMING   = 1;  // PROXIMAMENTE
+  EVENT_STATUS_AVAILABLE  = 2;  // DISPONIBLE
+  EVENT_STATUS_CLOSED     = 3;  // CERRADO
 }
 
 message Empty {}
