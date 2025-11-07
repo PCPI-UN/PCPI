@@ -39,6 +39,7 @@ export class ApproveProjectUC implements OnModuleInit  {
     const pendings = await this.repo.listPendingParticipants(project.id!);
     const now = new Date();
     console.log('Pending participants to invite:', pendings);
+    
 
     
     for (const pending of pendings) {

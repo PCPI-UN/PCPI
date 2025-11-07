@@ -7,8 +7,9 @@ import { NotFoundError } from '../../domain/errors';
 export class AddProjectDocumentUC {
   constructor(@Inject('ProjectRepository') private repo: ProjectRepository) {}
   async execute(input: AddDocumentFromUrlDTO) {
+    console.log('Executing AddProjectDocumentUC with input:', input);
     const p = await this.repo.findById(input.projectId);
     if (!p) throw new NotFoundError('Project not found');
-    return this.repo.addDocument(input.projectId, input.url);
+    return this.repo.addDocument(input.projectId, input.url, input.type);
   }
 }

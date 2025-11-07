@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
-import { PendingProjectParticipant, Project } from '../../domain/entities/project.entity';
+import { PendingProjectParticipant, Project, TypedDocument } from '../../domain/entities/project.entity';
 import { ProjectDocument, ProjectState, JurorKey, ProjectParticipant } from '../../domain/entities/project.entity';
 
 
@@ -19,7 +19,7 @@ type AddPendingParticipantInput = {
   firstName: string;
   lastName?: string | null;
   email: string;
-  studentCode?: number | null;
+  studentCode: string;
   status: 'PENDING' | 'INVITED' | 'JOINED';
 };
 
@@ -112,10 +112,11 @@ export class PrismaProjectRepository implements ProjectRepository {
     await this.prisma.project.delete({ where: { id } });
   }
 
-  async addDocument(projectId: number, url: string): Promise<ProjectDocument> {
-    return this.prisma.projectDocument.create({
-      data: { projectId, url }, // camelCase
-    }) as unknown as ProjectDocument;
+  async addDocument(projectId: number, url: string, type: TypedDocument ): Promise<ProjectDocument> {
+    console.log(`Adding document to project ${projectId} with URL ${url} and type ${type}`);
+    return (await this.prisma.projectDocument.create({
+      data: { projectId, url, type },
+    })) as unknown as ProjectDocument;
   }
 
   async listDocuments(projectId: number): Promise<ProjectDocument[]> {
@@ -170,19 +171,19 @@ export class PrismaProjectRepository implements ProjectRepository {
     }));
   }
 
-  async addParticipant(input: { projectId: number; userId: number; studentCode?: number | null }): Promise<ProjectParticipant> {
+  async addParticipant(input: { projectId: number; userId: number; studentCode: string }): Promise<ProjectParticipant> {
   // Idempotente: si ya existe (PK compuesta), actualiza solo studentCode cuando venga
   return (await this.prisma.projectParticipant.upsert({
     where: {
       userId_projectId: { userId: input.userId, projectId: input.projectId }, // Prisma crea este where único por la PK compuesta
     },
     update: {
-      ...(input.studentCode !== undefined ? { studentCode: input.studentCode } : {}),
+      studentCode: input.studentCode,
     },
     create: {
       userId: input.userId,
       projectId: input.projectId,
-      studentCode: input.studentCode ?? null,
+      studentCode: input.studentCode,
     },
   })) as unknown as ProjectParticipant;
 }
@@ -211,7 +212,7 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
       data: {
         firstName: input.firstName,
         lastName: input.lastName ?? null,
-        studentCode: input.studentCode ?? null,
+        studentCode: input.studentCode,
         status: input.status,
       },
     });

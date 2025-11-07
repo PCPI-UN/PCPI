@@ -1,4 +1,4 @@
-import {JurorKey, Project, ProjectDocument, ProjectState, ProjectParticipant, StudentStatus, PendingProjectParticipant } from '../entities/project.entity';
+import {TypedDocument, JurorKey, Project, ProjectDocument, ProjectState, ProjectParticipant, StudentStatus, PendingProjectParticipant } from '../entities/project.entity';
 
 export interface ProjectRepository {
   create(input: {
@@ -32,7 +32,7 @@ export interface ProjectRepository {
 
   delete(id: number): Promise<void>;
 
-  addDocument(projectId: number, url: string): Promise<ProjectDocument>;
+  addDocument(projectId: number, url: string, type: TypedDocument ): Promise<ProjectDocument>;
 
   listDocuments(projectId: number): Promise<ProjectDocument[]>;
 
@@ -40,7 +40,7 @@ export interface ProjectRepository {
   removeAssignment(projectId: number, juror: JurorKey): Promise<boolean>; // true si borró algo
   listAssignments(projectId: number): Promise<JurorKey[]>; // opcional útil
 
-  addParticipant(input: { projectId: number; userId: number; studentCode?: number | null }): Promise<ProjectParticipant>;
+  addParticipant(input: { projectId: number; userId: number; studentCode: String}): Promise<ProjectParticipant>;
   listParticipants(projectId: number): Promise<ProjectParticipant[]>;
 
   addPendingParticipant(input: {
@@ -48,7 +48,7 @@ export interface ProjectRepository {
     firstName: string;
     lastName?: string | null;
     email: string;
-    studentCode?: number | null;
+    studentCode: string;
     status: StudentStatus;
   }): Promise<PendingProjectParticipant>;
   listPendingParticipants(projectId: number): Promise<PendingProjectParticipant[]>;

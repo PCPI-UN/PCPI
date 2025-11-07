@@ -6,7 +6,7 @@ import { GetProjectUC } from '../../application/use-cases/get-project.uc';
 import { AddProjectDocumentUC } from '../../application/use-cases/add-document.uc';
 import { ListDocumentsUC } from '../../application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
-import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant } from './mappers';
+import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument } from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
@@ -70,7 +70,8 @@ export class ProjectsController {
 
   @GrpcMethod('ProjectsService', 'AddProjectDocumentFromUrl')
   async addProjectDocumentFromUrl(req: any) {
-    const doc = await this.addDoc.execute({ projectId: req.projectId, url: req.url });
+    console.log('Adding document from URL:', req);
+    const doc = await this.addDoc.execute({ projectId: req.projectId, url: req.url, type: protoToTypedDocument(req.type) });
     return { document: toProtoDocument(doc) };
   }
 
@@ -182,7 +183,7 @@ async createProjectWithPendingParticipantsRpc(req: any) {
     });
     console.log('Project created with ID:', project.id);
     const pendingParticipants = [];
-    console.log('Processing pending participants:', req.participants);
+    //console.log('Processing pending participants:', req.participants);
     if (req.participants && req.participants.length > 0) {
       for (const p of req.participants) {
         const pendingParticipant = await this.addPendingParticipantUC.execute({
