@@ -253,4 +253,47 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
     return res.count; // cuántos registros actualizó
   }
 
+  async listAssignedToJuror(juror: JurorKey, opts?: { page?: number; pageSize?: number }
+  ): Promise<{ items: Project[]; total: number }> {
+    const page = opts?.page ?? 1;
+  const pageSize = opts?.pageSize ?? 10;
+
+  const skip = (page - 1) * pageSize;
+
+  const [items, total] = await Promise.all([
+    this.prisma.project.findMany({
+      where: {
+        jurorsAssigned: {
+          some: {
+            memberUserId: juror.memberUserId,
+            memberEventId: juror.memberEventId,
+            memberRoleId: juror.memberRoleId,
+          },
+        },
+      },
+      include: {
+        participants: true,
+        documents: true,
+        pendingParticipants: true,
+      },
+      skip,
+      take: pageSize,
+      orderBy: { id: 'asc' },
+    }),
+    this.prisma.project.count({
+      where: {
+        jurorsAssigned: {
+          some: {
+            memberUserId: juror.memberUserId,
+            memberEventId: juror.memberEventId,
+            memberRoleId: juror.memberRoleId,
+          },
+        },
+      },
+    }),
+  ]);
+
+  return { items, total };
+}
+
 }

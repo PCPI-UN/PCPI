@@ -26,6 +26,7 @@ service ProjectsService {
   rpc AssignJurorToProjects (AssignJurorToProjectsRequest) returns (AssignJurorToProjectsResponse); 
   rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
+  rpc ListAssignedProjects(ListAssignedProjectsRequest) returns (ListAssignedProjectsResponse);
 
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
 }
@@ -96,6 +97,11 @@ message PendingParticipantInput {
   string email = 3;
   string studentCode = 4;
   string status = 5; // PENDING, INVITED, JOINED
+}
+
+message ProjectDocumentInput {
+  string url = 1;
+  TypedDocument type = 2;
 }
 
 /************** Requests/Responses **************/
@@ -186,11 +192,26 @@ message CreateProjectWithParticipantsRequest {
   int32 courseId = 5;
   ProjectState state = 6;
   repeated PendingParticipantInput participants = 7;
+  repeated ProjectDocumentInput documents = 8;
 }
 
 message CreateProjectWithParticipantsResponse {
   Project project = 1;
   repeated PendingProjectParticipant participants = 2;
+  repeated ProjectDocument documents = 3;
+}
+
+message ListAssignedProjectsRequest {
+  JurorKey juror = 1;
+  int32 page = 2;             // número de página
+  int32 page_size = 3;        // cantidad de ítems por página
+}
+
+message ListAssignedProjectsResponse {
+  repeated Project items = 1; // proyectos asignados al jurado
+  int32 total = 2;            // total de proyectos
+  int32 page = 3;
+  int32 page_size = 4;
 }
 
 message DeleteProjectRequest { int32 id = 1; }

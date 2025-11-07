@@ -53,6 +53,9 @@ export interface ProjectRepository {
   }): Promise<PendingProjectParticipant>;
   listPendingParticipants(projectId: number): Promise<PendingProjectParticipant[]>;
 
-   markPendingsInvited(projectId: number, emails: string[], invitedAt: Date): Promise<number>;
+  markPendingsInvited(projectId: number, emails: string[], invitedAt: Date): Promise<number>;
+
+  listAssignedToJuror(juror: JurorKey,opts?: { page?: number; pageSize?: number }
+  ): Promise<{ items: Project[]; total: number }>;
 
 }

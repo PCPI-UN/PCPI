@@ -18,6 +18,7 @@ import { ListParticipantsUC } from './application/use-cases/list-participants.uc
 import { AddPendingParticipantUC } from './application/use-cases/add-pending-participant.us';
 import { ListPendingParticipantsUC } from './application/use-cases/list-pending-participants.uc';
 import { InvitationClientModule } from './invitation-client.module';
+import { ListProjectsAssignedToJurorUC } from './application/use-cases/list-projects-assigned-to-juror.uc';
 
 
 
@@ -33,6 +34,7 @@ import { InvitationClientModule } from './invitation-client.module';
     UpdateProjectUC, ApproveProjectUC,AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
     ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,
+    ListProjectsAssignedToJurorUC
         
   ],
   exports: [ApproveProjectUC],

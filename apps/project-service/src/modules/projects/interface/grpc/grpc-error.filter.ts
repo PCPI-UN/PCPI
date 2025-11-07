@@ -11,7 +11,7 @@ import { NotFoundError, ValidationError, ConflictError, ForbiddenError, Precondi
 @Catch()
 export class GrpcErrorFilter implements RpcExceptionFilter {
   catch(exception: any, _host: ArgumentsHost): Observable<never> {
-    // Si ya es RpcException, pásalo tal cual
+    
     if (exception instanceof RpcException) {
       return throwError(() => exception.getError());
     }
