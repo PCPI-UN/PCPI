@@ -19,7 +19,7 @@ export class CoursesController {
     private readonly deleteUC: DeleteCourseUseCase,
     private readonly listByEventUC: ListCoursesByEventUseCase,
   ) {}
-
+  //@RequirePermission('manage:courses')
   @GrpcMethod('EventService', 'CreateCourse')
   async createCourseRpc(req: any) {
     const c = await this.createUC.execute(req);

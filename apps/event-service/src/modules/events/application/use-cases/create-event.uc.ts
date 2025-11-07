@@ -25,6 +25,7 @@ export class CreateEventUC {
       evaluationsOpened: input.evaluationsOpened ?? false,
       startDate: new Date(input.startDate),
       endDate: new Date(input.endDate),
+      location: input.location ?? null, 
       active: true,
       createdByUserId: input.createdByUserId ?? 1,
     });

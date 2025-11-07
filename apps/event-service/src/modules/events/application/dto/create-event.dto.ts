@@ -11,6 +11,7 @@ export interface CreateEventDTO {
   endDate: string;             // ISO string
   createdByUserId?: number; 
   userId?: number;   
+  location?: string;
     // 👇 Simulación manual mientras no hay AuthService real
   
   

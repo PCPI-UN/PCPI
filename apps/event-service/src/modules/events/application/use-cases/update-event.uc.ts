@@ -24,6 +24,7 @@ export class UpdateEventUC {
     startDate: input.startDate ? new Date(input.startDate) : undefined,
     endDate: input.endDate ? new Date(input.endDate) : undefined,
     active: input.active,
+    location: input.location ?? null, 
   });
 }
 

@@ -13,5 +13,6 @@ export interface Event {
   createdAt: Date;
   updatedAt: Date;
   createdByUserId: number;
+  location?: string | null;
 }
 

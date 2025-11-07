@@ -15,4 +15,5 @@ export const toProtoEvent = (e: Event) => ({
   active: e.active ?? true,
   createdAt: e.createdAt ? e.createdAt.toISOString() : '',
   updatedAt: e.updatedAt ? e.updatedAt.toISOString() : '',
+  location: e.location ?? '',
 });

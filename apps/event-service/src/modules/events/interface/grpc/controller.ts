@@ -30,7 +30,7 @@ export class EventsController {
    
 
   
-
+    //@RequirePermission('manage:events')
     @GrpcMethod('EventService', 'CreateEvent')
 async createEvent(data: any) {
   try {
@@ -60,6 +60,7 @@ async createEvent(data: any) {
       evaluationsOpened: data.evaluationsOpened,
       startDate: data.startDate,
       endDate: data.endDate,
+      location: data.location,  
       createdByUserId: userId, // simulado
       userId, // opcional
     };
@@ -89,7 +90,7 @@ async createEvent(data: any) {
 
 
 
-
+ // @RequirePermission('update:events')
   @GrpcMethod('EventService', 'UpdateEvent')
   async updateEventRpc(req: any) {
   await this.updateUC.execute(req);
@@ -116,7 +117,7 @@ async getEventRpc(req: { id: number }) {
       nextPageToken: '', // opcional, si implementas paginación real
     };
   }
-
+  //@RequirePermission('delete:events')
   @GrpcMethod('EventService', 'DeleteEvent')
   async deleteEventRpc(req: { id: number }) {
     await this.deleteUC.execute(req);

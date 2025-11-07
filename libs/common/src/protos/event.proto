@@ -54,6 +54,7 @@ message CreateEventRequest {
   string startDate = 7;
   string endDate = 8;
   string description = 9;
+  string location = 10;
 } 
 
 
@@ -73,6 +74,8 @@ message UpdateEventRequest {
   string startDate = 8;
   string endDate = 9;
   bool active = 10;
+    string location = 11;
+
 }
 
 message UpdateEventResponse {
@@ -97,6 +100,8 @@ message GetEventResponse {
   bool active = 10;
   string createdAt = 11;
   string updatedAt = 12;
+    string location = 13;
+
 
   // 👇 lista de cursos del evento
   repeated Course courses = 20;
