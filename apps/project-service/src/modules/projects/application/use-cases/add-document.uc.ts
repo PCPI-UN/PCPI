@@ -9,6 +9,6 @@ export class AddProjectDocumentUC {
   async execute(input: AddDocumentFromUrlDTO) {
     const p = await this.repo.findById(input.projectId);
     if (!p) throw new NotFoundError('Project not found');
-    return this.repo.addDocument(input.projectId, input.url);
+    return this.repo.addDocument(input.projectId, input.url, input.type);
   }
 }

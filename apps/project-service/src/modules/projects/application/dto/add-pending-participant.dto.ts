@@ -5,6 +5,6 @@ export interface AddPendingParticipantDTO {
   firstName: string;
   lastName?: string | null;
   email: string;
-  studentCode?: number | null;
+  studentCode: string;
   status?: StudentStatus
 }

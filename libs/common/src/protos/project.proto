@@ -26,6 +26,7 @@ service ProjectsService {
   rpc AssignJurorToProjects (AssignJurorToProjectsRequest) returns (AssignJurorToProjectsResponse); 
   rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
+  rpc ListAssignedProjects(ListAssignedProjectsRequest) returns (ListAssignedProjectsResponse);
 
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
 }
@@ -35,6 +36,11 @@ enum ProjectState {
   UNDER_REVIEW = 1;
   APPROVED = 2;
   REJECTED = 3;
+}
+
+enum TypedDocument {
+  POSTER = 1;
+  SUPPORTING_DOCUMENT = 2;
 }
 
 /************** Messages **************/
@@ -60,14 +66,15 @@ message ProjectDocument {
   int32 id = 1;
   int32 projectId = 2;
   string url = 3;
-  string createdAt = 4;
-  string updatedAt = 5;
+  TypedDocument type = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
 }
 
 message ProjectParticipant {
   int32 userId = 1;
   int32 projectId = 2;
-  int32 studentCode = 3; 
+  string studentCode = 3; 
 }
 
 message PendingProjectParticipant {
@@ -76,7 +83,7 @@ message PendingProjectParticipant {
   string firstName = 3;
   string lastName = 4;
   string email = 5;
-  int32 studentCode = 6;
+  string studentCode = 6;
   string status = 7;
   string invitedAt = 8;
   string joinedAt = 9;
@@ -88,8 +95,13 @@ message PendingParticipantInput {
   string firstName = 1;
   optional string lastName = 2;
   string email = 3;
-  optional int32 studentCode = 4;
+  string studentCode = 4;
   string status = 5; // PENDING, INVITED, JOINED
+}
+
+message ProjectDocumentInput {
+  string url = 1;
+  TypedDocument type = 2;
 }
 
 /************** Requests/Responses **************/
@@ -145,7 +157,7 @@ message ListProjectJurorsResponse { repeated JurorKey jurors = 1; }
 message IssueUploadUrlRequest { int32 projectId = 1; string contentType = 2; }
 message IssueUploadUrlResponse { string uploadUrl = 1; string publicUrl = 2; }
 
-message AddProjectDocumentFromUrlRequest { int32 projectId = 1; string url = 2; }
+message AddProjectDocumentFromUrlRequest { int32 projectId = 1; string url = 2; TypedDocument type = 3; }
 message ProjectDocumentResponse { ProjectDocument document = 1; }
 
 message ListProjectDocumentsRequest { int32 projectId = 1; }
@@ -162,7 +174,7 @@ message AddPendingParticipantRequest {
   string firstName = 2;
   optional string lastName = 3;
   string email = 4;
-  optional int32 studentCode = 5;
+  string studentCode = 5;
   string status = 6;
 }
 message AddPendingParticipantResponse {
@@ -180,11 +192,26 @@ message CreateProjectWithParticipantsRequest {
   int32 courseId = 5;
   ProjectState state = 6;
   repeated PendingParticipantInput participants = 7;
+  repeated ProjectDocumentInput documents = 8;
 }
 
 message CreateProjectWithParticipantsResponse {
   Project project = 1;
   repeated PendingProjectParticipant participants = 2;
+  repeated ProjectDocument documents = 3;
+}
+
+message ListAssignedProjectsRequest {
+  JurorKey juror = 1;
+  int32 page = 2;             // número de página
+  int32 page_size = 3;        // cantidad de ítems por página
+}
+
+message ListAssignedProjectsResponse {
+  repeated Project items = 1; // proyectos asignados al jurado
+  int32 total = 2;            // total de proyectos
+  int32 page = 3;
+  int32 page_size = 4;
 }
 
 message DeleteProjectRequest { int32 id = 1; }

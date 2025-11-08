@@ -21,6 +21,8 @@ import { InvitationClientModule } from './invitation-client.module';
 import { EventServiceModule } from './event-service.module';
 import { EventServiceAdapter } from './infrastructure/grpc-client/event-service.adapter';
 import { EVENT_SERVICE_PORT } from './application/ports/event-service.port';
+import { ListProjectsAssignedToJurorUC } from './application/use-cases/list-projects-assigned-to-juror.uc';
+
 
 
 @Module({
@@ -40,6 +42,8 @@ import { EVENT_SERVICE_PORT } from './application/ports/event-service.port';
     UpdateProjectUC, ApproveProjectUC,AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
     ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,
+    ListProjectsAssignedToJurorUC
+        
   ],
   exports: [ApproveProjectUC, CreateProjectUC],
 })

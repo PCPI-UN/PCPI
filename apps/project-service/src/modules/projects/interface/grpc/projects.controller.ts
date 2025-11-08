@@ -6,7 +6,7 @@ import { GetProjectUC } from '../../application/use-cases/get-project.uc';
 import { AddProjectDocumentUC } from '../../application/use-cases/add-document.uc';
 import { ListDocumentsUC } from '../../application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
-import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant } from './mappers';
+import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument } from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
@@ -16,6 +16,7 @@ import { AddParticipantUC } from '../../application/use-cases/add-participant.uc
 import { ListParticipantsUC } from '../../application/use-cases/list-participants.uc';
 import { AddPendingParticipantUC } from '../../application/use-cases/add-pending-participant.us';
 import { ListPendingParticipantsUC } from '../../application/use-cases/list-pending-participants.uc';
+import { ListProjectsAssignedToJurorUC } from '../../application/use-cases/list-projects-assigned-to-juror.uc';
 
 @Controller()
 export class ProjectsController {
@@ -35,6 +36,7 @@ export class ProjectsController {
     private readonly listParticipantsUC: ListParticipantsUC,
     private readonly addPendingParticipantUC: AddPendingParticipantUC,
     private readonly listPendingParticipantsUC: ListPendingParticipantsUC,
+    private readonly listAssignedToJurorUC: ListProjectsAssignedToJurorUC,
     
 
   ) {}
@@ -70,7 +72,7 @@ export class ProjectsController {
 
   @GrpcMethod('ProjectsService', 'AddProjectDocumentFromUrl')
   async addProjectDocumentFromUrl(req: any) {
-    const doc = await this.addDoc.execute({ projectId: req.projectId, url: req.url });
+    const doc = await this.addDoc.execute({ projectId: req.projectId, url: req.url, type: protoToTypedDocument(req.type) });
     return { document: toProtoDocument(doc) };
   }
 
@@ -163,13 +165,14 @@ async addPendingParticipantRpc(req: any) {
 
 @GrpcMethod('ProjectsService', 'ListPendingParticipants')
 async listPendingParticipantsRpc(req: { projectId: number }) {
-  const pendingParticipants = await this.listPendingParticipantsUC.execute({ projectId: req.projectId }); 
-  return { items: pendingParticipants.map(toProtoPendingParticipant) };
+    const pendingParticipants = await this.listPendingParticipantsUC.execute({ projectId: req.projectId }); 
+    return { items: pendingParticipants.map(toProtoPendingParticipant) };
+  
 }
 
 @GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
 async createProjectWithPendingParticipantsRpc(req: any) {
-  // console.log('Received CreateProjectWithPendingParticipants request:', req);
+  //console.log('Received CreateProjectWithPendingParticipants request:', req);
   try {
     
     const project = await this.createProject.execute({
@@ -182,7 +185,7 @@ async createProjectWithPendingParticipantsRpc(req: any) {
     });
     console.log('Project created with ID:', project.id);
     const pendingParticipants = [];
-    console.log('Processing pending participants:', req.participants);
+    //console.log('Processing pending participants:', req.participants);
     if (req.participants && req.participants.length > 0) {
       for (const p of req.participants) {
         const pendingParticipant = await this.addPendingParticipantUC.execute({
@@ -190,17 +193,36 @@ async createProjectWithPendingParticipantsRpc(req: any) {
           firstName: p.firstName,
           lastName: p.lastName ?? undefined,
           email: p.email,
-          studentCode: p.studentCode ?? undefined,
+          studentCode: p.studentCode,
           status: protoToStatus(p.status),
         });
         pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
       }
     }
-    return { project: toProtoProject(project), participants: pendingParticipants };
+    // Manejo de documentos del proyecto
+    const projectDocuments = [];
+    if (req.documents && req.documents.length > 0) {
+      for (const d of req.documents) {
+        const document = await this.addDoc.execute({ projectId: project.id, url: d.url, type: protoToTypedDocument(d.type) });
+        projectDocuments.push(toProtoDocument(document));
+      }
+    }
+    return { project: toProtoProject(project), participants: pendingParticipants, documents: projectDocuments };
   } catch (err) {
-  console.error('❌ Error creating project with pending participants:', err);
+  console.error('❌ Error creating project with pending participants and documents:', err);
   throw err; // vuelve a lanzar el error original (para que NestJS lo registre bien)
 }
 
 }
+
+@GrpcMethod('ProjectsService', 'ListAssignedProjects')
+async listAssignedProjectsRpc(req: any) {
+  const res = await this.listAssignedToJurorUC.execute({
+    juror: protoToJurorKey(req.juror),
+    page: req.page,
+    pageSize: req.pageSize,
+  });
+  return { items: res.items.map(toProtoProject), total: res.total };
+}
+
 }
