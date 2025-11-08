@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from '../auth.service';
 import { ConfigService } from '@nestjs/config';
+import { AppUser } from '../types/app-user.type';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -23,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: any): Promise<AppUser> {
     if (!payload.sub) {
       throw new UnauthorizedException('Invalid token payload');
     }
@@ -33,7 +34,23 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
-      return user;
+
+      const permissionsResponse =
+        await this.authService.getUserPermissions(payload.sub);
+
+      const appUser: AppUser = {
+        id: user.id,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email,
+        phone: user.phone || '',
+        active: user.active,
+        status: user.status,
+        platformRoles: permissionsResponse.roles || [],
+        platformPermissions: permissionsResponse.permissions || [],
+      };
+
+      return appUser;
     } catch (e) {
       throw new UnauthorizedException('Failed to validate user');
     }

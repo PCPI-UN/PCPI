@@ -125,7 +125,6 @@ async execute(dto: SubmitUnauthenticatedProjectDto): Promise<Project> {
     });
   }
 
-  
   return project;
 }
 ```

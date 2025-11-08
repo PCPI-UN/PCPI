@@ -79,6 +79,7 @@ model Permission {
   updatedAt   DateTime  @map("updated_at") @updatedAt @db.Timestamp()
   roles       Role[]    @relation("role_permissions")
 
+  @@unique([action, resource], name: "action_resource")
   @@map("permissions")
 }
 

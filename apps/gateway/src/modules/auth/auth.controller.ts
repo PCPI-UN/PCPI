@@ -6,16 +6,28 @@ import {
   Get,
   UseGuards,
   Req,
+  Put,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { Public } from '../../common/decorators/public.decorator';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { Public } from '@common/decorators/public.decorator';
 import { AuthGuard } from '@nestjs/passport';
-import { GetUser } from '../../common/decorators/get-user.decorator';
+import { GetUser } from '@common/decorators/get-user.decorator';
 import { AppUser } from './types/app-user.type';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -25,6 +37,9 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @ApiOperation({ summary: 'Login to the system' })
+  @ApiResponse({ status: 200, description: 'Login successful, returns access token and sets refresh token in cookie' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -39,6 +54,9 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Logout from the system' })
+  @ApiResponse({ status: 200, description: 'Logout successful, clears refresh token cookie' })
   async logout(@Res({ passthrough: true }) response: Response) {
     response.clearCookie('refresh_token');
     return { message: 'Logged out successfully' };
@@ -47,6 +65,9 @@ export class AuthController {
   @Public()
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({ status: 200, description: 'Returns new access token' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(@Req() req: any) {
     const { refreshToken } = req.user;
     const { accessToken } = await this.authService.refresh(refreshToken);
@@ -54,7 +75,48 @@ export class AuthController {
   }
 
   @Get('me')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({ status: 200, description: 'Returns authenticated user profile with roles and permissions (platform-specific)' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token missing or invalid' })
   getProfile(@GetUser() user: AppUser) {
     return user;
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  @ApiResponse({ status: 200, description: 'Password reset email sent (if account exists)' })
+  @ApiResponse({ status: 400, description: 'Invalid email format' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password using token from email' })
+  @ApiResponse({ status: 200, description: 'Password reset successful' })
+  @ApiResponse({ status: 400, description: 'Invalid token or weak password' })
+  @ApiResponse({ status: 404, description: 'Token not found or expired' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
+  }
+
+  @Put('password')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Change password (authenticated users)' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully. All refresh tokens invalidated.' })
+  @ApiResponse({ status: 400, description: 'Weak password or validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - JWT token missing or invalid' })
+  @ApiResponse({ status: 403, description: 'Current password is incorrect' })
+  async changePassword(
+    @GetUser('id') userId: number,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      userId,
+      dto.oldPassword,
+      dto.newPassword,
+    );
   }
 }

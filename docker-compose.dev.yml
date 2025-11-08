@@ -39,7 +39,7 @@ services:
       - ./nest-cli.json:/app/nest-cli.json
       - ./tsconfig.build.json:/app/tsconfig.build.json
       - /app/node_modules
-    command: sh -c "pnpm install --frozen-lockfile --force && mkdir -p libs/common/src/generated && npm run proto:generate && pnpm exec prisma db push --schema=./apps/auth-service/prisma/schema.prisma --accept-data-loss && pnpm run start:dev auth-service"
+    command: sh -c "pnpm install --frozen-lockfile --force && mkdir -p libs/common/src/generated && npm run proto:generate && pnpm exec prisma generate --schema=./apps/auth-service/prisma/schema.prisma && pnpm exec prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma && pnpm exec prisma db seed && pnpm run start:dev auth-service"
 
   evaluation-service:
     build:
