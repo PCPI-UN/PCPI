@@ -32,7 +32,7 @@ export class ApproveProjectUC implements OnModuleInit  {
   async execute(input: { id: number; actingUserId: number }) {
     const project = await this.repo.findById(input.id);
     if (!project) throw new NotFoundError('Project not found');
-    console.log('Approving project:', project);
+    //console.log('Approving project:', project);
 
     if (project.state === 'APPROVED') {
       console.log('Project already approved:', project.id);
@@ -50,7 +50,7 @@ export class ApproveProjectUC implements OnModuleInit  {
 
     const pendings = await this.repo.listPendingParticipants(project.id!);
     const now = new Date();
-    console.log('Pending participants to invite:', pendings);
+    
 
 
     
@@ -64,8 +64,8 @@ export class ApproveProjectUC implements OnModuleInit  {
         firstName: pending.firstName,
         lastName: pending.lastName ?? '',
       });
-      console.log('Sending invitation to:', pending.email);
-      console.log('Invitation observable:', obs$);
+      //console.log('Sending invitation to:', pending.email);
+      //console.log('Invitation observable:', obs$);
 
       await lastValueFrom(obs$);
     }

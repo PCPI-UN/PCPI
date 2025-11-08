@@ -113,7 +113,7 @@ export class PrismaProjectRepository implements ProjectRepository {
   }
 
   async addDocument(projectId: number, url: string, type: TypedDocument ): Promise<ProjectDocument> {
-    console.log(`Adding document to project ${projectId} with URL ${url} and type ${type}`);
+    
     return (await this.prisma.projectDocument.create({
       data: { projectId, url, type },
     })) as unknown as ProjectDocument;

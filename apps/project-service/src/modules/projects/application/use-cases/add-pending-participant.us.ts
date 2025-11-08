@@ -8,12 +8,14 @@ export class AddPendingParticipantUC {
   constructor(@Inject('ProjectRepository') private readonly repo: ProjectRepository) {}
 
   async execute(input: AddPendingParticipantDTO) {
-
     if (!input.projectId || input.projectId <= 0) throw new ValidationError('Invalid projectId');
     // validar email básico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(input.email)) throw new ValidationError('Invalid email format');
-
+    // validar que hay studentCode
+    if (!input.studentCode || input.studentCode.trim().length === 0) {
+      throw new ValidationError('studentCode is required');
+    }
     const p = await this.repo.findById(input.projectId);
     if (!p) throw new NotFoundError('Project not found');
     

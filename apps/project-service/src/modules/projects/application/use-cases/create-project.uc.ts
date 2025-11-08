@@ -54,10 +54,9 @@ export class CreateProjectUC {
     if (registrationDeadline < currentDate) {
       throw new ValidationError('The event registration deadline has passed');
     }
-    console.log("Event: ", event);
+    
     //4. Verficar que el evento sea publicJoinable
     if (!event.isPubliclyJoinable) {
-      console.log("Event Joinable? ",event.isPubliclyJoinable);
       throw new ValidationError('The event is not public joinable');
     }
 
