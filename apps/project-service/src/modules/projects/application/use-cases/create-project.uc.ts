@@ -17,7 +17,6 @@ export class CreateProjectUC {
 
     // 1. validar evento
     const event = await this.eventService.getEventById(input.eventId);
-    console.log('Validated event from event-service:', event);
     if (!event) {
       throw new NotFoundError('El evento no existe en event-service');
     }
@@ -28,7 +27,6 @@ export class CreateProjectUC {
     // 2. si mandan courseId, validamos que exista y que pertenezca al evento
     if (input.courseId) {
       const course = await this.eventService.getCourseById(input.courseId);
-      console.log('Validated course from event-service:', course);
       if (!course) {
         throw new NotFoundError('El curso no existe en event-service');
       }
@@ -49,6 +47,20 @@ export class CreateProjectUC {
     if (existing) {
       throw new ValidationError('A project with the same name already exists for this event and course');
     }
+  
+    //3. Validar que la fecha límite de inscripción del evento no haya pasado
+    const currentDate = new Date();
+    const registrationDeadline = new Date(event.inscriptionDeadline);
+    if (registrationDeadline < currentDate) {
+      throw new ValidationError('The event registration deadline has passed');
+    }
+    console.log("Event: ", event);
+    //4. Verficar que el evento sea publicJoinable
+    if (!event.isPubliclyJoinable) {
+      console.log("Event Joinable? ",event.isPubliclyJoinable);
+      throw new ValidationError('The event is not public joinable');
+    }
+
     const state = input.state ?? 'UNDER_REVIEW';
     return this.repo.create({
       eventId: input.eventId,

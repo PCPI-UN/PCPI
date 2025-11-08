@@ -17,7 +17,7 @@ export class NotificateStudentUC {
     const lastName = input.lastName || '';
     
 
-    const subject = `IRIS | Notificación de proyecto creado`;
+    const subject = `IRIS | INSCRIPCIÓN DE PROYECTO`;
     const body = `Hola ${firstName} ${lastName},\n\n
     Tu proyecto ha sido creado y está en revisión. Está atent@ a la respuesta de Decanatura para la aprobación de tu proyecto.\n\n
     Saludos,\n
