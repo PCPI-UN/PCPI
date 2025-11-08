@@ -18,23 +18,29 @@ import { ListParticipantsUC } from './application/use-cases/list-participants.uc
 import { AddPendingParticipantUC } from './application/use-cases/add-pending-participant.us';
 import { ListPendingParticipantsUC } from './application/use-cases/list-pending-participants.uc';
 import { InvitationClientModule } from './invitation-client.module';
-
+import { EventServiceModule } from './event-service.module';
+import { EventServiceAdapter } from './infrastructure/grpc-client/event-service.adapter';
+import { EVENT_SERVICE_PORT } from './application/ports/event-service.port';
 
 
 @Module({
   controllers: [ProjectsController],
-  imports: [InvitationClientModule],
+  imports: [InvitationClientModule, EventServiceModule],
   providers: [
     PrismaService,
     { provide: 'ProjectRepository', useClass: PrismaProjectRepository },
 
-    CreateProjectUC,GetProjectUC,ListProjectsByEventUC,
+    CreateProjectUC,
+    {
+      provide: EVENT_SERVICE_PORT,
+      useExisting: EventServiceAdapter,
+    },
+    GetProjectUC,ListProjectsByEventUC,
     AddProjectDocumentUC,ListDocumentsUC,DeleteProjectUC,
     UpdateProjectUC, ApproveProjectUC,AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
     ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,
-        
   ],
-  exports: [ApproveProjectUC],
+  exports: [ApproveProjectUC, CreateProjectUC],
 })
 export class ProjectsModule {}

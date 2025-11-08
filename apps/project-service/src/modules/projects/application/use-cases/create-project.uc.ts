@@ -1,19 +1,46 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { CreateProjectDTO } from '../dto/create-project.dto';
-import { ValidationError } from '../../domain/errors';
+import { NotFoundError, ValidationError } from '../../domain/errors';
+import { EventServicePort } from '../ports/event-service.port';
+import { EVENT_SERVICE_PORT } from '../ports/event-service.port';
 
 @Injectable()
 export class CreateProjectUC {
-  constructor(@Inject('ProjectRepository') private readonly repo: ProjectRepository) {}
+  constructor(
+    @Inject('ProjectRepository') private readonly repo: ProjectRepository,
+    @Inject(EVENT_SERVICE_PORT)
+    private readonly eventService: EventServicePort
+) {}
 
   async execute(input: CreateProjectDTO) {
+
+    // 1. validar evento
+    const event = await this.eventService.getEventById(input.eventId);
+    console.log('Validated event from event-service:', event);
+    if (!event) {
+      throw new NotFoundError('El evento no existe en event-service');
+    }
+    if (event.active === false) {
+      throw new ValidationError('El evento está inactivo');
+    }
+
+    // 2. si mandan courseId, validamos que exista y que pertenezca al evento
+    if (input.courseId) {
+      const course = await this.eventService.getCourseById(input.courseId);
+      console.log('Validated course from event-service:', course);
+      if (!course) {
+        throw new NotFoundError('El curso no existe en event-service');
+      }
+      if (course.eventId !== input.eventId) {
+        throw new ValidationError('El curso no pertenece a ese evento');
+      }
+    }
+
     if (!input.name || input.name.trim().length === 0) {
       throw new ValidationError('Project name is required');
     }
-    if (!input.eventId || input.eventId <= 0) {
-      throw new ValidationError('Invalid eventId');
-    }
+
     if (!input.courseId || input.courseId <= 0) {
       throw new ValidationError('Invalid courseId');
     }

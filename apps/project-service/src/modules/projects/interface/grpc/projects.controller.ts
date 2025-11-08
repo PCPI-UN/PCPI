@@ -52,7 +52,7 @@ export class ProjectsController {
     });
     return { project: toProtoProject(project) };
     } catch (err) {
-        throw new Error('Error creating project: ' + err.message);
+        throw err;
     }
   }
 
