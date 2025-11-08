@@ -187,8 +187,12 @@ async createProjectWithPendingParticipantsRpc(req: any) {
     });
     console.log('Project created with ID:', project.id);
     const pendingParticipants = [];
-    //console.log('Processing pending participants:', req.participants);
+    
+      
+
+     
     if (req.participants && req.participants.length > 0) {
+      try {
       for (const p of req.participants) {
         const pendingParticipant = await this.addPendingParticipantUC.execute({
           projectId: project.id,
@@ -200,6 +204,12 @@ async createProjectWithPendingParticipantsRpc(req: any) {
         });
         pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
       }
+      } catch (error) {
+        // Si hay un error al agregar participantes, eliminamos el proyecto creado
+        console.error('❌ Error adding pending participants, deleting project:', error);
+        await this.deleteProjectUC.execute({ id: project.id! });
+      throw error;
+    }
       //notificamos al primer participante
       const firstParticipant = req.participants[0];
       await this.notificateStudentUC.execute({
