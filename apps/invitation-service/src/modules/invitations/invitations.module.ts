@@ -113,7 +113,6 @@ import { InvitationController } from './interface/grpc/invitation.controller';
     GetInvitationByTokenUseCase,
     AcceptInvitationUseCase,
     RejectInvitationUseCase,
-
     // Repository Implementations
     {
       provide: InvitationRepositoryPort,

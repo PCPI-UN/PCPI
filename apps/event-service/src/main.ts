@@ -26,7 +26,6 @@ async function bootstrap() {
     console.log('🔍 Contains ListCourses?', hasListCourses);
     console.log('🔍 Contains UpdateCourse?', hasUpdateCourse);
     console.log('---------------------------------------------');
-
   } else {
     console.warn('⚠️  [WARN] Proto file not found. Check protoPath above.');
   }
@@ -48,7 +47,7 @@ async function bootstrap() {
 
   // 🔹 4. Registrar eventos de inicio
   app.listen().then(() => {
-    console.log('🚀 Event service running on gRPC port 50052');
+    console.log('🚀 Event service running on gRPC port 50053');
     console.log('---------------------------------------------');
     console.log('✅ [DEBUG] Microservice started successfully');
     console.log('🛰️  Waiting for gRPC calls...');

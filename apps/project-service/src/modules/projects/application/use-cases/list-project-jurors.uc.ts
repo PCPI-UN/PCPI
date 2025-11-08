@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { ListProjectJurorsDTO } from '../dto/list-project-jurors.dto';
+import { NotFoundError } from '../../domain/errors';
 
 @Injectable()
 export class ListProjectJurorsUC {
@@ -8,7 +9,7 @@ export class ListProjectJurorsUC {
 
   async execute(input: ListProjectJurorsDTO) {
     const project = await this.repo.findById(input.projectId);
-    if (!project) throw new Error('Project not found');
+    if (!project) throw new NotFoundError('Project not found');
     return this.repo.listAssignments(input.projectId); // devuelve JurorKey[]
   }
 }
