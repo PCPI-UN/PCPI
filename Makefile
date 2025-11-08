@@ -8,41 +8,41 @@ help: ## Show this help message
 
 # Development targets
 dev-up: ## Start all services in development mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up
 
 dev-up-d: ## Start all services in development mode (detached)
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up -d
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up -d
 
 dev-down: ## Stop all development services
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml down
 
 dev-down-v: ## Stop all development services and remove volumes
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v
 
 dev-build: ## Build all development services
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml build
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml build
 
 dev-rebuild: ## Rebuild all development services (no cache)
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml build --no-cache
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml build --no-cache
 
 dev-logs: ## Show logs for all development services
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml logs -f
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml logs -f
 
 dev-restart: ## Restart all development services
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml restart
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml restart
 
 # Production targets
 prod-up: ## Start all services in production mode
-	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+	docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
 
 prod-down: ## Stop all production services
-	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml down
+	docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml down
 
 prod-build: ## Build all production services
-	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml build
+	docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml build
 
 prod-logs: ## Show logs for all production services
-	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml logs -f
+	docker-compose -f docker-compose.base.yml -f docker-compose.prod.yml logs -f
 
 # Utility targets
 proto-gen: ## Generate protobuf TypeScript files
@@ -50,31 +50,31 @@ proto-gen: ## Generate protobuf TypeScript files
 	npm run proto:generate
 
 clean: ## Clean up Docker resources
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v --remove-orphans
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v --remove-orphans
 	docker system prune -f
 
 clean-all: ## Clean up all Docker resources including images
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v --remove-orphans
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml down -v --remove-orphans
 	docker system prune -af
 
 # Individual service targets (development)
 gateway: ## Start only gateway in dev mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up gateway
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up gateway
 
 auth: ## Start only auth-service in dev mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up auth-service
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up auth-service
 
 eval: ## Start only evaluation-service in dev mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up evaluation-service
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up evaluation-service
 
 event: ## Start only event-service in dev mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up event-service
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up event-service
 
 invite: ## Start only invitation-service in dev mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up invitation-service
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up invitation-service
 
 project: ## Start only project-service in dev mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up project-service
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up project-service
 
 notify: ## Start only notification-service in dev mode
-	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up notification-service
+	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up notification-service
