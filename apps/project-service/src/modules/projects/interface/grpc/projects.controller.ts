@@ -17,6 +17,7 @@ import { ListParticipantsUC } from '../../application/use-cases/list-participant
 import { AddPendingParticipantUC } from '../../application/use-cases/add-pending-participant.us';
 import { ListPendingParticipantsUC } from '../../application/use-cases/list-pending-participants.uc';
 import { ListProjectsAssignedToJurorUC } from '../../application/use-cases/list-projects-assigned-to-juror.uc';
+import { NotificateStudentUC } from '../../application/use-cases/notificate-student.uc';
 
 @Controller()
 export class ProjectsController {
@@ -37,6 +38,7 @@ export class ProjectsController {
     private readonly addPendingParticipantUC: AddPendingParticipantUC,
     private readonly listPendingParticipantsUC: ListPendingParticipantsUC,
     private readonly listAssignedToJurorUC: ListProjectsAssignedToJurorUC,
+    private readonly notificateStudentUC: NotificateStudentUC,
     
 
   ) {}
@@ -198,7 +200,15 @@ async createProjectWithPendingParticipantsRpc(req: any) {
         });
         pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
       }
+      //notificamos al primer participante
+      const firstParticipant = req.participants[0];
+      await this.notificateStudentUC.execute({
+        firstName: firstParticipant.firstName,
+        lastName: firstParticipant.lastName ?? '',
+        email: firstParticipant.email,
+      });
     }
+
     // Manejo de documentos del proyecto
     const projectDocuments = [];
     if (req.documents && req.documents.length > 0) {

@@ -22,12 +22,15 @@ import { EventServiceModule } from './event-service.module';
 import { EventServiceAdapter } from './infrastructure/grpc-client/event-service.adapter';
 import { EVENT_SERVICE_PORT } from './application/ports/event-service.port';
 import { ListProjectsAssignedToJurorUC } from './application/use-cases/list-projects-assigned-to-juror.uc';
-
+import { NotificationServiceModule } from './notification-service.module';
+import { NOTIFICATION_SERVICE_PORT } from './application/ports/notification-service.port';
+import { NotificationServiceAdapter } from './infrastructure/grpc-client/notification-service.adapter';
+import { NotificateStudentUC } from './application/use-cases/notificate-student.uc';
 
 
 @Module({
   controllers: [ProjectsController],
-  imports: [InvitationClientModule, EventServiceModule],
+  imports: [InvitationClientModule, EventServiceModule, NotificationServiceModule],
   providers: [
     PrismaService,
     { provide: 'ProjectRepository', useClass: PrismaProjectRepository },
@@ -42,9 +45,13 @@ import { ListProjectsAssignedToJurorUC } from './application/use-cases/list-proj
     UpdateProjectUC, ApproveProjectUC,AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
     ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,
-    ListProjectsAssignedToJurorUC
-        
+    ListProjectsAssignedToJurorUC,
+    NotificateStudentUC,
+    {
+      provide: NOTIFICATION_SERVICE_PORT,
+      useExisting: NotificationServiceAdapter,
+    },
   ],
-  exports: [ApproveProjectUC, CreateProjectUC],
+  exports: [ApproveProjectUC, CreateProjectUC, NotificateStudentUC],
 })
 export class ProjectsModule {}

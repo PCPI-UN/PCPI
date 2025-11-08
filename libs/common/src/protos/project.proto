@@ -39,6 +39,7 @@ enum ProjectState {
 }
 
 enum TypedDocument {
+  DOC_UNSPECIFIED = 0;
   POSTER = 1;
   SUPPORTING_DOCUMENT = 2;
 }
@@ -163,7 +164,7 @@ message ProjectDocumentResponse { ProjectDocument document = 1; }
 message ListProjectDocumentsRequest { int32 projectId = 1; }
 message ListProjectDocumentsResponse { repeated ProjectDocument items = 1; }
 
-message AddParticipantRequest {  int32 projectId = 1;  int32 userId = 2;  optional int32 studentCode = 3;}
+message AddParticipantRequest {  int32 projectId = 1;  int32 userId = 2;  string studentCode = 3;}
 message AddParticipantResponse {  ProjectParticipant participant = 1; }
 
 message ListParticipantsRequest {  int32 projectId = 1; }
