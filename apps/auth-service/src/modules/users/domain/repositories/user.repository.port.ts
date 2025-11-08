@@ -8,6 +8,7 @@ export interface PaginatedUsersResult {
 
 export abstract class UserRepositoryPort {
   abstract save(user: User, tx?: TransactionClient): Promise<User>;
+  abstract createWithRoles(user: User, roleIds: number[]): Promise<User>;
   abstract findById(id: number): Promise<User | null>;
   abstract findAll(options?: {
     page: number;

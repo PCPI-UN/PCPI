@@ -2,10 +2,13 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '@common/prisma/prisma.module';
 import { RoleRepositoryPort } from '@roles/domain/repositories/role.repository.port';
 import { PrismaRoleRepository } from '@roles/infrastructure/prisma/prisma-role.repository';
+import { PlatformStaffRepositoryPort } from '@roles/domain/repositories/platform-staff.repository.port';
+import { PrismaPlatformStaffRepository } from '@roles/infrastructure/prisma/prisma-platform-staff.repository';
 import { ValidateRolesExistUseCase } from '@roles/application/use-cases/validate-roles-exist.use-case';
 import { AssignPlatformRoleUseCase } from '@roles/application/use-cases/assign-platform-role.use-case';
 import { AssignPlatformRolesPublicUseCase } from '@roles/application/use-cases/assign-platform-roles-public.use-case';
 import { GetRolesByIdsUseCase } from '@roles/application/use-cases/get-roles-by-ids.use-case';
+import { RemovePlatformRoleUseCase } from '@roles/application/use-cases/remove-platform-role.use-case';
 import { RolesController } from '@roles/interface/grpc/roles.controller';
 
 @Module({
@@ -16,9 +19,14 @@ import { RolesController } from '@roles/interface/grpc/roles.controller';
     AssignPlatformRoleUseCase,
     AssignPlatformRolesPublicUseCase,
     GetRolesByIdsUseCase,
+    RemovePlatformRoleUseCase,
     {
       provide: RoleRepositoryPort,
       useClass: PrismaRoleRepository,
+    },
+    {
+      provide: PlatformStaffRepositoryPort,
+      useClass: PrismaPlatformStaffRepository,
     },
   ],
   exports: [ValidateRolesExistUseCase, AssignPlatformRoleUseCase],

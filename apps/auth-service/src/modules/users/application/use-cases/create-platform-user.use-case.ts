@@ -7,9 +7,6 @@ import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { ValidateRolesExistUseCase } from '@roles/application/use-cases/validate-roles-exist.use-case';
-import { AssignPlatformRoleUseCase } from '@roles/application/use-cases/assign-platform-role.use-case';
-import { PrismaService } from '@common/prisma/prisma.service';
-import { TransactionClient } from '@common/prisma/types/transaction-client.type';
 
 @Injectable()
 export class CreatePlatformUserUseCase {
@@ -17,8 +14,6 @@ export class CreatePlatformUserUseCase {
     private readonly userRepository: UserRepositoryPort,
     private readonly passwordHasher: PasswordHasherPort,
     private readonly validateRolesExistUseCase: ValidateRolesExistUseCase,
-    private readonly assignPlatformRoleUseCase: AssignPlatformRoleUseCase,
-    private readonly prisma: PrismaService,
   ) {}
 
   async execute(createPlatformUserDto: CreatePlatformUserDto): Promise<User> {
@@ -56,16 +51,6 @@ export class CreatePlatformUserUseCase {
       phone,
     );
 
-    return this.prisma.$transaction(async (tx: TransactionClient) => {
-      const savedUser = await this.userRepository.save(newUser, tx);
-
-      await this.assignPlatformRoleUseCase.execute(
-        savedUser.id,
-        roleIds,
-        tx,
-      );
-
-      return savedUser;
-    });
+    return this.userRepository.createWithRoles(newUser, roleIds);
   }
 }
