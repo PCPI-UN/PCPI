@@ -2,7 +2,7 @@ import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { lastValueFrom } from 'rxjs';
 import { ClientGrpc } from '@nestjs/microservices';
-import { NotFoundError } from '../../domain/errors';
+import { NotFoundError, ValidationError } from '../../domain/errors';
 
 interface InvitationGrpcService {
   CreateInvitation(data: {
@@ -29,17 +29,29 @@ export class ApproveProjectUC implements OnModuleInit  {
       this.client.getService<InvitationGrpcService>('InvitationService');
   }
 
-  async execute(input: { id: number; actingUserId?: number }) {
+  async execute(input: { id: number; actingUserId: number }) {
     const project = await this.repo.findById(input.id);
     if (!project) throw new NotFoundError('Project not found');
     console.log('Approving project:', project);
+
+    if (project.state === 'APPROVED') {
+      console.log('Project already approved:', project.id);
+      return project;
+    }
+
+    if (project.state !== 'UNDER_REVIEW') {
+      throw new ValidationError(
+        `Project in invalid state for approval: ${project.state}`,
+      );
+    }
+
 
     const projecto = await this.repo.setProjectState(project.id!, 'APPROVED');
 
     const pendings = await this.repo.listPendingParticipants(project.id!);
     const now = new Date();
     console.log('Pending participants to invite:', pendings);
-    
+
 
     
     for (const pending of pendings) {

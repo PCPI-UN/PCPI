@@ -138,7 +138,7 @@ message UpdateProjectRequest {
   optional ProjectState state = 6;
 }
 
-message ApproveProjectRequest { int32 id = 1; }
+message ApproveProjectRequest { int32 id = 1; int32 actingUserId = 2; }
 
 message AssignJurorToProjectsRequest {JurorKey juror = 1;repeated int32 projectIds = 2;
   bool skipEventMismatch = 3; // si true, omite proyectos con event distinto

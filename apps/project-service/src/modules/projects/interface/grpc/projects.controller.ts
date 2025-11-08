@@ -105,8 +105,8 @@ export class ProjectsController {
   }
 
   @GrpcMethod('ProjectsService', 'ApproveProject')
-  async approveProjectRpc(req: { id: number }) {
-    const updated = await this.approveProjectUC.execute({ id: req.id });
+  async approveProjectRpc(req: { id: number, actingUserId: number }) {
+    const updated = await this.approveProjectUC.execute({ id: req.id, actingUserId: req.actingUserId });
     return { project: toProtoProject(updated) };
   }
 

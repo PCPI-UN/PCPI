@@ -16,10 +16,17 @@ export class AddParticipantUC {
     if (!p) throw new NotFoundError('Project not found');
 
     // Crea o actualiza (upsert) el participante
-    return this.repo.addParticipant({
+    const participant = await this.repo.addParticipant({
       projectId: input.projectId,
       userId: input.userId,
       studentCode: input.studentCode,
     });
+    await this.repo.markPendingJoined(
+      input.projectId,
+      input.studentCode,
+      new Date()
+    );
+
+    return participant;
   }
 }
