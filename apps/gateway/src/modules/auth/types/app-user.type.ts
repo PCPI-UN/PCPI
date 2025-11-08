@@ -1,3 +1,9 @@
+export interface PlatformRole {
+  id: number;
+  name: string;
+  scope: string;
+}
+
 export interface AppUser {
   id: number;
   firstName: string;
@@ -6,4 +12,6 @@ export interface AppUser {
   phone: string;
   active: boolean;
   status: string;
+  platformRoles: PlatformRole[];
+  platformPermissions: string[];
 }

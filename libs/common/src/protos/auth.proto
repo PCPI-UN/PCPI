@@ -16,6 +16,10 @@ service AuthService {
   rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
   // Validates a JWT (access or refresh token)
   rpc ValidateJwt(ValidateTokenRequest) returns (ValidateTokenResponse) {}
+  // Initiates password reset flow by sending email with reset token
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {}
+  // Changes a user's password (requires authentication)
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
 
 
   // ---- USERS MODULE ----
@@ -38,8 +42,12 @@ service AuthService {
   rpc AssignPlatformRoles(AssignPlatformRolesRequest) returns (AssignPlatformRolesResponse) {}
   // Retrieves roles by their IDs
   rpc GetRolesByIds(GetRolesByIdsRequest) returns (GetRolesByIdsResponse) {}
+  // Removes a platform role from a user (soft delete)
+  rpc RemovePlatformRole(RemovePlatformRoleRequest) returns (RemovePlatformRoleResponse) {}
 
   // ---- PERMISSIONS MODULE ----
+  // Gets a user's platform roles and permissions
+  rpc GetUserPermissions(GetUserPermissionsRequest) returns (GetUserPermissionsResponse) {}
 
 }
 
@@ -86,7 +94,6 @@ message ValidateTokenRequest {
 message ValidateTokenResponse {
   bool valid = 1;
   int32 userId = 2;
-  repeated string roles = 3;
 }
 
 message ActivateUserRequest {
@@ -96,6 +103,30 @@ message ActivateUserRequest {
 
 message ActivateUserResponse {
   bool success = 1;
+}
+
+// The request message for initiating password reset.
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+// The response message for password reset request.
+message ForgotPasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// The request message for changing a user's password.
+message ChangePasswordRequest {
+  int32 userId = 1;
+  string oldPassword = 2;
+  string newPassword = 3;
+}
+
+// The response message for password change.
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 // ---- USER MODULE REQUEST/RESPONSE ----
@@ -234,4 +265,36 @@ message Role {
   string name = 2;
   string description = 3;
   string scope = 4;
+}
+
+// ---- PERMISSIONS MODULE REQUEST/RESPONSE ----
+
+// The request message for getting a user's platform roles and permissions
+message GetUserPermissionsRequest {
+  int32 userId = 1;
+}
+
+// The response message containing the user's platform roles and flattened permissions
+message GetUserPermissionsResponse {
+  repeated PlatformRoleWithPermissions roles = 1;
+  repeated string permissions = 2;  // Flattened: ["create:users", "read:events"]
+}
+
+// Platform role with basic information
+message PlatformRoleWithPermissions {
+  int32 id = 1;
+  string name = 2;
+  string scope = 3;  // Will be "PLATFORM"
+}
+
+// The request message for removing a platform role from a user
+message RemovePlatformRoleRequest {
+  int32 userId = 1;
+  int32 roleId = 2;
+}
+
+// The response message for removing a platform role
+message RemovePlatformRoleResponse {
+  bool success = 1;
+  string message = 2;
 }

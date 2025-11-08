@@ -7,6 +7,8 @@ import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
 import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
 import { ValidateJwtUseCase } from '@auth/application/use-cases/validate-jwt.use-case';
+import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-password.use-case';
+import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 
 // Proto Responses types
 import {
@@ -15,6 +17,8 @@ import {
   RefreshResponse,
   SetPasswordResponse,
   ValidateTokenResponse,
+  ForgotPasswordResponse,
+  ChangePasswordResponse,
 } from '@app/common/generated/auth';
 
 // DTOs
@@ -22,6 +26,8 @@ import { LoginDto } from '@auth/application/dto/login.dto';
 import { RefreshDto } from '@auth/application/dto/refresh.dto';
 import { SetPasswordDto } from '@auth/application/dto/set-password.dto';
 import { ValidateTokenDto } from '@auth/application/dto/validate-token.dto';
+import { ForgotPasswordDto } from '@auth/application/dto/forgot-password.dto';
+import { ChangePasswordDto } from '@auth/application/dto/change-password.dto';
 
 // Mappers
 import { AuthMapper } from '@auth/application/mappers/auth.mapper';
@@ -34,6 +40,8 @@ export class AuthController {
     private readonly setPasswordUseCase: SetPasswordUseCase,
     private readonly validateTokenUseCase: ValidateTokenUseCase,
     private readonly validateJwtUseCase: ValidateJwtUseCase,
+    private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
   ) {}
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Login')
@@ -72,5 +80,23 @@ export class AuthController {
       request.token,
     );
     return AuthMapper.toValidateTokenResponse(valid, userId);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'ForgotPassword')
+  async forgotPassword(request: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
+    const { success, message } = await this.forgotPasswordUseCase.execute(
+      request.email,
+    );
+    return AuthMapper.toForgotPasswordResponse(success, message);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'ChangePassword')
+  async changePassword(request: ChangePasswordDto): Promise<ChangePasswordResponse> {
+    const { success, message } = await this.changePasswordUseCase.execute(
+      request.userId,
+      request.oldPassword,
+      request.newPassword,
+    );
+    return AuthMapper.toChangePasswordResponse(success, message);
   }
 }

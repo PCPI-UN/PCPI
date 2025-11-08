@@ -34,6 +34,7 @@ services:
       # Add other required env vars
     ports:
       - "50051:50051"
+    command: sh -c "npx prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma && npx prisma db seed && node dist/apps/auth-service/main"
     restart: always
 
   evaluation-service:

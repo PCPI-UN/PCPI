@@ -53,4 +53,11 @@ export class PrismaUserTokenRepository implements UserTokenRepositoryPort {
   async delete(token: string): Promise<void> {
     await this.prisma.userToken.delete({ where: { token } });
   }
+
+  async markAsUsed(token: string): Promise<void> {
+    await this.prisma.userToken.update({
+      where: { token },
+      data: { usedAt: new Date() },
+    });
+  }
 }
