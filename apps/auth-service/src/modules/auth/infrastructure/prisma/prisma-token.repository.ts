@@ -24,8 +24,9 @@ export class PrismaTokenRepository implements TokenRepositoryPort {
   }
 
   async deleteByUserId(userId: number): Promise<void> {
-    await this.prisma.userToken.deleteMany({
+    await this.prisma.userToken.updateMany({
       where: { userId },
+      data: { usedAt: new Date() },
     });
   }
 }

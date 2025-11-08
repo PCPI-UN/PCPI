@@ -1,26 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@common/prisma/prisma.service';
+import { PlatformStaffRepositoryPort } from '@roles/domain/repositories/platform-staff.repository.port';
 
 @Injectable()
 export class AssignPlatformRoleUseCase {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly platformStaffRepository: PlatformStaffRepositoryPort,
+  ) {}
 
-  async execute(
-    userId: number,
-    roleIds: number[],
-    tx?: any,
-  ): Promise<void> {
-    const prisma = tx ?? this.prisma;
-
-    const data = roleIds.map((roleId) => ({
-      userId,
-      roleId,
-      active: true,
-    }));
-
-    await prisma.platformStaff.createMany({
-      data,
-      skipDuplicates: true,
-    });
+  async execute(userId: number, roleIds: number[]): Promise<void> {
+    await this.platformStaffRepository.assignRoles(userId, roleIds);
   }
 }

@@ -3,13 +3,22 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { Request } from 'express';
 import { AuthService } from '../auth.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {
+    const refreshPublicKey = Buffer.from(
+      configService.get<string>('JWT_REFRESH_PUBLIC_KEY', ''),
+      'base64',
+    ).toString('ascii');
+
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
@@ -17,7 +26,8 @@ export class JwtRefreshStrategy extends PassportStrategy(
         },
       ]),
       ignoreExpiration: true,
-      secretOrKey: 'this-will-be-ignored',
+      secretOrKey: refreshPublicKey,
+      algorithms: ['RS256'],
       passReqToCallback: true,
     });
   }
@@ -28,20 +38,19 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('Refresh token not found');
     }
 
-    try {
-      const { valid, userId } = await this.authService.validateJwt(refreshToken);
-      if (!valid) {
-        throw new UnauthorizedException('Invalid refresh token');
-      }
+    if (!payload.sub) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
 
-      const user = await this.authService.getUser(userId);
+    try {
+      const user = await this.authService.getUser(payload.sub);
       if (!user) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('User not found');
       }
 
       return { ...user, refreshToken };
     } catch (e) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Failed to validate refresh token');
     }
   }
 }

@@ -2,10 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { UserTokenRepositoryPort } from '@users/domain/repositories/user-token.repository.port';
+import { UserTokenType } from '@users/domain/entities/user-token.entity';
 
 interface ValidateTokenUseCaseResponse {
   valid: boolean;
   userId: number;
+  tokenType: UserTokenType;
 }
 
 @Injectable()
@@ -39,6 +41,7 @@ export class ValidateTokenUseCase {
     return {
       valid: true,
       userId: userToken.userId,
+      tokenType: userToken.type,
     };
   }
 }
