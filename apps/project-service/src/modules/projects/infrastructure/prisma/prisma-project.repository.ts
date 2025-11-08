@@ -296,4 +296,18 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
   return { items, total };
 }
 
+ async markPendingJoined(projectId: number, studentCode: string, joinedAt: Date): Promise<boolean> {
+    const res = await this.prisma.pendingProjectParticipant.updateMany({
+      where: {
+        projectId,
+        studentCode,
+      },
+      data: {
+        status: 'JOINED',
+        joinedAt,
+      },
+    });
+    return res.count > 0;
+  }
+
 }
