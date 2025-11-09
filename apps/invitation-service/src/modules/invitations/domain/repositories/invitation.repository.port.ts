@@ -6,5 +6,6 @@ export abstract class InvitationRepositoryPort {
   abstract findByToken(token: string): Promise<Invitation | null>;
   abstract findByEmail(email: string): Promise<Invitation[]>;
   abstract findByTarget(targetType: string, targetId: number): Promise<Invitation[]>;
+  abstract findPendingByEmailAndTargetType(email: string, targetType: string, targetId: number): Promise<Invitation | null>;
   abstract delete(id: string): Promise<void>;
 }
