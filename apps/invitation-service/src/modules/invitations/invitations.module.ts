@@ -24,6 +24,7 @@ import { CreateInvitationUseCase } from './application/use-cases/create-invitati
 import { GetInvitationByTokenUseCase } from './application/use-cases/get-invitation-by-token.use-case';
 import { AcceptInvitationUseCase } from './application/use-cases/accept-invitation.use-case';
 import { RejectInvitationUseCase } from './application/use-cases/reject-invitation.use-case';
+import { FindPendingByEmailUseCase } from './application/use-cases/find-pending-by-email.use-case';
 
 // Domain
 import { InvitationRepositoryPort } from './domain/repositories/invitation.repository.port';
@@ -113,6 +114,8 @@ import { InvitationController } from './interface/grpc/invitation.controller';
     GetInvitationByTokenUseCase,
     AcceptInvitationUseCase,
     RejectInvitationUseCase,
+    FindPendingByEmailUseCase,
+
     // Repository Implementations
     {
       provide: InvitationRepositoryPort,
@@ -128,6 +131,7 @@ import { InvitationController } from './interface/grpc/invitation.controller';
     GetInvitationByTokenUseCase,
     AcceptInvitationUseCase,
     RejectInvitationUseCase,
+    FindPendingByEmailUseCase,
   ],
 })
 export class InvitationsModule {}

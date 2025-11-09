@@ -10,20 +10,23 @@ import {
   AuthServiceClient,
 } from '@app/common/generated/auth';
 import { EventServiceClient } from '@app/common/generated/event';
+import { ProjectsServiceClient } from '@app/common/generated/project';
 import { AcceptInvitationResponse } from '@app/common/generated/invitation';
 import { InvitationTargetType } from '../../domain/entities/invitation.entity';
-import { EVENT_SERVICE_NAME } from '../../invitations.module';
+import { EVENT_SERVICE_NAME, PROJECT_SERVICE_NAME } from '../../invitations.module';
 
 @Injectable()
 export class AcceptInvitationUseCase implements OnModuleInit {
   private authService: AuthServiceClient;
   private eventService: EventServiceClient;
+  private projectService: ProjectsServiceClient;
 
   constructor(
     private readonly invitationRepository: InvitationRepositoryPort,
     private readonly invitationRoleRepository: InvitationRoleRepositoryPort,
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
+    @Inject(PROJECT_SERVICE_NAME) private readonly projectClient: ClientGrpc,
   ) {}
 
   onModuleInit() {
@@ -31,6 +34,8 @@ export class AcceptInvitationUseCase implements OnModuleInit {
       this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
     this.eventService =
       this.eventClient.getService<EventServiceClient>(EVENT_SERVICE_NAME);
+    this.projectService =
+      this.projectClient.getService<ProjectsServiceClient>(PROJECT_SERVICE_NAME);
   }
 
   async execute(dto: AcceptInvitationDto): Promise<AcceptInvitationResponse> {
@@ -94,10 +99,42 @@ export class AcceptInvitationUseCase implements OnModuleInit {
         break;
 
       case InvitationTargetType.PROJECT:
-        throw new RpcException({
-          code: status.UNIMPLEMENTED,
-          message: 'Project invitation acceptance is not yet implemented',
-        });
+        // Get project to find eventId
+        const projectResponse = await firstValueFrom(
+          this.projectService.getProject({
+            id: invitation.targetId,
+          }),
+        );
+
+        if (!projectResponse.project) {
+          throw new RpcException({
+            code: status.NOT_FOUND,
+            message: `Project with ID ${invitation.targetId} not found`,
+          });
+        }
+
+        const project = projectResponse.project;
+
+        // Create event member  for each role
+        for (const roleId of roleIds) {
+          await firstValueFrom(
+            this.eventService.createEventMember({
+              eventId: project.eventId,
+              userId: invitation.invitedUserId,
+              roleId,
+            }),
+          );
+        }
+
+        // Add as project participant
+        await firstValueFrom(
+          this.projectService.addParticipant({
+            userId: invitation.invitedUserId,
+            projectId: invitation.targetId,
+            studentCode: dto.studentCode || 0, 
+          }),
+        );
+        break;
     }
 
     // Mark invitation as accepted
