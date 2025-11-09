@@ -49,6 +49,7 @@ message AcceptInvitationRequest {
   optional string password = 2; // For new users setting their password
   optional string firstName = 3;
   optional string lastName = 4;
+  optional int32 studentCode = 5; // For project invitations - student code
 }
 
 // The response message for accepting an invitation

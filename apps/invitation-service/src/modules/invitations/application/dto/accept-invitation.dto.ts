@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MinLength, IsInt, Min } from 'class-validator';
 
 export class AcceptInvitationDto {
   @IsString()
@@ -17,4 +17,9 @@ export class AcceptInvitationDto {
   @IsString()
   @IsOptional()
   lastName?: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  studentCode?: number;
 }
