@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-
+import { RequirePermission } from '../../../../../../gateway/src/common/decorators/require-permission.decorator';
 import { CreateCourseUseCase } from '../../application/use-cases/create-course.uc';
 import { UpdateCourseUseCase } from '../../application/use-cases/update-course.uc';
 import { GetCourseUseCase } from '../../application/use-cases/get-course.uc';
@@ -19,7 +19,8 @@ export class CoursesController {
     private readonly deleteUC: DeleteCourseUseCase,
     private readonly listByEventUC: ListCoursesByEventUseCase,
   ) {}
-  //@RequirePermission('manage:courses')
+
+  @RequirePermission('manage:courses')
   @GrpcMethod('EventService', 'CreateCourse')
   async createCourseRpc(req: any) {
     const c = await this.createUC.execute(req);
@@ -29,6 +30,7 @@ export class CoursesController {
     };
   }
 
+  @RequirePermission('manage:courses')
   @GrpcMethod('EventService', 'UpdateCourse')
   async updateCourseRpc(req: any) {
     await this.updateUC.execute(req); // tu UC recibe el DTO completo (incluye id)
@@ -66,15 +68,17 @@ export class CoursesController {
     };
   }
 
+  @RequirePermission('manage:courses')
   @GrpcMethod('EventService', 'DeleteCourse')
   async deleteCourseRpc(req: any) {
     await this.deleteUC.execute(req); // tu UC recibe { id }
     return { ok: true };
   }
-    @GrpcMethod('EventService', 'ListCoursesByEvent')
+
+
+  @GrpcMethod('EventService', 'ListCoursesByEvent')
   async listCoursesByEventRpc(req: any) {
     
-
     const { items } = await this.listByEventUC.execute({
       eventId: Number(req.eventId),
       onlyActive: !!req.onlyActive,
@@ -88,5 +92,4 @@ export class CoursesController {
       nextPageToken: '',
     };
   }
-
 }

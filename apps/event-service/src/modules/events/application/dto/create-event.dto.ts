@@ -14,8 +14,5 @@ export interface CreateEventDTO {
   location?: string;
     // 👇 Simulación manual mientras no hay AuthService real
   
-  
-
-
 }
  

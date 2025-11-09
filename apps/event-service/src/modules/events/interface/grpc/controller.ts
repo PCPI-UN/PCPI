@@ -9,12 +9,11 @@ import { toProtoEvent } from './mappers';
 import { GrpcAuthGuard } from 'apps/event-service/src/common/auth/grpc-auth.guard';
 import { Metadata } from '@grpc/grpc-js';
 import { CreateEventDTO } from '../../application/dto/create-event.dto';
-
+import { RequirePermission } from '../../../../../../gateway/src/common/decorators/require-permission.decorator';
 import { Inject } from '@nestjs/common';
 import { ClientGrpc, RpcException } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { AuthServiceClient } from '@app/common/generated/auth';
-
 
 @Controller()
 export class EventsController {
@@ -27,70 +26,39 @@ export class EventsController {
     private readonly deleteUC: DeleteEventUC,
   ) {}
 
-   
+  @RequirePermission('manage:events')
+  @GrpcMethod('EventService', 'CreateEvent')
+  async createEvent(data: any) {
+    try {
+      console.log('📩 [DEBUG] CreateEvent called with data:', data);
 
-  
-    //@RequirePermission('manage:events')
-    @GrpcMethod('EventService', 'CreateEvent')
-async createEvent(data: any) {
-  try {
-    console.log('📩 [DEBUG] CreateEvent called with data:', data);
+      const dto: CreateEventDTO = {
+        organizationId: data.organizationId,
+        name: data.name,
+        description: data.description,
+        accessCode: data.accessCode,
+        isPubliclyJoinable: data.isPubliclyJoinable,
+        inscriptionDeadline: data.inscriptionDeadline,
+        evaluationsOpened: data.evaluationsOpened,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        location: data.location,
+        createdByUserId: data.userId, // Now coming from the authenticated request
+        userId: data.userId,
+      };
 
-    // 1️⃣ Simular roles del usuario (temporal)
-    const userRoles = ['ADMIN']; // 👈 cámbialo a ['PARTICIPANT'] para probar denegación
-    const userId = 1; // 👈 simula un usuario logueado cualquiera
+      console.log('🧩 [DEBUG] Final DTO passed to UC:', dto);
+      const result = await this.createUC.execute(dto);
+      console.log('🎯 [DEBUG] Event created successfully:', result);
 
-    console.log('🎭 [DEBUG] Roles simulados del usuario:', userRoles);
-
-    // 2️⃣ Validar rol del usuario
-    const isAdmin = userRoles.includes('ADMIN');
-    if (!isAdmin) {
-      console.warn('⛔ [DEBUG] Usuario sin permisos para crear eventos');
-      throw new RpcException('User is not allowed to create events');
+      return result;
+    } catch (err) {
+      console.error('💥 [ERROR] Internal failure in CreateEvent:', err);
+      throw new RpcException(err.message || 'Internal server error');
     }
-
-    // 3️⃣ Crear el DTO del evento
-    const dto: CreateEventDTO = {
-      organizationId: data.organizationId,
-      name: data.name,
-      description: data.description,
-      accessCode: data.accessCode,
-      isPubliclyJoinable: data.isPubliclyJoinable,
-      inscriptionDeadline: data.inscriptionDeadline,
-      evaluationsOpened: data.evaluationsOpened,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      location: data.location,  
-      createdByUserId: userId, // simulado
-      userId, // opcional
-    };
-
-    console.log('🧩 [DEBUG] Final DTO passed to UC:', dto);
-
-    // 4️⃣ Ejecutar caso de uso (sin token)
-    const result = await this.createUC.execute(dto);
-    console.log('🎯 [DEBUG] Event created successfully:', result);
-
-    return result;
-  } catch (err) {
-    console.error('💥 [ERROR] Internal failure in CreateEvent:', err);
-    throw new RpcException(err.message || 'Internal server error');
   }
-}
 
-
-
-
-
-
-
-
-
-
-
-
-
- // @RequirePermission('update:events')
+  @RequirePermission('update:events')
   @GrpcMethod('EventService', 'UpdateEvent')
   async updateEventRpc(req: any) {
   await this.updateUC.execute(req);
@@ -117,7 +85,7 @@ async getEventRpc(req: { id: number }) {
       nextPageToken: '', // opcional, si implementas paginación real
     };
   }
-  //@RequirePermission('delete:events')
+  @RequirePermission('delete:events')
   @GrpcMethod('EventService', 'DeleteEvent')
   async deleteEventRpc(req: { id: number }) {
     await this.deleteUC.execute(req);

@@ -13,4 +13,10 @@ export interface EventMemberRepository {
   delete(userId: number, eventId: number): Promise<void>;
   findByUserAndEvent(userId: number, eventId: number): Promise<EventMember | null>;
   
+  findByEventId(
+    eventId: number,
+    roleId?: number,
+    skip?: number,
+    take?: number,
+  ): Promise<[EventMember[], number]>; // [data, total]
 }

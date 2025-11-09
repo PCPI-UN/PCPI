@@ -33,4 +33,30 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
       where: { userId, eventId },
     });
   }
+  async findByEventId(
+    eventId: string | number,
+    roleId?: string | number,
+    skip = 0,
+    take = 20,
+  ): Promise<[EventMember[], number]> {
+    const where: any = {
+      eventId: Number(eventId),
+    };
+
+    if (roleId !== undefined) {
+      where.roleId = Number(roleId);
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.eventMember.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.eventMember.count({ where }),
+    ]);
+
+    return [data as unknown as EventMember[], total];
+  }
 }
