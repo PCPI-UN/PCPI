@@ -8,9 +8,17 @@ import {
   RefreshRequest,
   GetUserRequest,
   ValidateTokenRequest,
+  GetUserPermissionsRequest,
+  ForgotPasswordRequest,
+  SetPasswordRequest,
+  ChangePasswordRequest,
   LoginResponse,
   RefreshResponse,
   ValidateTokenResponse,
+  GetUserPermissionsResponse,
+  ForgotPasswordResponse,
+  SetPasswordResponse,
+  ChangePasswordResponse,
   User,
 } from '@app/common/generated/auth';
 import { LoginDto } from './dto/login.dto';
@@ -44,5 +52,44 @@ export class AuthService implements OnModuleInit {
 
   async getUser(id: number): Promise<User> {
     return firstValueFrom(this.authService.getUser({ id } as GetUserRequest));
+  }
+
+  async getUserPermissions(
+    userId: number,
+  ): Promise<GetUserPermissionsResponse> {
+    return firstValueFrom(
+      this.authService.getUserPermissions({
+        userId,
+      } as GetUserPermissionsRequest),
+    );
+  }
+
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    return firstValueFrom(
+      this.authService.forgotPassword({ email } as ForgotPasswordRequest),
+    );
+  }
+
+  async resetPassword(
+    token: string,
+    password: string,
+  ): Promise<SetPasswordResponse> {
+    return firstValueFrom(
+      this.authService.setPassword({ token, password } as SetPasswordRequest),
+    );
+  }
+
+  async changePassword(
+    userId: number,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<ChangePasswordResponse> {
+    return firstValueFrom(
+      this.authService.changePassword({
+        userId,
+        oldPassword,
+        newPassword,
+      } as ChangePasswordRequest),
+    );
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { ReassignProjectDTO } from '../dto/reassign-project.dto';
+import { NotFoundError,ValidationError } from '../../domain/errors';
 
 @Injectable()
 export class ReassignProjectJurorUC {
@@ -8,11 +9,12 @@ export class ReassignProjectJurorUC {
 
   async execute(input: ReassignProjectDTO) {
     const p = await this.repo.findById(input.projectId);
-    if (!p) throw new Error('Project not found');
+    if (!p) throw new NotFoundError('Project not found');
 
     // Validar consistencia con el evento del proyecto
-    if (p.eventId !== input.fromJuror.memberEventId) throw new Error('Event mismatch (fromJuror)');
-    if (p.eventId !== input.toJuror.memberEventId) throw new Error('Event mismatch (toJuror)');
+    if (input.fromJuror.memberEventId !== p.eventId || input.toJuror.memberEventId !== p.eventId) {
+      throw new ValidationError('Juror event does not match project event');
+    }
 
     // Si el from == to, no hay nada que hacer
     if (

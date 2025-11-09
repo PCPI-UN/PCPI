@@ -7,7 +7,7 @@ import { status } from '@grpc/grpc-js';
 @Injectable()
 export class DeactivateUserUseCase {
   constructor(private readonly userRepository: UserRepositoryPort) {}
-
+  // TODO: Add checks to prevent deactivating last admin
   async execute({ id }: DeactivateUserDto): Promise<{ success: boolean }> {
     const userExists = await this.userRepository.findById(id);
     if (!userExists) {

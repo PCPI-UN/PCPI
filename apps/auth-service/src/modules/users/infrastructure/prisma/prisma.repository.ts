@@ -32,6 +32,27 @@ export class PrismaUserRepository implements UserRepositoryPort {
     return UserMapper.toDomain(newPrismaUser);
   }
 
+  async createWithRoles(user: User, roleIds: number[]): Promise<User> {
+    return this.prisma.$transaction(async (tx: TransactionClient) => {
+      // Create the user
+      const savedUser = await this.save(user, tx);
+
+      // Assign roles to the user
+      const platformStaffData = roleIds.map((roleId) => ({
+        userId: savedUser.id,
+        roleId,
+        active: true,
+      }));
+
+      await tx.platformStaff.createMany({
+        data: platformStaffData,
+        skipDuplicates: true,
+      });
+
+      return savedUser;
+    });
+  }
+
   async findById(id: number): Promise<User | null> {
     const prismaUser = await this.prisma.user.findUnique({ where: { id } });
     if (!prismaUser) {

@@ -3,6 +3,8 @@ import {
   RefreshResponse,
   SetPasswordResponse,
   ValidateTokenResponse,
+  ForgotPasswordResponse,
+  ChangePasswordResponse,
 } from '@app/common/generated/auth';
 
 export class AuthMapper {
@@ -29,6 +31,20 @@ export class AuthMapper {
     return {
       valid,
       userId,
+    };
+  }
+
+  static toForgotPasswordResponse(success: boolean, message: string): ForgotPasswordResponse {
+    return {
+      success,
+      message,
+    };
+  }
+
+  static toChangePasswordResponse(success: boolean, message: string): ChangePasswordResponse {
+    return {
+      success,
+      message,
     };
   }
 }
