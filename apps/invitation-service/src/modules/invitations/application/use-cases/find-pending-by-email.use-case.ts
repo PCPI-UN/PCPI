@@ -7,6 +7,7 @@ import { InvitationMapper } from '../mappers/invitation.mapper';
 
 @Injectable()
 export class FindPendingByEmailUseCase {
+  
   constructor(
     private readonly invitationRepository: InvitationRepositoryPort,
     private readonly invitationRoleRepository: InvitationRoleRepositoryPort,
