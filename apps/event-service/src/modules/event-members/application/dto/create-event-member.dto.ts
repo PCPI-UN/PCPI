@@ -1,6 +1,6 @@
 import { IsInt, Min, Max } from 'class-validator';
 
-export class CreateEventMemberDto {
+export class CreateEventMemberDTO {
   @IsInt()
   @Min(1)
   userId: number;

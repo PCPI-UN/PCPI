@@ -13,7 +13,7 @@ export class CreateEventMemberUseCase {
     private readonly eventRepository: EventRepository,
   ) {}
 
-  async execute(input: CreateEventMember): Promise<EventMember> {
+  async execute(input: CreateEventMemberDTO): Promise<EventMember> {
     // Check if event exists (taking into account events module)
     const event = await this.eventRepository.findById(input.eventId);
     if (!event) {
