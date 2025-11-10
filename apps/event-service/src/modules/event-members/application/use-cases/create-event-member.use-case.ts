@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { EventMemberRepository } from '../../domain/repositories/event-member.repository';
 import { EventRepository } from '../../../events/domain/repositories/event.repository';
-import { CreateEventMember } from '../dto/create-event-member.dto';
+import { CreateEventMemberDTO } from '../dto/create-event-member.dto';
 import { EventMember } from '../../domain/entities/event-member.entity';
 
 @Injectable()

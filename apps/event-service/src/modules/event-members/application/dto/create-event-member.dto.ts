@@ -1,8 +1,20 @@
-export interface CreateEventMember {
+import { IsInt, Min, Max } from 'class-validator';
+
+export class CreateEventMemberDto {
+  @IsInt()
+  @Min(1)
   userId: number;
+
+  @IsInt()
+  @Min(1)
   eventId: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(4)
   roleId: number;
-  active?: boolean; // opcional porque en schema tiene default = true
+
+  active?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -6,6 +6,8 @@ import { DeleteEventMemberUseCase } from '../../application/use-cases/delete-eve
 import { FindEventMemberByUserAndEventUseCase } from '../../application/use-cases/get-event-member.use-case';
 import { ListEventMembersUseCase } from '../../application/use-cases/list-event-members.use-case';
 import { toProtoEventMember } from './mappers';
+import { CreateEventMemberDto } from '../../application/dto/create-event-member.dto';
+import { DeleteEventMemberDto } from '../../application/dto/delete-event-member.dto';
 
 @Controller()
 export class EventMemberController {
@@ -18,18 +20,21 @@ export class EventMemberController {
 
   @RequirePermission('manage:events')
   @GrpcMethod('EventService', 'CreateEventMember')
-  async CreateEventMemberRpc(req: any) {
+  async CreateEventMemberRpc(req: CreateEventMemberDto): Promise<CreateEventMemberResponse> {
     await this.createUC.execute(req);
     return {
       ok: true,
-      message: 'Event member created successfully',
+      message: 'Event member created successfully'
     };
   }
 
   @GrpcMethod('EventService', 'DeleteEventMember')
-  async deleteEventMemberRpc(req: any) {
+  async deleteEventMemberRpc(req: DeleteEventMemberDto): Promise<DeleteEventMemberResponse> {
     await this.deleteUC.execute(req);
-    return { ok: true };
+    return { 
+      ok: true,
+      message: 'Event member deleted successfully'
+     };
   }
 
   @GrpcMethod('EventService', 'GetEventMember')
@@ -40,13 +45,13 @@ export class EventMemberController {
   
   @GrpcMethod('EventService', 'ListEventMembers')
   async ListEventMembers(req: {
-    event_id: number;
-    role_id?: number;
+    eventId: number;
+    roleId?: number;
     page?: number;
   }) {
     const result = await this.listUC.execute({
-      eventId: req.event_id,
-      roleId: req.role_id,
+      eventId: req.eventId,
+      roleId: req.roleId,
       page: req.page,
     });
 
