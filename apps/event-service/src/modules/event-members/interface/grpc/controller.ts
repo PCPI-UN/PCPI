@@ -6,8 +6,9 @@ import { DeleteEventMemberUseCase } from '../../application/use-cases/delete-eve
 import { FindEventMemberByUserAndEventUseCase } from '../../application/use-cases/get-event-member.use-case';
 import { ListEventMembersUseCase } from '../../application/use-cases/list-event-members.use-case';
 import { toProtoEventMember } from './mappers';
-import { CreateEventMemberDto } from '../../application/dto/create-event-member.dto';
-import { DeleteEventMemberDto } from '../../application/dto/delete-event-member.dto';
+import { CreateEventMemberDTO } from '../../application/dto/create-event-member.dto';
+import { DeleteEventMemberDTO } from '../../application/dto/delete-event-member.dto';
+import { CreateEventMemberResponse, DeleteEventMemberResponse } from '@app/common/generated/event';
 
 @Controller()
 export class EventMemberController {
@@ -20,7 +21,7 @@ export class EventMemberController {
 
   @RequirePermission('manage:events')
   @GrpcMethod('EventService', 'CreateEventMember')
-  async CreateEventMemberRpc(req: CreateEventMemberDto): Promise<CreateEventMemberResponse> {
+  async CreateEventMemberRpc(req: CreateEventMemberDTO): Promise<CreateEventMemberResponse> {
     await this.createUC.execute(req);
     return {
       ok: true,
@@ -29,11 +30,10 @@ export class EventMemberController {
   }
 
   @GrpcMethod('EventService', 'DeleteEventMember')
-  async deleteEventMemberRpc(req: DeleteEventMemberDto): Promise<DeleteEventMemberResponse> {
+  async deleteEventMemberRpc(req: DeleteEventMemberDTO): Promise<DeleteEventMemberResponse> {
     await this.deleteUC.execute(req);
     return { 
-      ok: true,
-      message: 'Event member deleted successfully'
+      ok: true
      };
   }
 

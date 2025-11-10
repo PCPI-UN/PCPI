@@ -13,7 +13,7 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
         userId: input.userId,
         eventId: input.eventId,
         roleId: input.roleId,
-        active: true, // asegúrate de que exista en schema.prisma
+        active: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
