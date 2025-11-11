@@ -107,7 +107,7 @@ export class PrismaEventRepository extends EventRepository {
       endDate: input.endDate,         // Date ya en UC
       location: input.location ?? null,   // 👈 NUEVO
       active: input.active ?? true,
-      createdByUserId: input.createdByUserId ?? 1,
+      //createdByUserId: input.createdByUserId ?? 1,
     };
 
     const created = await this.prisma.event.create({ data });

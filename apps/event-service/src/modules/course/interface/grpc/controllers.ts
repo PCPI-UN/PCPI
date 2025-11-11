@@ -9,7 +9,7 @@ import { DeleteCourseUseCase } from '../../application/use-cases/delete-course.u
 import { ListCoursesByEventUseCase } from '../../application/use-cases/list-courses-by-event.uc';
 import { toProtoCourse } from './mappers';
 
-@Controller()
+@Controller() 
 export class CoursesController {
   constructor(
     private readonly createUC: CreateCourseUseCase,

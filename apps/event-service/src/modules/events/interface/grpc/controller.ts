@@ -52,8 +52,12 @@ export class EventsController {
       console.log('🧩 [DEBUG] Final DTO passed to UC:', dto);
       const result = await this.createUC.execute(dto);
       console.log('🎯 [DEBUG] Event created successfully:', result);
+      
 
-      return result;
+      return {
+        result,ok: true,
+      message: 'Evento creado satisfactoriamente',
+      }
     } catch (err) {
       console.error('💥 [ERROR] Internal failure in CreateEvent:', err);
       throw new RpcException(err.message || 'Internal server error');

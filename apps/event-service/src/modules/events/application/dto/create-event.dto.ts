@@ -12,7 +12,6 @@ export interface CreateEventDTO {
   createdByUserId?: number; 
   userId?: number;   
   location?: string;
-    // 👇 Simulación manual mientras no hay AuthService real
   
 }
  

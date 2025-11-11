@@ -107,8 +107,7 @@ message GetEventResponse {
 
 
 
-  // 👇 lista de cursos del evento
-  repeated Course courses = 20;
+  
 }
 
 message ListEventsRequest {

@@ -11,9 +11,7 @@ export class CreateEventUC {
 
     
 
-    const role = input.role ?? 'ADMIN';
-    console.log("el rol es:",role)
-    if (role !== 'ADMIN') throw new ForbiddenException('User not allowed to create events');
+    
 
     return this.repo.create({
       organizationId: input.organizationId,
@@ -27,7 +25,7 @@ export class CreateEventUC {
       endDate: new Date(input.endDate),
       location: input.location ?? null, 
       active: true,
-      createdByUserId: input.createdByUserId ?? 1,
+      //createdByUserId: input.createdByUserId ?? 1,
     });
   }
 }
