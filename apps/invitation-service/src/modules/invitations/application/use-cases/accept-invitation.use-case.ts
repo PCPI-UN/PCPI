@@ -131,7 +131,7 @@ export class AcceptInvitationUseCase implements OnModuleInit {
           this.projectService.addParticipant({
             userId: invitation.invitedUserId,
             projectId: invitation.targetId,
-            studentCode: dto.studentCode || 0, 
+            studentCode: dto.studentCode || '', 
           }),
         );
         break;
