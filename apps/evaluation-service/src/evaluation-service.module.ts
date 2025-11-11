@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { EvaluationsModule } from './modules/evaluations/evaluations.module';
 import { CriterionsModule } from './modules/criterions/criterions.module';
 import { ProjectServiceModule } from './common/clients/project-service.module';
+import { EventServiceModule } from './common/clients/event-service.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { ProjectServiceModule } from './common/clients/project-service.module';
       envFilePath: './apps/evaluation-service/.env',
     }),
     ProjectServiceModule,
+    EventServiceModule,
     EvaluationsModule,
     CriterionsModule
   ],

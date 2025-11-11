@@ -3,33 +3,35 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import {
-  PROJECTS_SERVICE_NAME,
-  protobufPackage as projectProtobufPackage,
-} from '@app/common/generated/project';
-import { ProjectServiceClient } from './project-service.client';
+  CRITERIONS_SERVICE_NAME,
+  protobufPackage,
+} from '@app/common/generated/evaluation';
+import { CriterionsService } from './criterions.service';
+import { CriterionsController } from './criterions.controller';
 
 @Module({
   imports: [
     ClientsModule.registerAsync([
       {
-        name: PROJECTS_SERVICE_NAME,
+        name: CRITERIONS_SERVICE_NAME,
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.GRPC,
           options: {
-            package: projectProtobufPackage,
+            package: protobufPackage,
             protoPath: join(
               process.cwd(),
-              'libs/common/src/protos/project.proto',
+              'libs/common/src/protos/evaluation.proto',
             ),
-            url: configService.get<string>('PROJECT_SERVICE_URL') || 'localhost:50054',
+            url: configService.get<string>('EVALUATION_SERVICE_URL'),
           },
         }),
         inject: [ConfigService],
       },
     ]),
   ],
-  providers: [ProjectServiceClient],
-  exports: [ProjectServiceClient],
+  controllers: [CriterionsController],
+  providers: [CriterionsService],
+  exports: [CriterionsService],
 })
-export class ProjectServiceModule {}
+export class CriterionsModule {}

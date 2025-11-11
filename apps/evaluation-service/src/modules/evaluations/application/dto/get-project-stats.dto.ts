@@ -1,7 +1,7 @@
 import { IsInt, IsNotEmpty } from 'class-validator';
 
-export class DeleteCriterionDto {
+export class GetProjectStatsDto {
   @IsInt()
   @IsNotEmpty()
-  id: number;
+  projectId: number;
 }

@@ -1,16 +1,19 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { EvaluationRepositoryPort } from "@evaluations/domain/repositories/evaluation.repository.port";
 import { Evaluation } from "@evaluations/domain/entities/evaluation.entity";
+import { EvaluationDetail } from "@evaluations/domain/entities/evaluation-detail.entity";
 import { RpcException } from "@nestjs/microservices";
 
 @Injectable()
 export class FindByIdUseCase {
     constructor(
-        @Inject('EvaluationRepositoryPort')
         private readonly evaluationRepository: EvaluationRepositoryPort,
     ) {}
 
-    async execute(id: number): Promise<Evaluation | null> {
+    async execute(id: number): Promise<{
+        evaluation: Evaluation;
+        scores: EvaluationDetail[];
+    } | null> {
 
         const evaluation = await this.evaluationRepository.findById(id);
         if (!evaluation) {
@@ -19,6 +22,9 @@ export class FindByIdUseCase {
                 message: 'Evaluation not found',
             });
         }
-        return evaluation;
+
+        const scores = await this.evaluationRepository.findEvaluationDetails(evaluation.id);
+
+        return { evaluation, scores };
     }
 }

@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { Inject } from '@nestjs/common';
+import { PROJECTS_SERVICE_NAME } from '@app/common/generated/project';
 import { Observable } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
 
@@ -27,7 +28,7 @@ export class ProjectServiceClient implements OnModuleInit {
   private projectsService: ProjectsServiceClient;
 
   constructor(
-    @Inject('PROJECT_SERVICE') private client: ClientGrpc,
+    @Inject(PROJECTS_SERVICE_NAME) private client: ClientGrpc,
   ) {}
 
   onModuleInit() {
