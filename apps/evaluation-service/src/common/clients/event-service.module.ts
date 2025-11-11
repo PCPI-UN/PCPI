@@ -3,33 +3,33 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import {
-  PROJECTS_SERVICE_NAME,
-  protobufPackage as projectProtobufPackage,
-} from '@app/common/generated/project';
-import { ProjectServiceClient } from './project-service.client';
+  EVENT_SERVICE_NAME,
+  protobufPackage as eventProtobufPackage,
+} from '@app/common/generated/event';
+import { EventServiceClient } from './event-service.client';
 
 @Module({
   imports: [
     ClientsModule.registerAsync([
       {
-        name: PROJECTS_SERVICE_NAME,
+        name: EVENT_SERVICE_NAME,
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.GRPC,
           options: {
-            package: projectProtobufPackage,
+            package: eventProtobufPackage,
             protoPath: join(
               process.cwd(),
-              'libs/common/src/protos/project.proto',
+              'libs/common/src/protos/event.proto',
             ),
-            url: configService.get<string>('PROJECT_SERVICE_URL') || 'localhost:50054',
+            url: configService.get<string>('EVENT_SERVICE_URL') || 'localhost:50053',
           },
         }),
         inject: [ConfigService],
       },
     ]),
   ],
-  providers: [ProjectServiceClient],
-  exports: [ProjectServiceClient],
+  providers: [EventServiceClient],
+  exports: [EventServiceClient],
 })
-export class ProjectServiceModule {}
+export class EventServiceModule {}

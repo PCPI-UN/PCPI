@@ -50,12 +50,26 @@ export class GrpcExceptionFilter implements ExceptionFilter {
       const grpcCode = exception.code;
       httpStatus = grpcToHttpStatus[grpcCode] || HttpStatus.INTERNAL_SERVER_ERROR;
       message = exception.details || exception.message || 'An unexpected error occurred';
-      
+
       this.logger.error(`gRPC Error - Code: ${grpcCode}, Message: ${message}`, exception.stack);
     } else {
       // Otherwise, use the status code and message from the exception. This is a regular NestJS exception.
       httpStatus = exception.status || HttpStatus.INTERNAL_SERVER_ERROR;
-      message = exception.message || message;
+
+      // Extract detailed validation errors if available (from ValidationPipe)
+      if (exception.response && typeof exception.response === 'object') {
+        // If response.message is an array (validation errors), join them
+        if (Array.isArray(exception.response.message)) {
+          message = exception.response.message.join(', ');
+        } else if (typeof exception.response.message === 'string') {
+          message = exception.response.message;
+        } else {
+          message = exception.message || message;
+        }
+      } else {
+        message = exception.message || message;
+      }
+
       this.logger.error(`Non-gRPC Error: ${message}`, exception.stack);
     }
     

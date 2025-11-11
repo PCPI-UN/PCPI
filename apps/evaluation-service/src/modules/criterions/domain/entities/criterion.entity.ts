@@ -5,6 +5,8 @@ export class Criterion {
         public readonly name: string,
         public readonly description: string | null,
         public readonly weight: number,
-        public readonly active: boolean,
+        public readonly active: boolean = true,
+        public readonly createdAt: Date,
+        public readonly updatedAt: Date,
     ) {}
 }

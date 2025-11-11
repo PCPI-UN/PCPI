@@ -10,12 +10,14 @@ import { ProjectServiceClient } from "../../../../common/clients/project-service
 @Injectable()
 export class CreateEvaluationUseCase {
     constructor(
-        @Inject('EvaluationRepositoryPort')
         private readonly evaluationRepository: EvaluationRepositoryPort,
         private readonly projectServiceClient: ProjectServiceClient,
     ) {}
 
-    async execute(createEvaluationDto: CreateEvaluationDto): Promise<Evaluation> {
+    async execute(createEvaluationDto: CreateEvaluationDto): Promise<{
+        evaluation: Evaluation;
+        scores: EvaluationDetail[];
+    }> {
         // Authorization check: Verify that the user is assigned as a juror for this project
         const isJurorAssigned = await this.projectServiceClient.isJurorAssignedToProject(
             createEvaluationDto.projectId,
@@ -35,7 +37,6 @@ export class CreateEvaluationUseCase {
             createEvaluationDto.projectId,
             createEvaluationDto.memberUserId,
             createEvaluationDto.memberEventId,
-            createEvaluationDto.memberRoleId
         );
 
         if (existingEvaluation) {
@@ -62,10 +63,20 @@ export class CreateEvaluationUseCase {
             new Date()
         );
 
-        const evaluationDetails = createEvaluationDto.scores.map((score: EvaluationScoreDto) => 
+        const evaluationDetails = createEvaluationDto.scores.map((score: EvaluationScoreDto) =>
             new EvaluationDetail(0, score.criterionId, score.score)
         );
 
-        return this.evaluationRepository.save(evaluation, evaluationDetails);
+        const savedEvaluation = await this.evaluationRepository.save(evaluation, evaluationDetails);
+
+        // Return composite with scores from request, updated with evaluationId
+        return {
+            evaluation: savedEvaluation,
+            scores: evaluationDetails.map((detail: EvaluationDetail) => new EvaluationDetail(
+                savedEvaluation.id,
+                detail.criterionId,
+                detail.score
+            )),
+        };
     }
 }

@@ -1,20 +1,7 @@
+import { IsInt, IsNotEmpty } from 'class-validator';
+
 export class FindEvaluationDto {
+    @IsInt()
+    @IsNotEmpty()
     id: number;
-}
-
-export class FindEvaluationsByProjectDto {
-    projectId: number;
-}
-
-export class FindEvaluationsByEvaluatorDto {
-    memberUserId: number;
-    memberEventId: number;
-    memberRoleId: number;
-}
-
-export class CheckEvaluationExistsDto {
-    projectId: number;
-    memberUserId: number;
-    memberEventId: number;
-    memberRoleId: number;
 }

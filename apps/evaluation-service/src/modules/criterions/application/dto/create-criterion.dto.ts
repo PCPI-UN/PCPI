@@ -1,8 +1,34 @@
+import {
+  IsInt,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  Min,
+  Max,
+} from 'class-validator';
+
 export class CreateCriterionDto {
-  eventId!: number;
-  name!: string;
+  @IsInt()
+  @IsNotEmpty()
+  eventId: number;
+
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
-  weight!: number;
-  active!: boolean;
-  courseIds!: number[];
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(0)
+  @Max(100)
+  weight: number;
+
+  @IsArray()
+  @IsInt({ each: true })
+  courseIds: number[];
 }
