@@ -4,11 +4,13 @@ import { CreateInvitationUseCase } from '../../application/use-cases/create-invi
 import { GetInvitationByTokenUseCase } from '../../application/use-cases/get-invitation-by-token.use-case';
 import { AcceptInvitationUseCase } from '../../application/use-cases/accept-invitation.use-case';
 import { RejectInvitationUseCase } from '../../application/use-cases/reject-invitation.use-case';
+import { FindPendingByEmailUseCase } from '../../application/use-cases/find-pending-by-email.use-case';
 import { CreateInvitationDto } from '../../application/dto/create-invitation.dto';
 import { GetInvitationByTokenDto } from '../../application/dto/get-invitation-by-token.dto';
 import { AcceptInvitationDto } from '../../application/dto/accept-invitation.dto';
 import { RejectInvitationDto } from '../../application/dto/reject-invitation.dto';
-import { GetInvitationByTokenResponse, Invitation } from '@app/common/generated/invitation';
+import { FindPendingByEmailDto } from '../../application/dto/find-pending-by-email.dto';
+import { GetInvitationByTokenResponse, Invitation, FindPendingByEmailResponse } from '@app/common/generated/invitation';
 import { InvitationMapper } from '../../application/mappers/invitation.mapper';
 
 const INVITATION_SERVICE_NAME = 'InvitationService';
@@ -20,6 +22,7 @@ export class InvitationController {
     private readonly getInvitationByTokenUseCase: GetInvitationByTokenUseCase,
     private readonly acceptInvitationUseCase: AcceptInvitationUseCase,
     private readonly rejectInvitationUseCase: RejectInvitationUseCase,
+    private readonly findPendingByEmailUseCase: FindPendingByEmailUseCase,
   ) {}
 
   @GrpcMethod(INVITATION_SERVICE_NAME, 'CreateInvitation')
@@ -43,5 +46,10 @@ export class InvitationController {
   @GrpcMethod(INVITATION_SERVICE_NAME, 'RejectInvitation')
   async rejectInvitation(request: RejectInvitationDto): Promise<{ success: boolean }> {
     return await this.rejectInvitationUseCase.execute(request);
+  }
+
+  @GrpcMethod(INVITATION_SERVICE_NAME, 'FindPendingByEmail')
+  async findPendingByEmail(request: FindPendingByEmailDto): Promise<FindPendingByEmailResponse> {
+    return await this.findPendingByEmailUseCase.execute(request);
   }
 }

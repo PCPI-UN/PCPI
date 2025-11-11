@@ -12,6 +12,8 @@ service InvitationService {
   rpc AcceptInvitation (AcceptInvitationRequest) returns (AcceptInvitationResponse) {}
   // Rejects an invitation
   rpc RejectInvitation (RejectInvitationRequest) returns (RejectInvitationResponse) {}
+  // Finds a pending invitation by email and target type
+  rpc FindPendingByEmail (FindPendingByEmailRequest) returns (FindPendingByEmailResponse) {}
 }
 
 // ---- INVITATION MODULE REQUEST/RESPONSE ----
@@ -47,6 +49,7 @@ message AcceptInvitationRequest {
   optional string password = 2; // For new users setting their password
   optional string firstName = 3;
   optional string lastName = 4;
+  optional int32 studentCode = 5; // For project invitations - student code
 }
 
 // The response message for accepting an invitation
@@ -62,6 +65,18 @@ message RejectInvitationRequest {
 // The response message for rejecting an invitation
 message RejectInvitationResponse {
   bool success = 1;
+}
+
+// The request message for finding a pending invitation by email
+message FindPendingByEmailRequest {
+  string email = 1;
+  string targetType = 2; // "PLATFORM", "EVENT", or "PROJECT"
+  int32 targetId = 3;
+}
+
+// The response message for finding a pending invitation by email
+message FindPendingByEmailResponse {
+  optional Invitation invitation = 1; // Returns invitation if found, null if not
 }
 
 enum InvitationStatus {
