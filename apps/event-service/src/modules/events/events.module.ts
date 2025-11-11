@@ -7,6 +7,7 @@ import { UpdateEventUC } from './application/use-cases/update-event.uc';
 import { GetEventUC } from './application/use-cases/get-event.uc';
 import { ListEventsUC } from './application/use-cases/list-events.uc';
 import { DeleteEventUC } from './application/use-cases/delete-event.uc';
+import { ListEventsPageUC } from './application/use-cases/list-events-page.uc';
 
 @Module({
   controllers: [EventsController],
@@ -21,6 +22,7 @@ import { DeleteEventUC } from './application/use-cases/delete-event.uc';
     GetEventUC,
     ListEventsUC,
     DeleteEventUC,
+    ListEventsPageUC,
   ],
 })
 export class EventsModule {}

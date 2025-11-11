@@ -14,6 +14,7 @@ import { Inject } from '@nestjs/common';
 import { ClientGrpc, RpcException } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { AuthServiceClient } from '@app/common/generated/auth';
+import { ListEventsPageUC } from '../../application/use-cases/list-events-page.uc';
 
 @Controller()
 export class EventsController {
@@ -24,6 +25,7 @@ export class EventsController {
     private readonly getUC: GetEventUC,
     private readonly listUC: ListEventsUC,
     private readonly deleteUC: DeleteEventUC,
+    private readonly listPageUC: ListEventsPageUC,
   ) {}
 
   @RequirePermission('manage:events')
@@ -85,10 +87,38 @@ async getEventRpc(req: { id: number }) {
       nextPageToken: '', // opcional, si implementas paginación real
     };
   }
+  
   @RequirePermission('delete:events')
   @GrpcMethod('EventService', 'DeleteEvent')
   async deleteEventRpc(req: { id: number }) {
     await this.deleteUC.execute(req);
     return { ok: true };
   }
+  
+  @GrpcMethod('EventService', 'ListEventsPage')
+async listEventsPageRpc(req: { page?: number; limit?: number; q?: string; onlyActive?: boolean }) {
+  const result = await this.listPageUC.execute({
+    page: req.page ?? 1,
+    limit: req.limit ?? 10,
+    q: req.q,
+    onlyActive: req.onlyActive,
+  });
+
+  
+  return {
+    items: result.items,   
+    page: result.page,
+    limit: result.limit,
+    total: result.total,
+    totalPages: result.totalPages,
+    hasNext: result.hasNext,
+    hasPrev: result.hasPrev,
+  };
 }
+
+
+
+}
+
+
+

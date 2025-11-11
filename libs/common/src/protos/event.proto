@@ -12,6 +12,7 @@ service EventService {
   rpc GetEvent (GetEventRequest) returns (GetEventResponse) {}
   rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
   rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
+  rpc ListEventsPage (ListEventsRequestPage) returns (ListEventsResponsePage) {}
 
   // ---- EVENT MEMBERS ----
   rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
@@ -127,6 +128,23 @@ message DeleteEventRequest {
 
 message DeleteEventResponse {
   bool ok = 1;
+}
+
+message ListEventsRequestPage {
+  int32 page = 1;            // default 1
+  int32 limit = 2;           // default 10, máx 100
+  string q = 3;              // búsqueda por name/description
+  bool onlyActive = 4;       // filtra activos=true
+}
+
+message ListEventsResponsePage {
+  repeated GetEventResponse items = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 total = 4;
+  int32 totalPages = 5;
+  bool hasNext = 6;
+  bool hasPrev = 7;
 }
 
 // =====================
