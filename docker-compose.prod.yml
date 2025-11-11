@@ -1,8 +1,6 @@
 services:
   # PostgreSQL Databases - no exposed ports (internal only)
   auth-db:
-    # In production, consider using managed databases instead
-    # For now, ensure strong passwords via environment variables
     environment:
       POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
 
@@ -27,76 +25,80 @@ services:
     build:
       target: production
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${AUTH_DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION:-3600}
-      # Add other required env vars
-    ports:
-      - "50051:50051"
-    command: sh -c "npx prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma && npx prisma db seed && node dist/apps/auth-service/main"
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@auth-db:5432/auth_service}
+      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
+      - GRPC_PORT=${GRPC_PORT:-50051}
+      - NODE_ENV=${NODE_ENV:-production}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      - JWT_REFRESH_PRIVATE_KEY=${JWT_REFRESH_PRIVATE_KEY}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - JWT_REFRESH_PUBLIC_KEY=${JWT_REFRESH_PUBLIC_KEY}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL}
+      - PASSWORD_RESET_TOKEN_EXPIRY_MINUTES=${PASSWORD_RESET_TOKEN_EXPIRY_MINUTES:-15}
+    command: sh -c "npx prisma generate --schema=./apps/auth-service/prisma/schema.prisma && npx prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma && npx prisma db seed && node dist/apps/auth-service/main"
     restart: always
 
   evaluation-service:
     build:
       target: production
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=${EVALUATION_DATABASE_URL}
-      # Add other required env vars
-    ports:
-      - "50052:50052"
+      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
+      - GRPC_PORT=${GRPC_PORT:-50052}
     restart: always
 
   event-service:
     build:
       target: production
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=${EVENT_DATABASE_URL}
-      # Add other required env vars
-    ports:
-      - "50053:50053"
+      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
+      - GRPC_PORT=${GRPC_PORT:-50053}
     restart: always
 
   invitation-service:
     build:
       target: production
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=${INVITATION_DATABASE_URL}
-      # Add other required env vars
-    ports:
-      - "50054:50054"
+      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
+      - GRPC_PORT=${GRPC_PORT:-50054}
     restart: always
 
   project-service:
     build:
       target: production
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=${PROJECT_DATABASE_URL}
-      # Add other required env vars
-    ports:
-      - "50055:50055"
+      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
+      - GRPC_PORT=${GRPC_PORT:-50055}
     restart: always
 
   gateway:
     build:
       target: production
     environment:
-      - NODE_ENV=production
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
       - EVALUATION_SERVICE_URL=${EVALUATION_SERVICE_URL:-evaluation-service:50052}
       - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
       - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service:50054}
       - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
-      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
-      - JWT_SECRET=${JWT_SECRET}
-      # Add other required env vars
+      - NODE_ENV=${NODE_ENV:-production}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - JWT_REFRESH_PUBLIC_KEY=${JWT_REFRESH_PUBLIC_KEY}
     ports:
-      - "3000:3000"
+      - "80:3000"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   notification-service:
     build:
@@ -107,7 +109,4 @@ services:
       - EMAIL_TEMPLATE_ID=${EMAIL_TEMPLATE_ID}
       - EMAIL_PUBLIC_KEY=${EMAIL_PUBLIC_KEY}
       - EMAIL_PRIVATE_KEY=${EMAIL_PRIVATE_KEY}
-      # Add other required env vars
-    ports:
-      - '50056:50056'
     restart: always
