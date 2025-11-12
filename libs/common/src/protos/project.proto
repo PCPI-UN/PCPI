@@ -29,6 +29,7 @@ service ProjectsService {
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
   rpc ListAssignedProjects(ListAssignedProjectsRequest) returns (ListAssignedProjectsResponse);
 
+  rpc ListProjectsForReview(ListProjectsForReviewRequest) returns (ListProjectsForReviewResponse);
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
 }
 
@@ -244,3 +245,6 @@ message ListAssignedProjectsResponse {
 
 message DeleteProjectRequest { int32 id = 1; }
 message DeleteProjectResponse { bool ok = 1; }
+
+message ListProjectsForReviewRequest  { int32 eventId = 1; }
+message ListProjectsForReviewResponse { repeated Project items = 1; }
