@@ -22,7 +22,8 @@ service ProjectsService {
   rpc ListPendingParticipants (ListPendingParticipantsRequest) returns (ListPendingParticipantsResponse);
 
   rpc UpdateProject (UpdateProjectRequest) returns (ProjectResponse);      
-  rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);     
+  rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);
+  rpc RejectProject (RejectProjectRequest) returns (ProjectResponse);     
   rpc AssignJurorToProjects (AssignJurorToProjectsRequest) returns (AssignJurorToProjectsResponse); 
   rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
@@ -61,6 +62,7 @@ message Project {
   string updatedAt = 7; 
   int32 courseId = 8;
   ProjectState state = 9;
+  optional string rejectionReason = 10;
 }
 
 message ProjectDocument {
@@ -97,7 +99,7 @@ message PendingParticipantInput {
   optional string lastName = 2;
   string email = 3;
   string studentCode = 4;
-  string status = 5; // PENDING, INVITED, JOINED
+  optional string status = 5; // PENDING (default), INVITED, JOINED - optional for public registration
 }
 
 message ProjectDocumentInput {
@@ -121,13 +123,17 @@ message GetProjectRequest { int32 id = 1; }
 message ListProjectsByEventRequest {
   int32 eventId = 1;
   optional string q = 2;
-  int32 page = 3;
-  int32 pageSize = 4;
-  int32 courseId = 5;
+  optional int32 page = 3;           // page number (1-indexed)
+  optional int32 limit = 4;          // items per page
+  optional int32 courseId = 5;
+  optional ProjectState state = 6;   // filter by project state
 }
 message ListProjectsResponse {
   repeated Project items = 1;
   int32 total = 2;
+  int32 page = 3;           // current page number
+  int32 limit = 4;          // items per page
+  int32 totalPages = 5;     // total number of pages
 }
 message UpdateProjectRequest {
   int32 id = 1;
@@ -140,16 +146,37 @@ message UpdateProjectRequest {
 
 message ApproveProjectRequest { int32 id = 1; int32 actingUserId = 2; }
 
-message AssignJurorToProjectsRequest {JurorKey juror = 1;repeated int32 projectIds = 2;
-  bool skipEventMismatch = 3; // si true, omite proyectos con event distinto
-  }
+message RejectProjectRequest { 
+  int32 id = 1; 
+  int32 actingUserId = 2;
+  optional string reason = 3; // Reason for rejection (stored in database)
+}
+
+// Service will:
+// 1. Validate all projects exist and belong to the same event
+// 2. Call event-service to verify userId is a juror in that event
+// 3. Get the full JurorKey (userId, eventId, roleId) from event-service
+// 4. Assign juror to all valid projects
+message AssignJurorToProjectsRequest {
+  int32 userId = 1;              // The user to assign as juror
+  repeated int32 projectIds = 2; // Projects to assign (must all be in same event)
+}
 message AssignJurorToProjectsResponse {
   int32 assigned = 1;
   repeated FailedAssignment failures = 2;
 }
 message FailedAssignment {int32 projectId = 1;string reason = 2;}
 
-message ReassignProjectJurorRequest {int32 projectId = 1;JurorKey fromJuror = 2;JurorKey toJuror = 3;}
+// Service will:
+// 1. Get project to determine eventId
+// 2. Validate both fromUserId and toUserId are jurors in that event
+// 3. Get full JurorKey for both users from event-service
+// 4. Remove old assignment and create new assignment
+message ReassignProjectJurorRequest {
+  int32 projectId = 1;
+  int32 fromUserId = 2;  // Current juror userId
+  int32 toUserId = 3;    // New juror userId
+}
 message ReassignProjectJurorResponse { bool ok = 1; bool changed = 2; }
 
 message ListProjectJurorsRequest { int32 projectId = 1; }
@@ -191,7 +218,7 @@ message CreateProjectWithParticipantsRequest {
   optional string description = 3;
   optional string eventNumber = 4;
   int32 courseId = 5;
-  ProjectState state = 6;
+  optional ProjectState state = 6; // Optional - backend defaults to UNDER_REVIEW for public submissions
   repeated PendingParticipantInput participants = 7;
   repeated ProjectDocumentInput documents = 8;
 }

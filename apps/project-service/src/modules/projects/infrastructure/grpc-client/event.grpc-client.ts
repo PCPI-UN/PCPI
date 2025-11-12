@@ -6,6 +6,7 @@ import { Observable, firstValueFrom } from 'rxjs';
 interface EventServiceGrpc {
   getEvent(data: { id: number }): Observable<any>;
   getCourse(data: { id: number }): Observable<any>;
+  getJurorMembership(data: { userId: number; eventId: number }): Observable<any>;
   // si luego quieres: listCoursesByEvent ...
 }
 
@@ -29,5 +30,9 @@ export class EventGrpcClient implements OnModuleInit {
 
   async getCourse(id: number) {
     return firstValueFrom(this.svc.getCourse({ id }));
+  }
+
+  async getJurorMembership(userId: number, eventId: number) {
+    return firstValueFrom(this.svc.getJurorMembership({ userId, eventId }));
   }
 }

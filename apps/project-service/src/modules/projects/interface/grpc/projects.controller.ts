@@ -18,6 +18,7 @@ import { AddPendingParticipantUC } from '../../application/use-cases/add-pending
 import { ListPendingParticipantsUC } from '../../application/use-cases/list-pending-participants.uc';
 import { ListProjectsAssignedToJurorUC } from '../../application/use-cases/list-projects-assigned-to-juror.uc';
 import { NotificateStudentUC } from '../../application/use-cases/notificate-student.uc';
+import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
 
 @Controller()
 export class ProjectsController {
@@ -30,6 +31,7 @@ export class ProjectsController {
     private readonly deleteProjectUC: DeleteProjectUC,
     private readonly updateProjectUC: UpdateProjectUC,
     private readonly approveProjectUC: ApproveProjectUC,
+    private readonly rejectProjectUC: RejectProjectUC,
     private readonly assignJurorBulkUC: AssignJurorBulkUC,
     private readonly reassignProjectJurorUC: ReassignProjectJurorUC,
     private readonly listProjectJurorsUC: ListProjectJurorsUC, 
@@ -110,25 +112,34 @@ export class ProjectsController {
     return { project: toProtoProject(updated) };
   }
 
+  @GrpcMethod('ProjectsService', 'RejectProject')
+  async rejectProjectRpc(req: { id: number; actingUserId: number; reason?: string }) {
+    const updated = await this.rejectProjectUC.execute({ 
+      id: req.id, 
+      actingUserId: req.actingUserId,
+      reason: req.reason 
+    });
+    return { project: toProtoProject(updated) };
+  }
+
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')
   async assignJurorToProjectsRpc(req: any) {
     const result = await this.assignJurorBulkUC.execute({
-      juror: protoToJurorKey(req.juror),
+      userId: req.userId,
       projectIds: req.projectIds ?? [],
-      skipEventMismatch: !!req.skipEventMismatch,
     });
     return { assigned: result.assigned, failures: result.failures };
   }
 
   @GrpcMethod('ProjectsService', 'ReassignProjectJuror')
-async reassignProjectJurorRpc(req: any) {
-  const result = await this.reassignProjectJurorUC.execute({
-    projectId: req.projectId,
-    fromJuror: protoToJurorKey(req.fromJuror),
-    toJuror: protoToJurorKey(req.toJuror),
-  });
-  return { ok: result.ok, changed: result.changed };
-}
+  async reassignProjectJurorRpc(req: any) {
+    const result = await this.reassignProjectJurorUC.execute({
+      projectId: req.projectId,
+      fromUserId: req.fromUserId,
+      toUserId: req.toUserId,
+    });
+    return { ok: result.ok, changed: result.changed };
+  }
 
 @GrpcMethod('ProjectsService', 'ListProjectJurors')
   async listProjectJurorsRpc(req: { projectId: number }) {
@@ -174,16 +185,14 @@ async listPendingParticipantsRpc(req: { projectId: number }) {
 
 @GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
 async createProjectWithPendingParticipantsRpc(req: any) {
-  //console.log('Received CreateProjectWithPendingParticipants request:', req);
   try {
-    
     const project = await this.createProject.execute({
       eventId: req.eventId,
       courseId: req.courseId,                
       name: req.name,
       description: req.description,
-      eventNumber: req.eventNumber,
-      state: protoToState(req.state),         
+      eventNumber: req.eventNumber, // Optional - set during confirmation
+      state: 'UNDER_REVIEW'       
     });
     console.log('Project created with ID:', project.id);
     const pendingParticipants = [];
@@ -200,7 +209,7 @@ async createProjectWithPendingParticipantsRpc(req: any) {
           lastName: p.lastName ?? undefined,
           email: p.email,
           studentCode: p.studentCode,
-          status: protoToStatus(p.status),
+          status: 'PENDING',
         });
         pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
       }
