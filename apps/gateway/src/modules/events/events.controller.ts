@@ -4,9 +4,9 @@ import {
   ApiOperation,
   ApiParam,
   ApiResponse,
-  ApiTags,
+  ApiTags
 } from '@nestjs/swagger';
-
+import { Public } from '../../common/decorators/public.decorator';
 import { EventService } from './events.service';
 import { CreateEventDTO } from './dto/events/create-event.dto';
 import { DeleteEventDTO } from './dto/events/delete-event.dto';
@@ -31,6 +31,7 @@ import { RequirePermission } from '../../common/decorators/require-permission.de
 export class EventsController {
     constructor(private readonly eventsService: EventService) {}
 
+    @Public()
     @RequirePermission('create:events')
     @Post()
     @ApiOperation({ summary: 'Create a new event' })
@@ -41,6 +42,7 @@ export class EventsController {
         return this.eventsService.create(createEventDTO);
     }
 
+    @Public()
     @RequirePermission('delete:events')
     @Post('delete')
     @ApiOperation({ summary: 'Delete an event' })
@@ -52,6 +54,7 @@ export class EventsController {
         return this.eventsService.delete(deleteEventDTO);
     }
 
+    @Public()
     @RequirePermission('read:events')
     @Get(':id')
     @ApiOperation({ summary: 'Get event by ID' })
@@ -63,6 +66,7 @@ export class EventsController {
         return this.eventsService.get({ id: Number(id) });
     }
 
+    @Public()
     @RequirePermission('read:events')
     @Get('page')
     @ApiOperation({ summary: 'Get paginated events' })
@@ -73,6 +77,7 @@ export class EventsController {
         return this.eventsService.listPage(listEventsPageDTO);
     }
 
+    @Public()
     @RequirePermission('read:events')
     @Get()
     @ApiOperation({ summary: 'Get all events with optional filters' })
@@ -83,6 +88,7 @@ export class EventsController {
         return this.eventsService.list(listEventsDTO);
     }
 
+    @Public()
     @RequirePermission('update:events')
     @Post('update')
     @ApiOperation({ summary: 'Update event details' })
@@ -94,6 +100,7 @@ export class EventsController {
         return this.eventsService.update(updateEventDTO);
     }
 
+    @Public()
     @RequirePermission('create:event-members')
     @Post('members')
     @ApiOperation({ summary: 'Create a new event member' })
@@ -104,6 +111,7 @@ export class EventsController {
         return this.eventsService.createMember(createEventMemberDTO);
     }
 
+    @Public()
     @RequirePermission('delete:event-members')
     @Post('members/delete')
     @ApiOperation({ summary: 'Delete event member' })
@@ -115,6 +123,7 @@ export class EventsController {
         return this.eventsService.deleteMember(deleteEventMemberDTO);
     }
 
+    @Public()
     @RequirePermission('read:event-members')
     @Get('members/:eventId')
     @ApiOperation({ summary: 'Get event members by event ID' })
@@ -126,6 +135,7 @@ export class EventsController {
         return this.eventsService.listMembers({ eventId: Number(eventId) });
     }
     
+    @Public()
     @RequirePermission('create:courses')
     @Post('courses')
     @ApiOperation({ summary: 'Create a new course' })
@@ -136,6 +146,7 @@ export class EventsController {
         return this.eventsService.createCourse(createCourseDTO);
     }
 
+    @Public()
     @RequirePermission('delete:courses')
     @Post('courses/delete')
     @ApiOperation({ summary: 'Delete a course' })
@@ -147,6 +158,7 @@ export class EventsController {
         return this.eventsService.deleteCourse(deleteCourseDTO);
     }
 
+    @Public()
     @RequirePermission('read:courses')
     @Get('courses/:id')
     @ApiOperation({ summary: 'Get course by ID' })
@@ -158,6 +170,7 @@ export class EventsController {
         return this.eventsService.getCourse(getCourseDTO);
     }
 
+    @Public()
     @RequirePermission('read:courses')
     @Get('courses')
     @ApiOperation({ summary: 'Get all courses' })
@@ -167,6 +180,7 @@ export class EventsController {
         return this.eventsService.listCourses();
     }
 
+    @Public()
     @RequirePermission('read:courses')
     @Get('courses/event/:eventId')
     @ApiOperation({ summary: 'Get courses by event ID' })
@@ -178,6 +192,7 @@ export class EventsController {
         return this.eventsService.listCoursesByEvent({ eventId: Number(eventId) });
     }
 
+    @Public()
     @RequirePermission('update:courses')
     @Post('courses/update')
     @ApiOperation({ summary: 'Update course details' })

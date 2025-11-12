@@ -26,6 +26,37 @@ import {
   AuthServiceClient,
   Role,
 } from '@app/common/generated/auth';
+import { CreateEventRequest,
+    CreateEventResponse,
+    DeleteEventRequest,
+    DeleteEventResponse,
+    GetEventRequest,
+    GetEventResponse,
+    ListEventsRequest,
+    ListEventsResponse,
+    UpdateEventRequest,
+    UpdateEventResponse,
+    ListEventsRequestPage,
+    ListEventsResponsePage,
+    CreateEventMemberRequest,
+    CreateEventMemberResponse,
+    DeleteEventMemberRequest,
+    DeleteEventMemberResponse,
+    ListEventMembersRequest,
+    ListEventMembersResponse,
+    CreateCourseRequest,
+    CreateCourseResponse,
+    DeleteCourseRequest,
+    DeleteCourseResponse,
+    UpdateCourseRequest,
+    UpdateCourseResponse,
+    ListCoursesRequest,
+    ListCoursesResponse,
+    GetCourseRequest,
+    GetCourseResponse,
+    ListCoursesByEventRequest,
+    ListCoursesByEventResponse
+ } from '@app/common/generated/event';
 
 @Injectable()
 export class EventService implements OnModuleInit{
@@ -47,64 +78,64 @@ export class EventService implements OnModuleInit{
        );
     }
 
-    async create(createEventDTO: CreateEventDTO) {
-        return firstValueFrom(this.eventService.createEvent(createEventDTO as any));
+    async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
+        return firstValueFrom(this.eventService.createEvent(createEventDTO as CreateEventRequest));
     }
 
-    async delete(deleteEventDTO: DeleteEventDTO) {
-        return firstValueFrom(this.eventService.deleteEvent(deleteEventDTO));
+    async delete(deleteEventDTO: DeleteEventDTO): Promise<DeleteEventResponse> {
+        return firstValueFrom(this.eventService.deleteEvent(deleteEventDTO as DeleteEventRequest));
     }
 
-    async get(getEventDTO: GetEventDTO) {
-        return firstValueFrom(this.eventService.getEvent(getEventDTO));
+    async get(getEventDTO: GetEventDTO): Promise<GetEventResponse> {
+        return firstValueFrom(this.eventService.getEvent(getEventDTO as GetEventRequest));
     }
 
     async listPage(listEventsPageDTO: ListEventsPageDTO) {
         return firstValueFrom(this.eventService.listEvents(listEventsPageDTO as any));
     }
 
-    async list(listEventsDTO: ListEventsDTO) {
-        return firstValueFrom(this.eventService.listEvents(listEventsDTO as any));
+    async list(listEventsDTO: ListEventsDTO): Promise<ListEventsResponse> {
+        return firstValueFrom(this.eventService.listEvents(listEventsDTO as ListEventsRequest));
     }
 
-    async update(updateEventDTO: UpdateEventDTO) {
-        return firstValueFrom(this.eventService.updateEvent(updateEventDTO as any));
+    async update(updateEventDTO: UpdateEventDTO): Promise<UpdateEventResponse> {
+        return firstValueFrom(this.eventService.updateEvent(updateEventDTO as UpdateEventRequest));
     }
 
-    async createMember(createEventMemberDTO: CreateEventMemberDTO) {
-        return firstValueFrom(this.eventService.createEventMember(createEventMemberDTO));
+    async createMember(createEventMemberDTO: CreateEventMemberDTO): Promise<CreateEventMemberResponse> {
+        return firstValueFrom(this.eventService.createEventMember(createEventMemberDTO as CreateEventMemberRequest));
     }
 
-    async deleteMember(deleteEventMemberDTO: DeleteEventMemberDTO) {
-        return firstValueFrom(this.eventService.deleteEventMember(deleteEventMemberDTO));
+    async deleteMember(deleteEventMemberDTO: DeleteEventMemberDTO): Promise<DeleteEventMemberResponse> {
+        return firstValueFrom(this.eventService.deleteEventMember(deleteEventMemberDTO as DeleteEventMemberRequest));
     }
 
-    async listMembers(listEventMembersDTO: ListEventMembersDTO) {
-        return firstValueFrom(this.eventService.listEventMembers(listEventMembersDTO));
+    async listMembers(listEventMembersDTO: ListEventMembersDTO): Promise<ListEventMembersResponse> {
+        return firstValueFrom(this.eventService.listEventMembers(listEventMembersDTO as ListEventMembersRequest));
     }
 
-    async createCourse(createCourseDTO: CreateCourseDTO) {
-        return firstValueFrom(this.eventService.createCourse(createCourseDTO as any));
+    async createCourse(createCourseDTO: CreateCourseDTO): Promise<CreateCourseResponse> {
+        return firstValueFrom(this.eventService.createCourse(createCourseDTO as CreateCourseRequest));
     }
 
-    async deleteCourse(deleteCourseDTO: DeleteCourseDTO) {
-        return firstValueFrom(this.eventService.deleteCourse(deleteCourseDTO));
+    async deleteCourse(deleteCourseDTO: DeleteCourseDTO): Promise<DeleteCourseResponse> {
+        return firstValueFrom(this.eventService.deleteCourse(deleteCourseDTO as DeleteCourseRequest));
     }
 
-    async getCourse(getCourseDTO: GetCourseDTO) {
-        return firstValueFrom(this.eventService.getCourse(getCourseDTO));
+    async getCourse(getCourseDTO: GetCourseDTO): Promise<GetCourseResponse> {
+        return firstValueFrom(this.eventService.getCourse(getCourseDTO as GetCourseRequest));
     }
 
-    async listCourses(listCoursesDTO?: ListCoursesDTO) {
+    async listCourses(listCoursesDTO?: ListCoursesDTO): Promise<ListCoursesResponse> {
         // Assuming the gRPC method can handle optional DTO or empty for all
-        return firstValueFrom(this.eventService.listCourses(listCoursesDTO as any || {}));
+        return firstValueFrom(this.eventService.listCourses(listCoursesDTO as ListCoursesRequest || {}));
     }
 
-    async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO) {
-        return firstValueFrom(this.eventService.listCoursesByEvent(listCoursesByEventDTO as any));
+    async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO): Promise<ListCoursesByEventResponse> {
+        return firstValueFrom(this.eventService.listCoursesByEvent(listCoursesByEventDTO as ListCoursesByEventRequest));
     }
 
-    async updateCourse(updateCourseDTO: UpdateCourseDTO) {
-        return firstValueFrom(this.eventService.updateCourse(updateCourseDTO as any));
+    async updateCourse(updateCourseDTO: UpdateCourseDTO): Promise<UpdateCourseResponse> {
+        return firstValueFrom(this.eventService.updateCourse(updateCourseDTO as UpdateCourseRequest));
     }
 }
