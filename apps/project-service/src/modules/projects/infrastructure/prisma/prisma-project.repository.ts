@@ -108,6 +108,16 @@ export class PrismaProjectRepository implements ProjectRepository {
     })) as unknown as Project;
   }
 
+  async setProjectStateWithReason(id: number, state: ProjectState, reason?: string): Promise<Project> {
+    return (await this.prisma.project.update({
+      where: { id },
+      data: { 
+        state,
+        rejectionReason: reason,
+      },
+    })) as unknown as Project;
+  }
+
   async delete(id: number): Promise<void> {
     await this.prisma.project.delete({ where: { id } });
   }
@@ -146,6 +156,20 @@ export class PrismaProjectRepository implements ProjectRepository {
     });
   }
 
+  async bulkUpsertAssignments(projectIds: number[], juror: JurorKey): Promise<void> {
+    const data = projectIds.map(projectId => ({
+      projectId,
+      memberUserId: juror.memberUserId,
+      memberEventId: juror.memberEventId,
+      memberRoleId: juror.memberRoleId,
+    }));
+
+    await this.prisma.projectAssignment.createMany({
+      data,
+      skipDuplicates: true, // Skip if assignment already exists for efficient insertion!
+    });
+  }
+
   async removeAssignment(projectId: number, juror: JurorKey): Promise<boolean> {
     const res = await this.prisma.projectAssignment.deleteMany({
       where: {
@@ -164,7 +188,7 @@ export class PrismaProjectRepository implements ProjectRepository {
       select: { memberUserId: true, memberEventId: true, memberRoleId: true },
       orderBy: [{ memberUserId: 'asc' }, { memberRoleId: 'asc' }],
     });
-    return rows.map(r => ({
+    return rows.map((r: { memberUserId: number; memberEventId: number; memberRoleId: number }) => ({
       memberUserId: r.memberUserId,
       memberEventId: r.memberEventId,
       memberRoleId: r.memberRoleId,

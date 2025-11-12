@@ -17,6 +17,7 @@ service EventService {
   rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
   rpc DeleteEventMember (DeleteEventMemberRequest) returns (DeleteEventMemberResponse) {}
   rpc GetEventMember (GetEventMemberRequest) returns (GetEventMemberResponse) {}
+  rpc GetJurorMembership (GetJurorMembershipRequest) returns (GetJurorMembershipResponse) {}
 
   // ---- COURSES ----
   rpc CreateCourse (CreateCourseRequest) returns (CreateCourseResponse) {}
@@ -155,6 +156,18 @@ message GetEventMemberResponse {
   bool active = 4;
   string createdAt = 5;
   string updatedAt = 6;
+}
+
+message GetJurorMembershipRequest {
+  int32 userId = 1;
+  int32 eventId = 2;
+}
+
+message GetJurorMembershipResponse {
+  bool isJuror = 1;
+  int32 memberUserId = 2;
+  int32 memberEventId = 3;
+  int32 memberRoleId = 4;
 }
 
 // =====================

@@ -29,6 +29,7 @@ export interface ProjectRepository {
   }): Promise<Project>;
 
   setProjectState(id: number, state: ProjectState): Promise<Project>;
+  setProjectStateWithReason(id: number, state: ProjectState, reason?: string): Promise<Project>;
 
   delete(id: number): Promise<void>;
 
@@ -37,6 +38,8 @@ export interface ProjectRepository {
   listDocuments(projectId: number): Promise<ProjectDocument[]>;
 
   upsertAssignment(projectId: number, juror: JurorKey): Promise<void>;
+  // Bulk assign juror to multiple projects in one operation
+  bulkUpsertAssignments(projectIds: number[], juror: JurorKey): Promise<void>;
   removeAssignment(projectId: number, juror: JurorKey): Promise<boolean>; // true si borró algo
   listAssignments(projectId: number): Promise<JurorKey[]>; // opcional útil
 
