@@ -1,22 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
-import { CriterionRepositoryPort } from '../../domain/repositories/criterion.repository.port';
-import { Inject } from '@nestjs/common';
+import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
 import { UpdateCriterionDto } from '../dto/update-criterion.dto';
-import { Criterion } from '../../domain/entities/criterion.entity';
+import { Criterion } from '@criterions/domain/entities/criterion.entity';
+import { CriterionCourse } from '@criterions/domain/entities/criterion-courses.entity';
+import { EventServiceClient } from '@common/clients/event-service.client';
 
 @Injectable()
 export class UpdateCriterionUseCase {
   constructor(
-    @Inject('CriterionRepositoryPort')
     private readonly criterionRepository: CriterionRepositoryPort,
+    private readonly eventServiceClient: EventServiceClient,
   ) {}
 
-  async execute(updateCriterionDto: UpdateCriterionDto): Promise<Criterion> {
+  async execute(updateCriterionDto: UpdateCriterionDto): Promise<{
+    criterion: Criterion;
+    courseIds: number[];
+  }> {
     const { id, eventId, name, description, weight, active, courseIds } = updateCriterionDto;
 
-    // Check if criterion exists
     const existingCriterion = await this.criterionRepository.findById(id);
     if (!existingCriterion) {
       throw new RpcException({
@@ -25,7 +28,6 @@ export class UpdateCriterionUseCase {
       });
     }
 
-    // Validate weight if provided
     if (weight !== undefined && (weight <= 0 || weight > 1)) {
       throw new RpcException({
         code: status.INVALID_ARGUMENT,
@@ -33,7 +35,6 @@ export class UpdateCriterionUseCase {
       });
     }
 
-    // Validate name if provided
     if (name !== undefined && (!name || name.trim().length === 0)) {
       throw new RpcException({
         code: status.INVALID_ARGUMENT,
@@ -41,32 +42,96 @@ export class UpdateCriterionUseCase {
       });
     }
 
-    // Crear la entidad actualizada con los valores existentes o los nuevos
+
+    const finalEventId = eventId ?? existingCriterion.eventId;
+
+    // If eventId is being updated, validate new event exists
+    if (eventId !== undefined && eventId !== existingCriterion.eventId) {
+      try {
+        await this.eventServiceClient.getEvent(eventId);
+      } catch (error) {
+        throw new RpcException({
+          code: status.NOT_FOUND,
+          message: `Event with ID ${eventId} not found`,
+        });
+      }
+    }
+
+    let coursesToValidate: number[] | undefined = courseIds;
+
+    // If courses are being updated, validate them
+    if (courseIds !== undefined && courseIds.length > 0) {
+      const { valid, invalidCourses } = await this.eventServiceClient.validateCoursesBelongToEvent(
+        courseIds,
+        finalEventId,
+      );
+
+      if (!valid) {
+        throw new RpcException({
+          code: status.INVALID_ARGUMENT,
+          message: `Courses [${invalidCourses.join(', ')}] do not belong to event ${finalEventId}`,
+        });
+      }
+
+      coursesToValidate = courseIds;
+    } else if (courseIds === undefined) {
+      // If courses are not being updated, get existing courses for weight validation
+      const existingCourses = await this.criterionRepository.getCriterionCourses(id);
+      coursesToValidate = existingCourses.map((cc: CriterionCourse) => cc.course_id);
+    }
+
+    const finalWeight = weight ?? existingCriterion.weight;
+
+    // Validate weight constraint if weight is changing or courses are being updated
+    if (coursesToValidate && coursesToValidate.length > 0 && (weight !== undefined || courseIds !== undefined)) {
+      for (const courseId of coursesToValidate) {
+        // Get all criteria for this course EXCLUDING current criterion
+        const otherCriteria = (await this.criterionRepository.findByCourseId(courseId))
+          .filter((c: Criterion) => c.id !== id && c.active);
+
+        const otherWeight = otherCriteria.reduce((sum: number, c: Criterion) => sum + c.weight, 0);
+
+        // Check if updated weight would exceed 100%
+        if (otherWeight + finalWeight > 1.0) {
+          throw new RpcException({
+            code: status.INVALID_ARGUMENT,
+            message: `Updated weight for course ${courseId} would exceed 100%. Other criteria: ${(otherWeight * 100).toFixed(2)}%, Requested: ${(finalWeight * 100).toFixed(2)}%, Total: ${((otherWeight + finalWeight) * 100).toFixed(2)}%`,
+          });
+        }
+      }
+    }
+
     const updatedCriterion = new Criterion(
       id,
-      eventId ?? existingCriterion.eventId,
+      finalEventId,
       name?.trim() ?? existingCriterion.name,
       description !== undefined ? (description?.trim() || null) : existingCriterion.description,
-      weight ?? existingCriterion.weight,
+      finalWeight,
       active ?? existingCriterion.active,
+      existingCriterion.createdAt,
+      new Date(),
     );
 
     try {
-      // Actualizar el criterio
       const savedCriterion = await this.criterionRepository.update(updatedCriterion);
 
-      // Manejar la asociación de cursos si se proporcionaron
       if (courseIds !== undefined) {
-        // Remover todas las asociaciones existentes
         await this.criterionRepository.removeAllCourseAssociations(id);
-        
-        // Agregar las nuevas asociaciones si hay cursos
+
         if (courseIds.length > 0) {
           await this.criterionRepository.associateCourses(id, courseIds);
         }
       }
 
-      return savedCriterion;
+      // Get final courseIds to return
+      const finalCourseIds = courseIds !== undefined
+        ? courseIds
+        : (await this.criterionRepository.getCriterionCourses(id)).map((cc: CriterionCourse) => cc.course_id);
+
+      return {
+        criterion: savedCriterion,
+        courseIds: finalCourseIds,
+      };
     } catch (error) {
       throw new RpcException({
         code: status.INTERNAL,

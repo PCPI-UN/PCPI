@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
 import { EvaluationServiceModule } from './evaluation-service.module';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { MicroserviceOptions, Transport, RpcException } from '@nestjs/microservices';
 import { join } from 'path';
 
 async function bootstrap() {
@@ -9,10 +11,10 @@ async function bootstrap() {
     {
       transport: Transport.GRPC,
       options: {
-        package: 'evaluation',
+        package: 'criterions',
         protoPath: join(
           process.cwd(),
-          'libs/common/src/protos/evaluation.proto',
+          'libs/common/src/protos/criterions.proto',
         ),
         url: `${process.env.GRPC_HOST || '0.0.0.0'}:${
           process.env.GRPC_PORT || 50052
@@ -20,6 +22,26 @@ async function bootstrap() {
       },
     },
   );
+
+    app.useGlobalPipes(new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors: ValidationError[]) => {
+        const messages = errors.map((error) => {
+          const constraints = error.constraints;
+          if (constraints) {
+            return `${error.property}: ${Object.values(constraints).join(', ')}`;
+          }
+          return `${error.property}: validation failed`;
+        });
+  
+        return new RpcException({
+          code: 3, // Equivalent to HTTP 400 Bad Request
+          message: `Validation failed: ${messages.join('; ')}`,
+        });
+      },
+    }));
   await app.listen();
 }
 bootstrap();

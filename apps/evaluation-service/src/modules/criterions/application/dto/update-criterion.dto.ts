@@ -1,9 +1,44 @@
+import {
+  IsInt,
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  IsArray,
+  Min,
+  Max,
+} from 'class-validator';
+
 export class UpdateCriterionDto {
-  id!: number;
+  @IsInt()
+  @IsNotEmpty()
+  id: number;
+
+  @IsInt()
+  @IsOptional()
   eventId?: number;
+
+  @IsString()
+  @IsOptional()
   name?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  @Max(100)
   weight?: number;
+
+  @IsBoolean()
+  @IsOptional()
   active?: boolean;
+
+  @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
   courseIds?: number[];
 }

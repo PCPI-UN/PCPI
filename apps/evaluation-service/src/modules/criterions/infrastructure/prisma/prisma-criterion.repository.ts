@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../common/prisma/prisma.service';
-// Temporary fix - using any until module resolution is fixed
-type CriterionRepositoryPort = any;
-type Criterion = any;
-type CriterionCourse = any;
+import { PrismaService } from '@common/prisma/prisma.service';
+import { CriterionRepositoryPort, PaginatedCriterions, FindAllFilters } from '@criterions/domain/repositories/criterion.repository.port';
+import { Criterion } from '@criterions/domain/entities/criterion.entity';
+import { CriterionCourse } from '@criterions/domain/entities/criterion-courses.entity';
+
+
 import { CriterionMapper } from './mappers/criterion.mapper';
 
 @Injectable()
@@ -13,7 +14,6 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
   async create(criterion: Criterion): Promise<Criterion> {
     const persistenceData = CriterionMapper.toPersistence(criterion);
     
-    // Para crear, removemos el ID para que la base de datos lo genere
     const { id, ...createData } = persistenceData;
     
     const newPrismaCriterion = await this.prisma.criterion.create({
@@ -25,14 +25,16 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
 
   async findById(id: number): Promise<Criterion | null> {
     const prismaCriterion = await this.prisma.criterion.findUnique({
-      where: { id },
+      where: { id, active: true },
     });
     
     return prismaCriterion ? CriterionMapper.toDomain(prismaCriterion) : null;
   }
 
-  async findAll(filters?: { eventId?: number; courseId?: number }): Promise<Criterion[]> {
-    let whereClause: any = {};
+  async findAll(page: number, limit: number, filters?: FindAllFilters): Promise<PaginatedCriterions> {
+    let whereClause: any = {
+      active: true,
+    };
 
     if (filters?.eventId) {
       whereClause.eventId = filters.eventId;
@@ -46,11 +48,20 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
       };
     }
 
-    const prismaCriterions = await this.prisma.criterion.findMany({
-      where: whereClause,
-    });
+    const [results, total] = await Promise.all([
+      this.prisma.criterion.findMany({
+        where: whereClause,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.criterion.count({
+        where: whereClause,
+      }),
+    ]);
 
-    return prismaCriterions.map(CriterionMapper.toDomain);
+    const criterions = results.map(CriterionMapper.toDomain);
+
+    return { criterions, total };
   }
 
   async update(criterion: Criterion): Promise<Criterion> {
@@ -65,13 +76,13 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
   }
 
   async delete(id: number): Promise<void> {
-    await this.prisma.criterion.delete({
+    await this.prisma.criterion.update({
       where: { id },
+      data: { active: false },
     });
   }
 
   async associateCourses(criterionId: number, courseIds: number[]): Promise<void> {
-    // Crear las asociaciones en lote
     const associations = courseIds.map(courseId => ({
       criterionId,
       courseId,
@@ -79,7 +90,7 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
 
     await this.prisma.criterionCourse.createMany({
       data: associations,
-      skipDuplicates: true, // Evita errores si ya existen las asociaciones
+      skipDuplicates: true,
     });
   }
 
@@ -95,5 +106,37 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
     });
 
     return prismaCriterionCourses.map(CriterionMapper.criterionCourseToDomain);
+  }
+
+  async findByCourseId(courseId: number): Promise<Criterion[]> {
+    const prismaCriterions = await this.prisma.criterion.findMany({
+      where: {
+        active: true,
+        criterionsCourses: {
+          some: {
+            courseId,
+          },
+        },
+      },
+    });
+
+    return prismaCriterions.map(CriterionMapper.toDomain);
+  }
+
+  async findByCourseIds(courseIds: number[]): Promise<Criterion[]> {
+    const prismaCriterions = await this.prisma.criterion.findMany({
+      where: {
+        active: true,
+        criterionsCourses: {
+          some: {
+            courseId: {
+              in: courseIds,
+            },
+          },
+        },
+      },
+    });
+
+    return prismaCriterions.map(CriterionMapper.toDomain);
   }
 }

@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { EventRepository } from '../../domain/repositories/event.repository';
+import { Event as DomainEvent } from '../../domain/entities/event.entity';
 
 // Si tienes un mapper a dominio, úsalo; aquí dejo uno rápido inline:
 type PrismaEvent = Parameters<PrismaService['event']['create']>[0] extends { data: infer _ }
   ? any
   : any;
 
-function toDomainEvent(p: any) {
-  if (!p) return null;
+function toDomainEvent(p: any): DomainEvent {
   return {
     id: p.id,
     organizationId: p.organizationId,
@@ -22,9 +22,9 @@ function toDomainEvent(p: any) {
     endDate: p.endDate,
     active: p.active,
     createdAt: p.createdAt,
-    updatedAt: p.updatedAt,  
+    updatedAt: p.updatedAt,
     createdByUserId: p.createdByUserId,
-    location: p.location,            
+    location: p.location,
   };
 }
 
@@ -33,6 +33,7 @@ export class PrismaEventRepository extends EventRepository {
   constructor(private readonly prisma: PrismaService) {
     super();
   }
+
 
 
   private buildWhere(where?: { q?: string; onlyActive?: boolean }) {
@@ -128,8 +129,7 @@ export class PrismaEventRepository extends EventRepository {
 
   async findAll() {
     const rows = await this.prisma.event.findMany({
-      // Si usas select, asegúrate de incluir location
-      // select: { id: true, name: true, ..., location: true },
+      
       orderBy: { id: 'asc' },
     });
     return rows.map(toDomainEvent);
@@ -191,4 +191,37 @@ export class PrismaEventRepository extends EventRepository {
     const where = this.buildWhere(whereIn);
     return this.prisma.event.count({ where });
   }
+
+    async findPaginated(params: {
+    page: number;
+    limit: number;
+    q?: string;
+    onlyActive?: boolean;
+  }): Promise<{ items: DomainEvent[]; total: number }> {
+    const { page, limit, q, onlyActive } = params;
+
+    const where = this.buildWhere({ q, onlyActive });
+    const skip = (page - 1) * limit;
+
+    const [rows, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    const items = rows.map((row) => toDomainEvent(row)); 
+
+    return {
+      items,
+      total,
+    };
+  }
 }
+
+
+
+

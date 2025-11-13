@@ -10,7 +10,6 @@ service EventService {
   rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse) {}
   rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse) {}
   rpc GetEvent (GetEventRequest) returns (GetEventResponse) {}
-  rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
   rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
   rpc ListEventsPage (ListEventsRequestPage) returns (ListEventsResponsePage) {}
 
@@ -110,16 +109,7 @@ message GetEventResponse {
   
 }
 
-message ListEventsRequest {
-  int32 pageSize = 1;
-  string pageToken = 2;
-  bool onlyActive = 3;
-}
 
-message ListEventsResponse {
-  repeated GetEventResponse events = 1;
-  string nextPageToken = 2;
-}
 
 message DeleteEventRequest {
   int32 id = 1;

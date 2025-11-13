@@ -1,2 +1,2 @@
 export * from './event.dto';
-export * from './event-member.dto';
+export * from "./event-member.dto"

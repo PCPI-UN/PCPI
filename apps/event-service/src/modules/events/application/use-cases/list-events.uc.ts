@@ -1,35 +1,49 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EventRepository } from '../../domain/repositories/event.repository';
+import { Event as DomainEvent } from '../../domain/entities/event.entity';
+import { ListEventsPageDTO } from '../dto/list-events-page.dto';
+import { ListEventsDTO } from '../dto/list-events.dto';
+
+interface ListEventsOutput {
+  items: DomainEvent[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
 
 @Injectable()
 export class ListEventsUC {
   constructor(
-    @Inject('EventRepository') private readonly repo: any,
+    @Inject('EventRepository')
+    private readonly repo: EventRepository,
   ) {}
 
-  async execute(input: any) {
+  async execute(input: ListEventsDTO): Promise<ListEventsOutput> {
+    // 👇 aquí resolvemos el undefined con defaults
+    
     const page = input.page && input.page > 0 ? input.page : 1;
-    const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 20;
+    const limit = input.limit && input.limit > 0 ? input.limit : 10;
 
-    // 🔹 usa findAll (no list)
-    const allEvents = await this.repo.findAll();
+    const { items, total } = await this.repo.findPaginated({
+      page,
+      limit,
+      q: input.q,
+      onlyActive: input.onlyActive,
+    });
 
-    // 🔹 aplica paginación y búsqueda si quieres
-    const filtered = input.q
-  ? allEvents.filter((e: any) =>
-      e.name.toLowerCase().includes(input.q.toLowerCase()) ||
-      e.description?.toLowerCase().includes(input.q.toLowerCase()),
-    )
-  : allEvents;
-
-
-    const start = (page - 1) * pageSize;
-    const paged = filtered.slice(start, start + pageSize);
+    const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
 
     return {
-      total: filtered.length,
-      page,
-      pageSize,
-      data: paged,
+      items,
+      page,       
+      limit,      
+      total,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
     };
   }
 }
