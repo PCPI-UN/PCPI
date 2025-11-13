@@ -23,7 +23,7 @@ type AddPendingParticipantInput = {
   status: 'PENDING' | 'INVITED' | 'JOINED';
 };
 
-type ListOpts = { courseId?: number; q?: string; page?: number; pageSize?: number };
+type ListOpts = { courseId?: number; q?: string; page?: number; pageSize?: number; state?: ProjectState };
 
 @Injectable()
 export class PrismaProjectRepository implements ProjectRepository {
@@ -57,14 +57,14 @@ export class PrismaProjectRepository implements ProjectRepository {
     })) as unknown as Project | null;
   }
 
-  async listByEvent(eventId: number, opts?: ListOpts): Promise<{ items: Project[]; total: number }> {
+  async listByFilter(eventId: number, opts?: ListOpts): Promise<{ items: Project[]; total: number, page: number; pageSize: number }> {
     const page = opts?.page && opts.page > 0 ? opts.page : 1;
-    const pageSize = opts?.pageSize && opts.pageSize > 0 ? opts.pageSize : 20;
-
+    const pageSize = opts?.pageSize && opts.pageSize > 0 ? opts.pageSize : 10;
     const where: any = {
       eventId,
       ...(opts?.courseId ? { courseId: opts.courseId } : {}),
       ...(opts?.q ? { name: { contains: opts.q, mode: 'insensitive' as const } } : {}),
+      ...(opts?.state ? { state: opts.state } : {}),
     };
 
     const [items, total] = await this.prisma.$transaction([
@@ -77,7 +77,7 @@ export class PrismaProjectRepository implements ProjectRepository {
       this.prisma.project.count({ where }),
     ]);
 
-    return { items: items as unknown as Project[], total };
+    return { items: items as unknown as Project[], total, page, pageSize };
   }
 
   async updateProject(input: {

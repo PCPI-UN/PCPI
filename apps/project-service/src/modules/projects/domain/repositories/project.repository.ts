@@ -14,9 +14,9 @@ export interface ProjectRepository {
   findManyByIds(ids: number[]): Promise<Project[]>;
   findProject(eventId: number, courseId: number, name: string): Promise<Project | null>;
 
-  listByEvent(
+  listByFilter(
     eventId: number,
-    opts?: { courseId?: number; q?: string; page?: number; pageSize?: number } 
+    opts?: { courseId?: number; q?: string; page?: number; pageSize?: number; state?: ProjectState } 
   ): Promise<{ items: Project[]; total: number }>;
 
   updateProject(input: {

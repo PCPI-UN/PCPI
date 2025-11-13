@@ -19,6 +19,8 @@ import { ListPendingParticipantsUC } from '../../application/use-cases/list-pend
 import { ListProjectsAssignedToJurorUC } from '../../application/use-cases/list-projects-assigned-to-juror.uc';
 import { NotificateStudentUC } from '../../application/use-cases/notificate-student.uc';
 import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
+import { ListProjectsForReviewUC } from '../../application/use-cases/list-projects-for-review.uc';
+import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto';
 
 @Controller()
 export class ProjectsController {
@@ -70,9 +72,9 @@ export class ProjectsController {
   }
 
    @GrpcMethod('ProjectsService', 'ListProjectsByEvent')
-  async listProjectsByEventRpc(req: { eventId: number; courseId?:number; q?: string; page?: number; pageSize?: number }) {
+  async listProjectsByEventRpc(req: ListProjectsByFilterDTO) {
     const res = await this.listByEvent.execute(req);
-    return { items: res.items.map(toProtoProject), total: res.total };
+    return { items: res.items.map(toProtoProject), total: res.total, page: res.page, pageSize: res.pageSize, totalPages: res.totalPages };
   }
 
   @GrpcMethod('ProjectsService', 'AddProjectDocumentFromUrl')
@@ -256,12 +258,10 @@ async listAssignedProjectsRpc(req: any) {
 }
 
 @GrpcMethod('ProjectsService', 'ListProjectsForReview')
-async listProjectsForReviewRpc(req: any) {
-  const res = await this.listProjectsForReviewUC.execute({
-    eventId: req.eventId,
-  });
-  return { items: res.map(toProtoProject) };
-    
+async listProjectsForReviewRpc(req: ListProjectsByFilterDTO) {
+  const res = await this.listProjectsForReviewUC.execute(req);
+  return { items: res.items.map(toProtoProject), total: res.total, page: res.page, pageSize: res.pageSize, totalPages: res.totalPages };
+  
 }
 
 }
