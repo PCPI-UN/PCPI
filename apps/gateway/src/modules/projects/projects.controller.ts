@@ -1,16 +1,29 @@
-import { Body, Controller, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { 
+  Body, 
+  Controller, 
+  Param, 
+  ParseIntPipe, 
+  Patch, 
+  Post, 
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
+  ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AppUser } from '../auth/types/app-user.type';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
+import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
 import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
 import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
 import { ApproveProjectDto } from './dto/approve-project.dto';
@@ -24,10 +37,30 @@ export class ProjectsController {
 
   @Public()
   @Post()
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 4 }, // Max 4 files: 1 logo + 1 poster + 2 supporting docs
+      ],
+      {
+        limits: {
+          fileSize: 5 * 1024 * 1024, // 5MB max per file
+        },
+      },
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
-    summary: 'Submit a new project',
+    summary: 'Submit a new project with file uploads',
     description:
-      'Public endpoint that allows anyone to submit a project with participants and documents. No authentication required.',
+      'Public endpoint that allows anyone to submit a project with participants and document files. ' +
+      'Accepts up to 4 files: 1 logo, 1 poster, and 2 supporting documents. ' +
+      'Maximum file size: 5MB per file. ' +
+      'Files are uploaded to Azure Blob Storage. No authentication required.',
+  })
+  @ApiBody({
+    description: 'Project data with file uploads (max 4 files, 5MB each)',
+    type: CreateProjectWithParticipantsMultipartDto,
   })
   @ApiResponse({
     status: 201,
@@ -35,12 +68,24 @@ export class ProjectsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid input data',
+    description: 'Invalid input data, file too large, or too many files',
   })
-  submitProject(
-    @Body() createProjectDto: CreateProjectWithParticipantsDto,
+  @ApiResponse({
+    status: 413,
+    description: 'File size exceeds 5MB limit',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to upload files to Azure Blob Storage',
+  })
+  async submitProject(
+    @Body() body: CreateProjectWithParticipantsMultipartDto,
+    @UploadedFiles() uploadedFiles: { files?: Express.Multer.File[] },
   ) {
-    return this.projectsService.createProjectWithParticipants(createProjectDto);
+    return this.projectsService.createProjectWithParticipantsAndFiles(
+      body,
+      uploadedFiles.files || [],
+    );
   }
 
   // TODO: Add platform permission guard - only admins/event managers can assign jurors

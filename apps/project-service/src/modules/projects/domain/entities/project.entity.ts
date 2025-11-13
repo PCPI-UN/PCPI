@@ -1,6 +1,6 @@
 export type ProjectState = 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
 export type StudentStatus = 'PENDING' | 'INVITED' | 'JOINED';
-export type TypedDocument = 'POSTER' | 'SUPPORTING_DOCUMENT';
+export type TypedDocument = 'LOGO' | 'POSTER' | 'SUPPORTING_DOCUMENT';
 export type Status = 'ACTIVE' | 'INACTIVE';
 
 export interface Project {

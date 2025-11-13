@@ -22,15 +22,17 @@ export const protoToState = (n?: number): ProjectState => {
 
 const TypedDocumentToProto = (t: TypedDocument): number => {
   switch (t) {
-    case 'POSTER': return 1;
-    case 'SUPPORTING_DOCUMENT': return 2;
+    case 'LOGO': return 1;
+    case 'POSTER': return 2;
+    case 'SUPPORTING_DOCUMENT': return 3;
     default: return 0; // UNSPECIFIED
   }
 };
 export const protoToTypedDocument = (n?: number): TypedDocument => {
   switch (n) {
-    case 1: return 'POSTER';
-    case 2: return 'SUPPORTING_DOCUMENT';
+    case 1: return 'LOGO';
+    case 2: return 'POSTER';
+    case 3: return 'SUPPORTING_DOCUMENT';
     default: return 'POSTER';
   }
 };
