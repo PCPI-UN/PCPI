@@ -25,7 +25,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
           return request?.cookies?.['refresh_token'];
         },
       ]),
-      ignoreExpiration: true,
+      ignoreExpiration: false,
       secretOrKey: refreshPublicKey,
       algorithms: ['RS256'],
       passReqToCallback: true,

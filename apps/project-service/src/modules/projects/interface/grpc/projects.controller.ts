@@ -40,9 +40,7 @@ export class ProjectsController {
     private readonly addPendingParticipantUC: AddPendingParticipantUC,
     private readonly listPendingParticipantsUC: ListPendingParticipantsUC,
     private readonly listAssignedToJurorUC: ListProjectsAssignedToJurorUC,
-    private readonly notificateStudentUC: NotificateStudentUC,
-    private readonly listProjectsForReviewUC: ListProjectsForReviewUC,
-    
+    private readonly notificateStudentUC: NotificateStudentUC,    
 
   ) {}
 
@@ -253,15 +251,6 @@ async listAssignedProjectsRpc(req: any) {
     pageSize: req.pageSize,
   });
   return { items: res.items.map(toProtoProject), total: res.total };
-}
-
-@GrpcMethod('ProjectsService', 'ListProjectsForReview')
-async listProjectsForReviewRpc(req: any) {
-  const res = await this.listProjectsForReviewUC.execute({
-    eventId: req.eventId,
-  });
-  return { items: res.map(toProtoProject) };
-    
 }
 
 }
