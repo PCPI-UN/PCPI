@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EventMemberRepository } from '../ports/event-member.repository';
-import { EventRepository } from '../../../events/application/ports/event.repository';
-import { CreateEventMember } from '../dto/create-event-member.dto';
+import { EventMemberRepository } from '../../domain/repositories/event-member.repository';
+import { EventRepository } from '../../../events/domain/repositories/event.repository';
+import { CreateEventMemberDTO } from '../dto/create-event-member.dto';
 import { EventMember } from '../../domain/entities/event-member.entity';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class CreateEventMemberUseCase {
     private readonly eventRepository: EventRepository,
   ) {}
 
-  async execute(input: CreateEventMember): Promise<EventMember> {
+  async execute(input: CreateEventMemberDTO): Promise<EventMember> {
     // Check if event exists (taking into account events module)
     const event = await this.eventRepository.findById(input.eventId);
     if (!event) {

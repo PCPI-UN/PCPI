@@ -10,14 +10,14 @@ service EventService {
   rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse) {}
   rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse) {}
   rpc GetEvent (GetEventRequest) returns (GetEventResponse) {}
-  rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
   rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
+  rpc ListEventsPage (ListEventsRequestPage) returns (ListEventsResponsePage) {}
 
   // ---- EVENT MEMBERS ----
   rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
   rpc DeleteEventMember (DeleteEventMemberRequest) returns (DeleteEventMemberResponse) {}
   rpc GetEventMember (GetEventMemberRequest) returns (GetEventMemberResponse) {}
-  rpc GetJurorMembership (GetJurorMembershipRequest) returns (GetJurorMembershipResponse) {}
+  rpc ListEventMembers (ListEventMembersRequest) returns (ListEventMembersResponse) {}
 
   // ---- COURSES ----
   rpc CreateCourse (CreateCourseRequest) returns (CreateCourseResponse) {}
@@ -46,15 +46,18 @@ message Course {
 // =====================
 
 message CreateEventRequest {
-  string name = 1;
-  string description = 2;
+  int32 organizationId = 1;
+  string name = 2;
   string accessCode = 3;
   bool isPubliclyJoinable = 4;
   string inscriptionDeadline = 5;
   bool evaluationsOpened = 6;
   string startDate = 7;
   string endDate = 8;
-}
+  string description = 9;
+  string location = 10;
+} 
+
 
 message CreateEventResponse {
   bool ok = 1;
@@ -72,6 +75,8 @@ message UpdateEventRequest {
   string startDate = 8;
   string endDate = 9;
   bool active = 10;
+    string location = 11;
+
 }
 
 message UpdateEventResponse {
@@ -96,21 +101,15 @@ message GetEventResponse {
   bool active = 10;
   string createdAt = 11;
   string updatedAt = 12;
+  string location = 13;
+  EventStatus status = 17;
 
-  // 👇 lista de cursos del evento
-  repeated Course courses = 20;
+
+
+  
 }
 
-message ListEventsRequest {
-  int32 pageSize = 1;
-  string pageToken = 2;
-  bool onlyActive = 3;
-}
 
-message ListEventsResponse {
-  repeated GetEventResponse events = 1;
-  string nextPageToken = 2;
-}
 
 message DeleteEventRequest {
   int32 id = 1;
@@ -118,6 +117,23 @@ message DeleteEventRequest {
 
 message DeleteEventResponse {
   bool ok = 1;
+}
+
+message ListEventsRequestPage {
+  int32 page = 1;            // default 1
+  int32 limit = 2;           // default 10, máx 100
+  string q = 3;              // búsqueda por name/description
+  bool onlyActive = 4;       // filtra activos=true
+}
+
+message ListEventsResponsePage {
+  repeated GetEventResponse items = 1;
+  int32 page = 2;
+  int32 limit = 3;
+  int32 total = 4;
+  int32 totalPages = 5;
+  bool hasNext = 6;
+  bool hasPrev = 7;
 }
 
 // =====================
@@ -158,16 +174,26 @@ message GetEventMemberResponse {
   string updatedAt = 6;
 }
 
-message GetJurorMembershipRequest {
-  int32 userId = 1;
-  int32 eventId = 2;
+message ListEventMembersRequest {
+  int32 eventId = 1;
+  optional int32 roleId = 2;
+  optional int32 page = 3;
 }
 
-message GetJurorMembershipResponse {
-  bool isJuror = 1;
-  int32 memberUserId = 2;
-  int32 memberEventId = 3;
-  int32 memberRoleId = 4;
+message EventMemberProto {
+  int32 userId = 1;
+  int32 eventId = 2;
+  int32 roleId = 3;
+  bool active = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+}
+
+message ListEventMembersResponse {
+  repeated EventMemberProto members = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 total_pages = 4;
 }
 
 // =====================
@@ -235,6 +261,13 @@ message ListCoursesByEventRequest {
 message ListCoursesByEventResponse {
   repeated Course courses = 1;
   string nextPageToken = 2; // deja vacío por ahora
+}
+
+enum EventStatus {
+  EVENT_STATUS_UNSPECIFIED = 0;
+  EVENT_STATUS_UPCOMING   = 1;  // PROXIMAMENTE
+  EVENT_STATUS_AVAILABLE  = 2;  // DISPONIBLE
+  EVENT_STATUS_CLOSED     = 3;  // CERRADO
 }
 
 message Empty {}

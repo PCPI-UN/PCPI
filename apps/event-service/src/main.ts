@@ -10,9 +10,9 @@ async function bootstrap() {
 
   // 🔹 2. Debugging: verificar existencia y contenido del proto
   console.log('---------------------------------------------');
-  console.log('🧠 [DEBUG] gRPC service startup');
-  console.log('📄 Proto path being loaded:', protoPath);
-  console.log('📂 Exists?:', fs.existsSync(protoPath));
+  console.log('[DEBUG] gRPC service startup');
+  console.log(' Proto path being loaded:', protoPath);
+  console.log(' Exists?:', fs.existsSync(protoPath));
 
   if (fs.existsSync(protoPath)) {
     const protoContent = fs.readFileSync(protoPath, 'utf8');
@@ -28,10 +28,9 @@ async function bootstrap() {
     console.log('---------------------------------------------');
 
   } else {
-    console.warn('⚠️  [WARN] Proto file not found. Check protoPath above.');
+    console.warn('WARN] Proto file not found. Check protoPath above.');
   }
 
-  // 🔹 3. Crear microservicio
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
@@ -48,11 +47,13 @@ async function bootstrap() {
 
   // 🔹 4. Registrar eventos de inicio
   app.listen().then(() => {
-    console.log(`🚀 Event service running on gRPC port ${process.env.GRPC_PORT || 50053}`);
+    console.log('gRPC Microservice starting...');
+    console.log('Transport:', Transport.GRPC);
+    console.log('Package:', 'event');
+    console.log('Proto Path:', protoPath);
+    console.log('URL:', process.env.GRPC_PORT || 50053);
     console.log('---------------------------------------------');
-    console.log('✅ [DEBUG] Microservice started successfully');
-    console.log('🛰️  Waiting for gRPC calls...');
-    console.log('---------------------------------------------');
+
   });
 }
 

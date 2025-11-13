@@ -9,5 +9,6 @@ export interface UpdateEventDTO {
   startDate?: string;
   endDate?: string;
   active?: boolean;
+  location?: string;
 }
 

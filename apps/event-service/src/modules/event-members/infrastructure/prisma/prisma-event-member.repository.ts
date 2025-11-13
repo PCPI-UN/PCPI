@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { EventMemberRepository } from '../../application/ports/event-member.repository';
+import { EventMemberRepository } from '../../domain/repositories/event-member.repository';
 import { EventMember } from '../../domain/entities/event-member.entity';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
         userId: input.userId,
         eventId: input.eventId,
         roleId: input.roleId,
-        active: true, // asegúrate de que exista en schema.prisma
+        active: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -32,5 +32,31 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
     await this.prisma.eventMember.deleteMany({
       where: { userId, eventId },
     });
+  }
+  async findByEventId(
+    eventId: string | number,
+    roleId?: string | number,
+    skip = 0,
+    take = 20,
+  ): Promise<[EventMember[], number]> {
+    const where: any = {
+      eventId: Number(eventId),
+    };
+
+    if (roleId !== undefined) {
+      where.roleId = Number(roleId);
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.eventMember.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.eventMember.count({ where }),
+    ]);
+
+    return [data as unknown as EventMember[], total];
   }
 }

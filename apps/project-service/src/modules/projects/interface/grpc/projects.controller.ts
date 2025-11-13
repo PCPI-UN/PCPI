@@ -42,9 +42,8 @@ export class ProjectsController {
     private readonly addPendingParticipantUC: AddPendingParticipantUC,
     private readonly listPendingParticipantsUC: ListPendingParticipantsUC,
     private readonly listAssignedToJurorUC: ListProjectsAssignedToJurorUC,
-    private readonly notificateStudentUC: NotificateStudentUC,
-    private readonly listProjectsForReviewUC: ListProjectsForReviewUC,
-    
+    private readonly notificateStudentUC: NotificateStudentUC,  
+    private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
 
   ) {}
 

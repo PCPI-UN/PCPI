@@ -1,5 +1,5 @@
 import { CreateCourseUseCase } from './create-course.uc';
-import { CourseRepository } from '../ports/course.repository';
+import { CourseRepository } from '../../domain/repositories/course.repository';
 import { CreateCourseDTO } from '../dto/create-course.dto';
 import { BadRequestException } from '@nestjs/common';
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CourseRepository } from '../ports/course.repository';
+import { CourseRepository } from '../../domain/repositories/course.repository';
 import { ListCoursesDTO } from '../dto/list-course.dto';
 
 @Injectable()

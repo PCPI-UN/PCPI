@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { CourseRepository } from '../../application/ports/course.repository';
+import { CourseRepository } from '../../domain/repositories/course.repository';
 import { Course } from '../../domain/entities/course.entity';
 
 const map = (c: any): Course =>

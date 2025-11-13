@@ -1,5 +1,5 @@
 import { ListEventsUC } from './list-events.uc';
-import { EventRepository } from '../ports/event.repository';
+import { EventRepository } from '../../domain/repositories/event.repository';
 import { ListEventsDTO } from '../dto/list-events.dto';
 
 describe('ListEventsUC', () => {

@@ -23,6 +23,8 @@ model Event {
   active              Boolean   @map("active") @default(true)
   createdAt           DateTime  @map("created_at") @default(now()) @db.Timestamp()
   updatedAt           DateTime  @map("updated_at") @updatedAt @db.Timestamp()
+  createdByUserId     Int?       
+  location          String?   @db.VarChar(255) 
 
   participants        EventMember[]
   courses             Course[]

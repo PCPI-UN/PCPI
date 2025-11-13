@@ -25,14 +25,14 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('auth', 'Authentication and authorization endpoints')
     .addTag('users', 'User management endpoints')
+    .addTag('events', 'Event management endpoints')
+    
     .addBearerAuth(
       {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
+        type: 'apiKey',
+        name: 'access_token',
+        in: 'cookie',
+        description: 'JWT access token stored in HTTP-only cookie. Set automatically after login.',
       },
       'JWT-auth',
     )

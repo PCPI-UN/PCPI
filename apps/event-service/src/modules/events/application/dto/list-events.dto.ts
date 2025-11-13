@@ -1,6 +1,6 @@
-export interface ListEventsDTO {
+export class ListEventsDTO {
   q?: string;
-  page?: number;     // default 1
-  pageSize?: number; // default 20
   onlyActive?: boolean;
+  page?: number;
+  limit?: number;
 }

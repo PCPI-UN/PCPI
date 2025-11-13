@@ -13,7 +13,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -23,7 +23,7 @@ import { FindUsersQueryDto } from './dto/find-users-query.dto';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 
 @ApiTags('users')
-@ApiBearerAuth('JWT-auth')
+@ApiSecurity('JWT-auth')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

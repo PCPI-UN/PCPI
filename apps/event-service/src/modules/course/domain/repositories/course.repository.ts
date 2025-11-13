@@ -1,4 +1,4 @@
-import { Course } from '../../domain/entities/course.entity';
+import { Course } from '../entities/course.entity';
 
 export interface CourseRepository {
   create(data: { eventId: number; code: string; description?: string | null; active?: boolean }): Promise<Course>;

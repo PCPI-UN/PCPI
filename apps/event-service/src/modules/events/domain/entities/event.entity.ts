@@ -12,5 +12,7 @@ export interface Event {
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
+  createdByUserId: number;
+  location?: string | null;
 }
 

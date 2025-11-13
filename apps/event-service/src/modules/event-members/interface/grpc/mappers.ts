@@ -5,6 +5,6 @@ export const toProtoEventMember = (em: EventMember) => ({
   eventId: em.eventId,
   roleId: em.roleId,
   active: em.active,
-  createdAt: em.createdAt ? em.createdAt.toISOString() : '',
-  updatedAt: em.updatedAt ? em.updatedAt.toISOString() : '',
+  createdAt: em.createdAt.toISOString(),
+  updatedAt: em.updatedAt.toISOString(),
 });

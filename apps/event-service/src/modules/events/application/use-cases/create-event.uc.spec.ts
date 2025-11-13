@@ -1,5 +1,5 @@
 import { CreateEventUC } from './create-event.uc';
-import { EventRepository } from '../ports/event.repository';
+import { EventRepository } from '../../domain/repositories/event.repository';
 import { CreateEventDTO } from '../dto/create-event.dto';
 
 describe('CreateEventUC', () => {
