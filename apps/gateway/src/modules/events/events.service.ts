@@ -1,7 +1,7 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
+import { first, firstValueFrom } from 'rxjs';
 import { CreateEventDTO } from './dto/events/create-event.dto';
 import { DeleteEventDTO } from './dto/events/delete-event.dto';
 import { GetEventDTO } from './dto/events/get-event.dto';
@@ -55,6 +55,7 @@ import { CreateEventRequest,
     ListCoursesByEventRequest,
     ListCoursesByEventResponse
  } from '@app/common/generated/event';
+import { AppUser } from '../auth/types/app-user.type';
 
 @Injectable()
 export class EventService implements OnModuleInit{
@@ -89,7 +90,19 @@ export class EventService implements OnModuleInit{
     }
 
     async listPage(listEventsPageDTO: ListEventsPageDTO): Promise<ListEventsResponsePage> {
-        return firstValueFrom(this.eventService.listEventsPage(listEventsPageDTO as ListEventsRequestPage));
+        // const isAdmin = user.platformRoles[0]?.name === 'Admin'; 
+        // const requestData: ListEventsRequestPage = {
+        //     isAdmin,
+        //     ...listEventsPageDTO
+        // }
+
+        // const systemRoles  =  [{id: 1, name: 'Admin', scope: 'PLATFORM'}]
+        // con
+        // const events = await firstValueFrom(this.eventService.listEvents(listEventsPageDTO as ListEventsRequestPage));
+
+        // events.map( event => mapToRoleName(event.role) )
+        return firstValueFrom(this.eventService.updateEvent(listEventsPageDTO as ListEventsRequestPage));
+
     }
 
     async update(updateEventDTO: UpdateEventDTO): Promise<UpdateEventResponse> {
