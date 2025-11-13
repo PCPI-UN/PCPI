@@ -1,5 +1,5 @@
 import { UpdateCourseUseCase } from './update-course.uc';
-import { CourseRepository } from '../ports/course.repository';
+import { CourseRepository } from '../../domain/repositories/course.repository';
 import { UpdateCourseDTO } from '../dto/update-course.dto';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 

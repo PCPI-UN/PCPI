@@ -1,5 +1,5 @@
 import { UpdateEventUC } from './update-event.uc';
-import { EventRepository } from '../ports/event.repository';
+import { EventRepository } from '../../domain/repositories/event.repository';
 import { UpdateEventDTO } from '../dto/update-event.dto';
 
 describe('UpdateEventUC', () => {

@@ -22,9 +22,9 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { Public } from '@common/decorators/public.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { AuthGuard } from '@nestjs/passport';
-import { GetUser } from '@common/decorators/get-user.decorator';
+import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AppUser } from './types/app-user.type';
 
 @ApiTags('auth')

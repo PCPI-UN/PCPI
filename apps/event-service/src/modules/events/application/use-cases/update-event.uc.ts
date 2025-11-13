@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { EventRepository } from '../ports/event.repository';
+import { EventRepository } from '../../domain/repositories/event.repository';
 import { UpdateEventDTO } from '../dto/update-event.dto';
 
 @Injectable()
@@ -24,6 +24,7 @@ export class UpdateEventUC {
     startDate: input.startDate ? new Date(input.startDate) : undefined,
     endDate: input.endDate ? new Date(input.endDate) : undefined,
     active: input.active,
+    location: input.location ?? null, 
   });
 }
 

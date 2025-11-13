@@ -1,3 +1,4 @@
+// src/modules/events/application/dto/create-event.dto.ts
 export interface CreateEventDTO {
   organizationId?: number;
   name: string;
@@ -8,4 +9,9 @@ export interface CreateEventDTO {
   evaluationsOpened: boolean;
   startDate: string;           // ISO string
   endDate: string;             // ISO string
+  createdByUserId?: number; 
+  userId?: number;   
+  location?: string;
+  
 }
+ 

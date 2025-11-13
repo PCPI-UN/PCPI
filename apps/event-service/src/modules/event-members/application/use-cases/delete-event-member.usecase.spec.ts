@@ -1,6 +1,6 @@
 import { DeleteEventMemberUseCase } from './delete-event-member.use-case';
-import { EventMemberRepository } from '../ports/event-member.repository';
-import { EventRepository } from '../../../events/application/ports/event.repository';
+import { EventMemberRepository } from '../../domain/repositories/event-member.repository';
+import { EventRepository } from '../../../events/domain/repositories/event.repository';
 import { DeleteEventMemberDTO } from '../dto/delete-event-member.dto';
 
 describe('DeleteEventMemberUseCase', () => {

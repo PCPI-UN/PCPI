@@ -1,5 +1,5 @@
 import { GetCourseUseCase } from './get-course.uc';
-import { CourseRepository } from '../ports/course.repository';
+import { CourseRepository } from '../../domain/repositories/course.repository';
 import { GetCourseDTO } from '../dto/get-course.dto';
 import { NotFoundException } from '@nestjs/common';
 

@@ -25,7 +25,9 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('auth', 'Authentication and authorization endpoints')
     .addTag('users', 'User management endpoints')
-    .addApiKey(
+    .addTag('events', 'Event management endpoints')
+    
+    .addBearerAuth(
       {
         type: 'apiKey',
         name: 'access_token',

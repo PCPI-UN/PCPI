@@ -1,4 +1,4 @@
-import { EventMember } from '../../domain/entities/event-member.entity';
+import { EventMember } from '../entities/event-member.entity';
 
 export interface EventMemberRepository {
   create(input: {
@@ -13,4 +13,10 @@ export interface EventMemberRepository {
   delete(userId: number, eventId: number): Promise<void>;
   findByUserAndEvent(userId: number, eventId: number): Promise<EventMember | null>;
   
+  findByEventId(
+    eventId: number,
+    roleId?: number,
+    skip?: number,
+    take?: number,
+  ): Promise<[EventMember[], number]>; // [data, total]
 }
