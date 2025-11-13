@@ -13,7 +13,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
 import { CriterionsService } from './criterions.service';
@@ -23,7 +23,7 @@ import { ListCriterionsDto } from './dto/list-criterions.dto';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
 
 @ApiTags('criterions')
-@ApiBearerAuth('JWT-auth')
+@ApiSecurity('JWT-auth')
 @Controller('criterions')
 export class CriterionsController {
   constructor(private readonly criterionsService: CriterionsService) {}
