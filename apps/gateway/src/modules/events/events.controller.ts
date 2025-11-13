@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Delete, Patch, Query} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags
 } from '@nestjs/swagger';
@@ -11,7 +12,6 @@ import { EventService } from './events.service';
 import { CreateEventDTO } from './dto/events/create-event.dto';
 import { DeleteEventDTO } from './dto/events/delete-event.dto';
 import { GetEventDTO } from './dto/events/get-event.dto';
-import { ListEventsDTO } from './dto/events/list-events.dto';
 import { UpdateEventDTO } from './dto/events/update-event.dto';
 import { ListEventsPageDTO } from './dto/events/list-events-page.dto';
 import { CreateEventMemberDTO } from './dto/event-members/create-event-member.dto';
@@ -24,6 +24,7 @@ import { ListCoursesDTO } from './dto/courses/list-course.dto';
 import { GetCourseDTO } from './dto/courses/get-course.dto';
 import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
+//import { Public } from '@prisma/client/runtime/library';
 
 @ApiTags('events')
 @ApiBearerAuth('JWT-auth')
@@ -44,7 +45,7 @@ export class EventsController {
 
     @Public()
     @RequirePermission('delete:events')
-    @Post('delete')
+    @Delete('delete')
     @ApiOperation({ summary: 'Delete an event' })
     @ApiResponse({ status: 200, description: 'Event deleted successfully' })
     @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -68,7 +69,7 @@ export class EventsController {
 
     @Public()
     @RequirePermission('read:events')
-    @Get('page')
+    @Post('page')
     @ApiOperation({ summary: 'Get paginated events' })
     @ApiResponse({ status: 200, description: 'Returns paginated list of events' })
     @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -78,19 +79,8 @@ export class EventsController {
     }
 
     @Public()
-    @RequirePermission('read:events')
-    @Get()
-    @ApiOperation({ summary: 'Get all events with optional filters' })
-    @ApiResponse({ status: 200, description: 'Returns list of events' })
-    @ApiResponse({ status: 400, description: 'Invalid input data' })
-    @ApiResponse({ status: 403, description: 'Forbidden - Missing read:events permission' })
-    async listEvents(@Body() listEventsDTO: ListEventsDTO) {
-        return this.eventsService.list(listEventsDTO);
-    }
-
-    @Public()
     @RequirePermission('update:events')
-    @Post('update')
+    @Patch('update')
     @ApiOperation({ summary: 'Update event details' })
     @ApiResponse({ status: 200, description: 'Event updated successfully' })
     @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -113,7 +103,7 @@ export class EventsController {
 
     @Public()
     @RequirePermission('delete:event-members')
-    @Post('members/delete')
+    @Delete('members/delete')
     @ApiOperation({ summary: 'Delete event member' })
     @ApiResponse({ status: 200, description: 'Event member deleted successfully' })
     @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -125,14 +115,13 @@ export class EventsController {
 
     @Public()
     @RequirePermission('read:event-members')
-    @Get('members/:eventId')
+    @Post('members/:eventId')
     @ApiOperation({ summary: 'Get event members by event ID' })
-    @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
     @ApiResponse({ status: 200, description: 'Returns list of event members' })
     @ApiResponse({ status: 403, description: 'Forbidden - Missing read:event-members permission' })
     @ApiResponse({ status: 404, description: 'Event not found' })
-    async listEventMembers(@Param('eventId') eventId: string) {
-        return this.eventsService.listMembers({ eventId: Number(eventId) });
+    async listEventMembers(@Body() listEventMembers: ListEventMembersDTO) {
+        return this.eventsService.listMembers(listEventMembers);
     }
     
     @Public()
@@ -148,7 +137,7 @@ export class EventsController {
 
     @Public()
     @RequirePermission('delete:courses')
-    @Post('courses/delete')
+    @Delete('courses/delete')
     @ApiOperation({ summary: 'Delete a course' })
     @ApiResponse({ status: 200, description: 'Course deleted successfully' })
     @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -160,9 +149,8 @@ export class EventsController {
 
     @Public()
     @RequirePermission('read:courses')
-    @Get('courses/:id')
+    @Post('courses/:id')
     @ApiOperation({ summary: 'Get course by ID' })
-    @ApiParam({ name: 'id', description: 'Course ID', type: Number })
     @ApiResponse({ status: 200, description: 'Returns course details' })
     @ApiResponse({ status: 403, description: 'Forbidden - Missing read:courses permission' })
     @ApiResponse({ status: 404, description: 'Course not found' })
@@ -172,29 +160,28 @@ export class EventsController {
 
     @Public()
     @RequirePermission('read:courses')
-    @Get('courses')
+    @Get('courses/all')  // Changed from @Post to @Get for REST conventions (listing is read-only, idempotent)
     @ApiOperation({ summary: 'Get all courses' })
     @ApiResponse({ status: 200, description: 'Returns list of courses' })
     @ApiResponse({ status: 403, description: 'Forbidden - Missing read:courses permission' })
-    async listCourses() {
-        return this.eventsService.listCourses();
+    async listCourses(@Query() listCoursesDTO?: ListCoursesDTO) {  // Changed to @Query() (optional for filters); remove if no filters needed
+        return this.eventsService.listCourses(listCoursesDTO);
     }
 
     @Public()
     @RequirePermission('read:courses')
     @Get('courses/event/:eventId')
     @ApiOperation({ summary: 'Get courses by event ID' })
-    @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
     @ApiResponse({ status: 200, description: 'Returns list of courses for the event' })
     @ApiResponse({ status: 403, description: 'Forbidden - Missing read:courses permission' })
     @ApiResponse({ status: 404, description: 'Event not found' })
-    async listCoursesByEvent(@Param('eventId') eventId: string) {
-        return this.eventsService.listCoursesByEvent({ eventId: Number(eventId) });
+    async listCoursesByEvent(@Query() listCoursesByEventDTO: ListCoursesByEventDTO) {
+        return this.eventsService.listCoursesByEvent(listCoursesByEventDTO);
     }
 
     @Public()
     @RequirePermission('update:courses')
-    @Post('courses/update')
+    @Patch('courses/update')
     @ApiOperation({ summary: 'Update course details' })
     @ApiResponse({ status: 200, description: 'Course updated successfully' })
     @ApiResponse({ status: 400, description: 'Invalid input data' })

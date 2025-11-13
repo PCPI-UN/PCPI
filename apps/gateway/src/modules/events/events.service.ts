@@ -32,8 +32,6 @@ import { CreateEventRequest,
     DeleteEventResponse,
     GetEventRequest,
     GetEventResponse,
-    ListEventsRequest,
-    ListEventsResponse,
     UpdateEventRequest,
     UpdateEventResponse,
     ListEventsRequestPage,
@@ -90,12 +88,8 @@ export class EventService implements OnModuleInit{
         return firstValueFrom(this.eventService.getEvent(getEventDTO as GetEventRequest));
     }
 
-    async listPage(listEventsPageDTO: ListEventsPageDTO) {
-        return firstValueFrom(this.eventService.listEvents(listEventsPageDTO as any));
-    }
-
-    async list(listEventsDTO: ListEventsDTO): Promise<ListEventsResponse> {
-        return firstValueFrom(this.eventService.listEvents(listEventsDTO as ListEventsRequest));
+    async listPage(listEventsPageDTO: ListEventsPageDTO): Promise<ListEventsResponsePage> {
+        return firstValueFrom(this.eventService.listEventsPage(listEventsPageDTO as ListEventsRequestPage));
     }
 
     async update(updateEventDTO: UpdateEventDTO): Promise<UpdateEventResponse> {
@@ -127,8 +121,7 @@ export class EventService implements OnModuleInit{
     }
 
     async listCourses(listCoursesDTO?: ListCoursesDTO): Promise<ListCoursesResponse> {
-        // Assuming the gRPC method can handle optional DTO or empty for all
-        return firstValueFrom(this.eventService.listCourses(listCoursesDTO as ListCoursesRequest || {}));
+        return firstValueFrom(this.eventService.listCourses(listCoursesDTO as ListCoursesRequest));
     }
 
     async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO): Promise<ListCoursesByEventResponse> {
