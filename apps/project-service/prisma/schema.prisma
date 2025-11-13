@@ -14,6 +14,7 @@ enum ProjectState {
 }
 
 enum TypedDocument {
+  LOGO
   POSTER
   SUPPORTING_DOCUMENT
 }

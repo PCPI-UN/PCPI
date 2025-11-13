@@ -8,17 +8,23 @@ import {
   ValidateNested,
   Min,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { PendingParticipantInputDto } from './pending-participant-input.dto';
-import { ProjectDocumentInputDto } from './project-document-input.dto';
+import { ProjectDocumentWithUrlDto } from './project-document-input.dto';
 
+/**
+ * Internal DTO for creating a project with participants
+ * This is used internally after files have been uploaded and URLs obtained
+ */
 export class CreateProjectWithParticipantsDto {
   @ApiProperty({
     description: 'Event ID to which this project belongs',
     example: 1,
     minimum: 1,
   })
+  @Type(() => Number)
   @IsInt()
   @IsNotEmpty()
   @Min(1)
@@ -29,6 +35,7 @@ export class CreateProjectWithParticipantsDto {
     example: 1,
     minimum: 1,
   })
+  @Type(() => Number)
   @IsInt()
   @IsNotEmpty()
   @Min(1)
@@ -63,13 +70,13 @@ export class CreateProjectWithParticipantsDto {
   participants?: PendingParticipantInputDto[];
 
   @ApiProperty({
-    description: 'List of documents associated with the project (poster, supporting documents)',
-    type: [ProjectDocumentInputDto],
+    description: 'List of documents associated with the project (poster, supporting documents) with URLs',
+    type: [ProjectDocumentWithUrlDto],
     required: false,
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ProjectDocumentInputDto)
+  @Type(() => ProjectDocumentWithUrlDto)
   @IsOptional()
-  documents?: ProjectDocumentInputDto[];
+  documents?: ProjectDocumentWithUrlDto[];
 }

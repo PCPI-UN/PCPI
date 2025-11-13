@@ -19,7 +19,6 @@ import { ListPendingParticipantsUC } from '../../application/use-cases/list-pend
 import { ListProjectsAssignedToJurorUC } from '../../application/use-cases/list-projects-assigned-to-juror.uc';
 import { NotificateStudentUC } from '../../application/use-cases/notificate-student.uc';
 import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
-import { ListProjectsForReviewUC } from '../../application/use-cases/list-projects-for-review.uc';
 
 @Controller()
 export class ProjectsController {

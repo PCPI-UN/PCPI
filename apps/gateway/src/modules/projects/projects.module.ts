@@ -8,6 +8,7 @@ import {
 } from '@app/common/generated/project';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
+import { AzureBlobUploadService } from './azure-blob-upload.service';
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { ProjectsService } from './projects.service';
     ]),
   ],
   controllers: [ProjectsController],
-  providers: [ProjectsService],
+  providers: [ProjectsService, AzureBlobUploadService],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}

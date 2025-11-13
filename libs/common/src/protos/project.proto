@@ -42,8 +42,9 @@ enum ProjectState {
 
 enum TypedDocument {
   DOC_UNSPECIFIED = 0;
-  POSTER = 1;
-  SUPPORTING_DOCUMENT = 2;
+  LOGO = 1;
+  POSTER = 2;
+  SUPPORTING_DOCUMENT = 3;
 }
 
 /************** Messages **************/
