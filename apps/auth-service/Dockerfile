@@ -46,6 +46,7 @@ RUN adduser -S nestjs -u 1001
 
 # Change ownership to non-root user
 #RUN chown -R nestjs:nodejs /app
+
 USER nestjs
 
 EXPOSE 50051
