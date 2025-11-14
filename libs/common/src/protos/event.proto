@@ -124,6 +124,7 @@ message ListEventsRequestPage {
   int32 limit = 2;           // default 10, máx 100
   string q = 3;              // búsqueda por name/description
   bool onlyActive = 4;       // filtra activos=true
+  bool isAdmin = 5;
 }
 
 message ListEventsResponsePage {

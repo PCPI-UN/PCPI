@@ -24,6 +24,8 @@ import { ListCoursesDTO } from './dto/courses/list-course.dto';
 import { GetCourseDTO } from './dto/courses/get-course.dto';
 import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
+import { AppUser } from '../auth/types/app-user.type';
+import { GetUser } from '../../common/decorators/get-user.decorator';
 //import { Public } from '@prisma/client/runtime/library';
 
 @ApiTags('events')
@@ -66,17 +68,25 @@ export class EventsController {
     async getEvent(@Param('id') id: string) {
         return this.eventsService.get({ id: Number(id) });
     }
+//////////////////////////////////////////////////
 
-    @Public()
     @RequirePermission('read:events')
     @Post('page')
     @ApiOperation({ summary: 'Get paginated events' })
     @ApiResponse({ status: 200, description: 'Returns paginated list of events' })
     @ApiResponse({ status: 400, description: 'Invalid input data' })
     @ApiResponse({ status: 403, description: 'Forbidden - Missing read:events permission' })
-    async listEventsPage(@Body() listEventsPageDTO: ListEventsPageDTO) {
-        return this.eventsService.listPage(listEventsPageDTO);
-    }
+    async listEventsPage(
+  @GetUser() user: AppUser,
+  @Body() listEventsPageDTO: ListEventsPageDTO,
+  
+) 
+    
+{
+  console.log("Usuario en gateway events.controller", user);
+  return this.eventsService.listPage(user, listEventsPageDTO);
+}
+////////////////////////////////////////////////////
 
     @Public()
     @RequirePermission('update:events')

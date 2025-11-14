@@ -88,22 +88,27 @@ export class EventService implements OnModuleInit{
     async get(getEventDTO: GetEventDTO): Promise<GetEventResponse> {
         return firstValueFrom(this.eventService.getEvent(getEventDTO as GetEventRequest));
     }
+//////#################################
+    async listPage(
+  user: AppUser,
+  listEventsPageDTO: ListEventsPageDTO,
+): Promise<ListEventsResponsePage> {
+  const isAdmin = user.platformRoles[0]?.name === 'Admin';
+  
+  console.log("Es admin",isAdmin);
 
-    async listPage(listEventsPageDTO: ListEventsPageDTO): Promise<ListEventsResponsePage> {
-        // const isAdmin = user.platformRoles[0]?.name === 'Admin'; 
-        // const requestData: ListEventsRequestPage = {
-        //     isAdmin,
-        //     ...listEventsPageDTO
-        // }
-
-        // const systemRoles  =  [{id: 1, name: 'Admin', scope: 'PLATFORM'}]
-        // con
-        // const events = await firstValueFrom(this.eventService.listEvents(listEventsPageDTO as ListEventsRequestPage));
-
-        // events.map( event => mapToRoleName(event.role) )
-        return firstValueFrom(this.eventService.updateEvent(listEventsPageDTO as ListEventsRequestPage));
-
-    }
+  const requestData: ListEventsRequestPage = {
+    isAdmin,
+    page: listEventsPageDTO.page ?? 1,          // 👈 default
+    limit: listEventsPageDTO.limit ?? 10,       // 👈 default
+    onlyActive: listEventsPageDTO.onlyActive ?? true,
+    q: listEventsPageDTO.q ?? '',
+  };
+  console.log('🚀 Gateway -> ListEventsPage requestData:', requestData);
+  return firstValueFrom(
+    this.eventService.listEventsPage(requestData)
+  );
+}
 
     async update(updateEventDTO: UpdateEventDTO): Promise<UpdateEventResponse> {
         return firstValueFrom(this.eventService.updateEvent(updateEventDTO as UpdateEventRequest));

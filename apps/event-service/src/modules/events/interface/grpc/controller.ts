@@ -16,6 +16,14 @@ import { lastValueFrom } from 'rxjs';
 import { AuthServiceClient } from '@app/common/generated/auth';
 
 import { ListEventsDTO } from '@app/common/dtos';
+import { ForbiddenException } from '@nestjs/common';
+
+import { Logger } from '@nestjs/common';
+import { ListEventsRequestPage } from '@app/common/generated/event';
+const logger = new Logger('EventsController');
+
+
+
 
 @Controller()
 export class EventsController {
@@ -83,9 +91,31 @@ async getEventRpc(req: { id: number }) {
 }
 
 
+  
+@GrpcMethod('EventService', 'ListEventsPage')
+async listEventsRpc(req: ListEventsRequestPage) {
+  try {
+    // log para confirmar que llega el isAdmin
+    logger.log({
+      msg: 'ListEventsPage called',
+      isAdmin: req.isAdmin,                           // 👈 llega desde el gateway
+      page: req.page,
+      limit: req.limit,
+      onlyActive: req.onlyActive,
+      q: req.q,
+    });
+  } catch (e) {
+    logger.warn('Failed to log request info for ListEventsPage', e?.message || e);
+  }
 
-  @GrpcMethod('EventService', 'ListEventsPage')
-async listEventsRpc(req: ListEventsDTO) {
+  // ❗ Regla de negocio: Solo Admin puede listar eventos
+  if (!req.isAdmin) {
+    console.log("En controller event service no es admin");
+    throw new ForbiddenException('Only admins can list events');
+    
+  }
+
+  // ya estás enviando el request correcto al use case
   const result = await this.listUC.execute(req);
 
   return {
