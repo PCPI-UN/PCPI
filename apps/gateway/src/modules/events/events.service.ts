@@ -97,19 +97,19 @@ export class EventService implements OnModuleInit{
   //const isAdmin = false; // prueba usuario no admin harcoded :3
   console.log("Es admin",isAdmin);
 
-  const requestData: ListEventsRequestPage = {
-    isAdmin,
-    page: listEventsPageDTO.page ?? 1,         
-    limit: listEventsPageDTO.limit ?? 10,       
-    onlyActive: listEventsPageDTO.onlyActive ?? true,
-    q: listEventsPageDTO.q ?? '',
-    userId: user.id,
-  };
-  console.log('🚀 Gateway -> ListEventsPage requestData:', requestData);
-  return firstValueFrom(
-    this.eventService.listEventsPage(requestData)
-  );
-}
+    const requestData: ListEventsRequestPage = {
+        isAdmin,
+        page: listEventsPageDTO.page ?? 1,         
+        limit: listEventsPageDTO.limit ?? 10,       
+        onlyActive: listEventsPageDTO.onlyActive ?? true,
+        q: listEventsPageDTO.q ?? '',
+        userId: user.id,
+    };
+    console.log('🚀 Gateway -> ListEventsPage requestData:', requestData);
+    return firstValueFrom(
+        this.eventService.listEventsPage(requestData)
+    );
+    }
 
     async update(updateEventDTO: UpdateEventDTO): Promise<UpdateEventResponse> {
         return firstValueFrom(this.eventService.updateEvent(updateEventDTO as UpdateEventRequest));
@@ -139,8 +139,8 @@ export class EventService implements OnModuleInit{
         return firstValueFrom(this.eventService.getCourse(getCourseDTO as GetCourseRequest));
     }
 
-    async listCourses(listCoursesDTO?: ListCoursesDTO): Promise<ListCoursesResponse> {
-        return firstValueFrom(this.eventService.listCourses(listCoursesDTO as ListCoursesRequest));
+    async findAllCourses(request: ListCoursesDTO): Promise<ListCoursesResponse> {
+        return firstValueFrom(this.eventService.listCourses(request as ListCoursesRequest));
     }
 
     async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO): Promise<ListCoursesByEventResponse> {

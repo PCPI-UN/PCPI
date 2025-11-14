@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsPositive, IsString, Min} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ListCoursesDTO {
@@ -8,7 +8,7 @@ export class ListCoursesDTO {
     example: 1,
     required: false,
   })
-  @IsNumber() @IsOptional() @IsPositive()
+  @IsInt() @IsOptional() @IsPositive()
   @Type(() => Number)
   eventId?: number;
 
@@ -25,19 +25,22 @@ export class ListCoursesDTO {
     description: 'Page number for pagination',
     example: 1,
     required: false,
+    default: 1,
   })
-  @IsNumber() @IsOptional() @IsPositive()
+  @IsInt() @IsOptional() @Min(1)
   @Type(() => Number)
-  page?: number;
+  
+  page?: number = 1;
 
   @ApiProperty({
     description: 'Number of items per page for pagination',
     example: 10,
     required: false,
+    default: 10,
   })
-  @IsNumber() @IsOptional() @IsPositive()
+  @IsInt() @IsOptional() @Min(1)
   @Type(() => Number)
-  pageSize?: number;
+  pageSize?: number = 10;
   
   @ApiProperty({
     description: 'Search query to filter courses by code or description',

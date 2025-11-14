@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, Min, Max, IsBoolean, IsPositive, IsOptional, IsString, IsNotEmpty, IsDateString} from 'class-validator';
+import { IsInt, IsBoolean, IsPositive, IsOptional, IsString, IsNotEmpty, IsDateString} from 'class-validator';
 
 export class CreateEventDTO {
   @ApiProperty({
@@ -7,7 +7,7 @@ export class CreateEventDTO {
     example: 10,
     required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
   organizationId?: number;
 
   @ApiProperty({
@@ -72,7 +72,7 @@ export class CreateEventDTO {
     example: 5001,
     required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
   createdByUserId?: number; 
 
   @ApiProperty({
@@ -80,7 +80,7 @@ export class CreateEventDTO {
     example: 5001,
     required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
   userId?: number;   
 
   @ApiProperty({

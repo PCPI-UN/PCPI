@@ -1,20 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsPositive, Max, IsNotEmpty } from 'class-validator';
-
+import { IsInt, IsOptional, IsPositive, Max, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class ListEventMembersDTO {
   @ApiProperty({
     description: 'ID of the event to filter members',
     example: 1,
   })
-  @IsNumber() @IsPositive() @IsNotEmpty()
+  @IsInt() @IsPositive() @IsNotEmpty()
+  @Type(() => Number)
   eventId: number;
 
   @ApiProperty({
     description: 'ID of the role to filter members',
     example: 2,
+    required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
+  @Type(() => Number)
   roleId?: number;
 
   @ApiProperty({
@@ -22,8 +25,9 @@ export class ListEventMembersDTO {
     example: 20,
     required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
   @Max(20, { message: 'limit cannot exceed 20' })
+  @Type(() => Number)
   limit?: number = 20;
 
   @ApiProperty({
@@ -31,6 +35,7 @@ export class ListEventMembersDTO {
     example: 1,
     required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
+  @Type(() => Number)
   page?: number = 1;
 }

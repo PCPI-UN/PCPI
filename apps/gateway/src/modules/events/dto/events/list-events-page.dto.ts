@@ -6,6 +6,7 @@ export class ListEventsPageDTO {
   @ApiProperty({
     description: 'Page number for pagination',
     example: 1,
+    required: false,
   })
   @IsInt() @Min(1) @IsOptional()
   @Type(() => Number)
@@ -14,6 +15,7 @@ export class ListEventsPageDTO {
   @ApiProperty({
     description: 'Number of items per page for pagination (max 100)',
     example: 20,
+    required: false,
   })
   @IsInt() @Min(1) @Max(20) @IsOptional()
   @Type(() => Number)

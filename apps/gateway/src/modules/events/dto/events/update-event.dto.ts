@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsBoolean, IsPositive, IsOptional, IsString, IsNotEmpty, IsDateString} from 'class-validator';
+import { IsInt, IsBoolean, IsPositive, IsOptional, IsString, IsNotEmpty, IsDateString} from 'class-validator';
 
 
 export class UpdateEventDTO {
@@ -7,7 +7,7 @@ export class UpdateEventDTO {
     description: 'ID of the event to update',
     example: 123,
   })
-  @IsNumber() @IsPositive() @IsNotEmpty()
+  @IsInt() @IsPositive() @IsNotEmpty()
   id: number;
 
   @ApiProperty({
