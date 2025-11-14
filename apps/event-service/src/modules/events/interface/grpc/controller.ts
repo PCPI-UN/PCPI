@@ -93,31 +93,38 @@ async getEventRpc(req: { id: number }) {
 
   
 @GrpcMethod('EventService', 'ListEventsPage')
-async listEventsRpc(req: ListEventsRequestPage) {
+async listEventsRpc(
+  req: ListEventsRequestPage & { userId: number; isAdmin: boolean },
+) {
   try {
-    // log para confirmar que llega el isAdmin
     logger.log({
       msg: 'ListEventsPage called',
-      isAdmin: req.isAdmin,                           // 👈 llega desde el gateway
+      isAdmin: req.isAdmin,
+      userId: req.userId,
       page: req.page,
       limit: req.limit,
       onlyActive: req.onlyActive,
       q: req.q,
     });
   } catch (e) {
-    logger.warn('Failed to log request info for ListEventsPage', e?.message || e);
+    logger.warn(
+      'Failed to log request info for ListEventsPage',
+      (e as any)?.message || e,
+    );
   }
 
-  // ❗ Regla de negocio: Solo Admin puede listar eventos
-  if (!req.isAdmin) {
-    console.log("En controller event service no es admin");
-    throw new ForbiddenException('Only admins can list events');
-    
-  }
+  // ✅ Ya NO bloqueamos a los no admin.
+  // La diferencia admin/no admin la maneja el UC con isAdmin.
 
-  // ya estás enviando el request correcto al use case
-  const result = await this.listUC.execute(req);
-
+  const result = await this.listUC.execute({
+    page: req.page ?? 1,
+    limit: req.limit ?? 10,
+    q: req.q || undefined,
+    onlyActive: req.onlyActive ?? undefined,
+    userId: req.userId,     // 👈 muy importante
+    isAdmin: req.isAdmin,   // 👈 muy importante
+  });
+    const userIdUsed = req.isAdmin ? null : req.userId;
   return {
     items: result.items.map(toProtoEvent),
     page: result.page,
@@ -126,8 +133,10 @@ async listEventsRpc(req: ListEventsRequestPage) {
     totalPages: result.totalPages,
     hasNext: result.hasNext,
     hasPrev: result.hasPrev,
+    userIdUsed: req.isAdmin ? null : req.userId,
   };
 }
+
 
 
   

@@ -3,12 +3,14 @@ import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { EventRepository } from '../../domain/repositories/event.repository';
 import { Event as DomainEvent } from '../../domain/entities/event.entity';
 
-// Si tienes un mapper a dominio, úsalo; aquí dejo uno rápido inline:
-type PrismaEvent = Parameters<PrismaService['event']['create']>[0] extends { data: infer _ }
-  ? any
-  : any;
+type PrismaEvent = any;
 
 function toDomainEvent(p: any): DomainEvent {
+   if (!p) {
+    
+    throw new Error('toDomainEvent called with null/undefined');
+    
+  }
   return {
     id: p.id,
     organizationId: p.organizationId,
@@ -34,8 +36,6 @@ export class PrismaEventRepository extends EventRepository {
     super();
   }
 
-
-
   private buildWhere(where?: { q?: string; onlyActive?: boolean }) {
     const filters: any = {};
     if (where?.onlyActive) filters.active = true;
@@ -49,7 +49,7 @@ export class PrismaEventRepository extends EventRepository {
   }
 
   /** Calcula EventStatus (enum numérico del proto) con base en fechas */
-  private computeStatus(e: PrismaEvent): number /* EventStatus */ {
+  private computeStatus(e: PrismaEvent): number {
     // EventStatus:
     // 0: UNSPECIFIED, 1: UPCOMING, 2: AVAILABLE, 3: CLOSED
     const now = new Date();
@@ -68,68 +68,79 @@ export class PrismaEventRepository extends EventRepository {
       description: e.description ?? '',
       accessCode: e.accessCode,
       isPubliclyJoinable: e.isPubliclyJoinable,
-      inscriptionDeadline: e.inscriptionDeadline ? new Date(e.inscriptionDeadline).toISOString() : '',
+      inscriptionDeadline: e.inscriptionDeadline
+        ? new Date(e.inscriptionDeadline).toISOString()
+        : '',
       evaluationsOpened: e.evaluationsOpened,
       startDate: e.startDate ? new Date(e.startDate).toISOString() : '',
       endDate: e.endDate ? new Date(e.endDate).toISOString() : '',
       active: e.active,
-      createdAt: e.createdAt instanceof Date ? e.createdAt.toISOString() : new Date(e.createdAt).toISOString(),
-      updatedAt: e.updatedAt instanceof Date ? e.updatedAt.toISOString() : new Date(e.updatedAt).toISOString(),
+      createdAt:
+        e.createdAt instanceof Date
+          ? e.createdAt.toISOString()
+          : new Date(e.createdAt).toISOString(),
+      updatedAt:
+        e.updatedAt instanceof Date
+          ? e.updatedAt.toISOString()
+          : new Date(e.updatedAt).toISOString(),
       location: e.location ?? '',
-      status: this.computeStatus(e),   // ← número compatible con proto
-      // 👇 lista de cursos del evento (compatibles con message Course)
+      status: this.computeStatus(e),
       courses: (e.courses ?? []).map((c: any) => ({
         id: c.id,
         eventId: c.eventId,
         code: c.code,
         description: c.description ?? '',
         active: c.active,
-        createdAt: c.createdAt instanceof Date ? c.createdAt.toISOString() : new Date(c.createdAt).toISOString(),
-        updatedAt: c.updatedAt instanceof Date ? c.updatedAt.toISOString() : new Date(c.updatedAt).toISOString(),
+        createdAt:
+          c.createdAt instanceof Date
+            ? c.createdAt.toISOString()
+            : new Date(c.createdAt).toISOString(),
+        updatedAt:
+          c.updatedAt instanceof Date
+            ? c.updatedAt.toISOString()
+            : new Date(c.updatedAt).toISOString(),
       })),
     };
   }
 
   // ==========================
-  //  MÉTODOS EXISTENTES TUYOS
+  //  CRUD BÁSICO
   // ==========================
 
   async create(input: any) {
-    // 👇 mapea explícitamente lo que persistes (incluye location)
     const data = {
       organizationId: input.organizationId,
       name: input.name,
       description: input.description ?? null,
       accessCode: input.accessCode,
       isPubliclyJoinable: input.isPubliclyJoinable ?? false,
-      inscriptionDeadline: input.inscriptionDeadline, // Date ya en UC
+      inscriptionDeadline: input.inscriptionDeadline,
       evaluationsOpened: input.evaluationsOpened ?? false,
-      startDate: input.startDate,     // Date ya en UC
-      endDate: input.endDate,         // Date ya en UC
-      location: input.location ?? null,   // 👈 NUEVO
+      startDate: input.startDate,
+      endDate: input.endDate,
+      location: input.location ?? null,
       active: input.active ?? true,
-      //createdByUserId: input.createdByUserId ?? 1,
+      createdByUserId: input.createdByUserId ?? null,
     };
 
     const created = await this.prisma.event.create({ data });
     return toDomainEvent(created);
   }
 
-  async findById(id: number) {
-    const row = await this.prisma.event.findUnique({
-      where: { id },
-      // select opcional; si lo usas, incluye location
-      // select: { id: true, ..., location: true },
-      include: {
-        courses: true, // útil si tu GetEvent también muestra cursos
-      },
-    });
-    return toDomainEvent(row);
-  }
+  async findById(id: number): Promise<DomainEvent | null> {
+  const row = await this.prisma.event.findUnique({
+    where: { id },
+    include: { courses: true },
+  });
+
+  if (!row) return null;   // ✔️ ahora tu tipo lo permite
+
+  return toDomainEvent(row);
+}
+
 
   async findAll() {
     const rows = await this.prisma.event.findMany({
-      
       orderBy: { id: 'asc' },
     });
     return rows.map(toDomainEvent);
@@ -137,7 +148,6 @@ export class PrismaEventRepository extends EventRepository {
 
   async update(id: number, input: any) {
     const data = {
-      // Solo campos actualizables; incluye location si llega
       name: input.name,
       description: input.description ?? null,
       accessCode: input.accessCode,
@@ -146,7 +156,7 @@ export class PrismaEventRepository extends EventRepository {
       evaluationsOpened: input.evaluationsOpened,
       startDate: input.startDate,
       endDate: input.endDate,
-      location: input.location ?? null,   // 👈 NUEVO
+      location: input.location ?? null,
       active: input.active,
     };
 
@@ -161,11 +171,10 @@ export class PrismaEventRepository extends EventRepository {
     await this.prisma.event.delete({ where: { id } });
   }
 
+  // ==========================
+  //  LISTADOS / PAGINACIÓN
+  // ==========================
 
-  //  NUEVO: soporte a paginación page/limit
-
-
- 
   async findManyForGetResponse(opts: {
     skip?: number;
     take?: number;
@@ -180,19 +189,18 @@ export class PrismaEventRepository extends EventRepository {
       take: opts.take ?? 10,
       orderBy: opts.orderBy ?? { createdAt: 'desc' },
       include: {
-        courses: true, // ← para poblar "courses" en la respuesta
+        courses: true,
       },
     });
     return rows.map((e) => this.mapToGetEventResponseShape(e));
   }
 
-  /** Total de filas para los mismos filtros de paginación */
   async count(whereIn: { q?: string; onlyActive?: boolean }) {
     const where = this.buildWhere(whereIn);
     return this.prisma.event.count({ where });
   }
 
-    async findPaginated(params: {
+  async findPaginated(params: {
     page: number;
     limit: number;
     q?: string;
@@ -213,15 +221,82 @@ export class PrismaEventRepository extends EventRepository {
       this.prisma.event.count({ where }),
     ]);
 
-    const items = rows.map((row) => toDomainEvent(row)); 
+    const items = rows.map((row) => toDomainEvent(row));
 
     return {
       items,
       total,
     };
   }
+
+  // 👉 SOLO EVENTOS DONDE EL USER ES MEMBER (EventMember)
+  async findPaginatedByMember(params: {
+  page: number;
+  limit: number;
+  q?: string;
+  onlyActive?: boolean;
+  userId: number;
+}): Promise<{ items: DomainEvent[]; total: number }> {
+  const { page, limit, q, onlyActive, userId } = params;
+
+  const baseWhere = this.buildWhere({ q, onlyActive });
+  const skip = (page - 1) * limit;
+
+  // ==========================================================
+  // 🔎 LOG 1: Ver todos los EventMembers del usuario
+  // ==========================================================
+  const userMemberships = await this.prisma.eventMember.findMany({
+    where: { userId },
+  });
+
+  console.log("🔎 [EventMember] Registros encontrados para userId:", userId);
+  console.log(JSON.stringify(userMemberships, null, 2));
+
+  // ==========================================================
+  // 🔎 LOG 2: Ver el filtro completo que enviamos a Prisma
+  // ==========================================================
+  const where = {
+    ...baseWhere,
+    participants: {
+      some: {
+        userId: userId,
+        active: true,
+      },
+    },
+  };
+
+  console.log("🧩 [QueryWhere] Filtro de búsqueda construido:");
+  console.log(JSON.stringify(where, null, 2));
+
+  // ==========================================================
+  // 🔎 LOG 3: Ejecutar la query
+  // ==========================================================
+  const rows = await this.prisma.event.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: { createdAt: 'desc' },
+  });
+
+  console.log("📦 [Eventos encontrados]:");
+  console.log(JSON.stringify(rows.map(r => ({ id: r.id, name: r.name })), null, 2));
+
+  const total = await this.prisma.event.count({ where });
+
+  // ==========================================================
+  // 🔎 LOG 4: Mostrar el total
+  // ==========================================================
+  console.log(`📊 [Total]: ${total} eventos permitidos para userId ${userId}`);
+
+  // ==========================================================
+  // FIN LOGS - Mapear a Domain
+  // ==========================================================
+  const items = rows.map(toDomainEvent);
+
+  return {
+    items,
+    total,
+  };
 }
 
-
-
-
+}

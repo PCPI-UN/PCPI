@@ -94,15 +94,16 @@ export class EventService implements OnModuleInit{
   listEventsPageDTO: ListEventsPageDTO,
 ): Promise<ListEventsResponsePage> {
   const isAdmin = user.platformRoles[0]?.name === 'Admin';
-  
+  //const isAdmin = false; // prueba usuario no admin harcoded :3
   console.log("Es admin",isAdmin);
 
   const requestData: ListEventsRequestPage = {
     isAdmin,
-    page: listEventsPageDTO.page ?? 1,          // 👈 default
-    limit: listEventsPageDTO.limit ?? 10,       // 👈 default
+    page: listEventsPageDTO.page ?? 1,         
+    limit: listEventsPageDTO.limit ?? 10,       
     onlyActive: listEventsPageDTO.onlyActive ?? true,
     q: listEventsPageDTO.q ?? '',
+    userId: user.id,
   };
   console.log('🚀 Gateway -> ListEventsPage requestData:', requestData);
   return firstValueFrom(

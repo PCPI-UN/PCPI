@@ -125,6 +125,7 @@ message ListEventsRequestPage {
   string q = 3;              // búsqueda por name/description
   bool onlyActive = 4;       // filtra activos=true
   bool isAdmin = 5;
+  int32 userId = 6;
 }
 
 message ListEventsResponsePage {
@@ -135,6 +136,8 @@ message ListEventsResponsePage {
   int32 totalPages = 5;
   bool hasNext = 6;
   bool hasPrev = 7;
+  int32 userIdUsed = 8;
+
 }
 
 // =====================
