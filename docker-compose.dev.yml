@@ -160,3 +160,7 @@ services:
       - ./tsconfig.build.json:/app/tsconfig.build.json
       - /app/node_modules
     command: sh -c "pnpm install --frozen-lockfile --force && mkdir -p libs/common/src/generated && npm run proto:generate && pnpm run start:dev notification-service"
+
+  redis:
+    ports:
+      - "6379:6379"

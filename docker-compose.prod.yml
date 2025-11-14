@@ -120,3 +120,7 @@ services:
       - EMAIL_PUBLIC_KEY=${EMAIL_PUBLIC_KEY}
       - EMAIL_PRIVATE_KEY=${EMAIL_PRIVATE_KEY}
     restart: always
+    
+  redis:
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    restart: always

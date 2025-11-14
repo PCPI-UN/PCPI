@@ -169,6 +169,21 @@ services:
     networks:
       - iris-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: iris-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_dev_password}
+    volumes:
+      - redis_data:/data
+    networks:
+      - iris-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 networks:
   iris-network:
     driver: bridge
@@ -185,3 +200,5 @@ volumes:
     name: iris-invitation-db-data
   project_db_data:
     name: iris-project-db-data
+  redis_data:
+    name: iris-redis-data
