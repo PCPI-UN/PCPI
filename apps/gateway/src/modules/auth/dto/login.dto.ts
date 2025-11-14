@@ -13,7 +13,7 @@ export class LoginDto implements LoginRequest {
 
   @ApiProperty({
     description: 'User password',
-    example: 'Admin12345@',
+    example: 'Admin1234@',
   })
   @IsString()
   @IsNotEmpty()
