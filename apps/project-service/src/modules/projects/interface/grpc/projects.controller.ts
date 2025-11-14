@@ -73,7 +73,7 @@ export class ProjectsController {
    @GrpcMethod('ProjectsService', 'ListProjectsByEvent')
   async listProjectsByEventRpc(req: ListProjectsByFilterDTO) {
     const res = await this.listByEvent.execute(req);
-    return { items: res.items.map(toProtoProject), total: res.total, page: res.page, pageSize: res.pageSize, totalPages: res.totalPages };
+    return { items: res.items.map(toProtoProject), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage, itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
   }
 
   @GrpcMethod('ProjectsService', 'AddProjectDocumentFromUrl')
@@ -259,7 +259,7 @@ async listAssignedProjectsRpc(req: any) {
 @GrpcMethod('ProjectsService', 'ListProjectsForReview')
 async listProjectsForReviewRpc(req: ListProjectsByFilterDTO) {
   const res = await this.listProjectsForReviewUC.execute(req);
-  return { items: res.items.map(toProtoProject), total: res.total, page: res.page, pageSize: res.pageSize, totalPages: res.totalPages };
+  return { items: res.items.map(toProtoProject), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage , itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
   
 }
 

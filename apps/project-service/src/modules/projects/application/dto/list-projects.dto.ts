@@ -4,7 +4,7 @@ export interface ListProjectsByFilterDTO {
   eventId: number;
   courseId?: number; 
   q?: string;
-  page?: number;     // default 1
-  pageSize?: number; // default 20
+  currentPage?: number;     // default 1
+  itemsPerPage?: number; // default 20
   state?: ProjectState; // optional filter by project state
 }

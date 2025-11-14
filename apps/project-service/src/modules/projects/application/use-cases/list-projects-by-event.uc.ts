@@ -7,18 +7,19 @@ export class ListProjectsByEventUC {
   constructor(@Inject('ProjectRepository') private readonly repo: ProjectRepository) {}
 
   async execute(input: ListProjectsByFilterDTO) {
-    const page = input.page && input.page > 0 ? input.page : 1;
-    const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 10;
+    const currentPage = input.currentPage && input.currentPage > 0 ? input.currentPage : 1;
+    const itemsPerPage = input.itemsPerPage && input.itemsPerPage > 0 ? input.itemsPerPage : 10;
     const projects = this.repo.listByFilter(input.eventId, {
       courseId: input.courseId, 
       q: input.q,
-      page,
-      pageSize,
+      currentPage,
+      itemsPerPage,
       state: input.state,
     });
     const items = (await projects).items;
     const total = (await projects).total;
-    const totalPages = Math.ceil(total / pageSize);
-    return {items, total, page, pageSize, totalPages};
+    const totalPages = Math.ceil(total / itemsPerPage);
+    const itemsOnCurrentPage = items.length;
+    return {items, total, currentPage, itemsOnCurrentPage, itemsPerPage, totalPages};
   }
 }

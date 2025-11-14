@@ -125,17 +125,18 @@ message GetProjectRequest { int32 id = 1; }
 message ListProjectsByEventRequest {
   int32 eventId = 1;
   optional string q = 2;
-  optional int32 page = 3;           // page number (1-indexed)
-  optional int32 pageSize = 4;          // items per page
+  optional int32 currentPage = 3;           // page number (1-indexed)
+  optional int32 itemsPerPage = 4;          // items per page
   optional int32 courseId = 5;
   optional ProjectState state = 6;   // filter by project state
 }
 message ListProjectsResponse {
   repeated Project items = 1;
   int32 total = 2;
-  int32 page = 3;           // current page number
-  int32 pageSize = 4;          // items per page
-  int32 totalPages = 5;     // total number of pages
+  int32 currentPage = 3;           // current page number
+  int32 itemsOnCurrentPage = 4;
+  int32 itemsPerPage = 5;          // items per page
+  int32 totalPages = 6;     // total number of pages
 }
 message UpdateProjectRequest {
   int32 id = 1;
@@ -250,14 +251,15 @@ message DeleteProjectResponse { bool ok = 1; }
 message ListProjectsForReviewRequest  { 
   int32 eventId = 1;
   optional string q = 2;
-  optional int32 page = 3;           // page number (1-indexed)
-  optional int32 pageSize = 4;          // items per page
+  optional int32 currentPage = 3;           // page number (1-indexed)
+  optional int32 itemsPerPage = 4;          // items per page
   optional int32 courseId = 5;
   }
 message ListProjectsForReviewResponse { 
   repeated Project items = 1;
   int32 total = 2;
-  int32 page = 3;           // current page number
-  int32 pageSize = 4;          // items per page
-  int32 totalPages = 5;     // total number of pages
+  int32 currentPage = 3;           // current page number
+  int32 itemsOnCurrentPage = 4;
+  int32 itemsPerPage = 5;          // items per page
+  int32 totalPages = 6;     // total number of pages
   }

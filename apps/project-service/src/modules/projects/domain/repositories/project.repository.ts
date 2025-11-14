@@ -16,7 +16,7 @@ export interface ProjectRepository {
 
   listByFilter(
     eventId: number,
-    opts?: { courseId?: number; q?: string; page?: number; pageSize?: number; state?: ProjectState } 
+    opts?: { courseId?: number; q?: string; currentPage?: number; itemsPerPage?: number; state?: ProjectState } 
   ): Promise<{ items: Project[]; total: number }>;
 
   updateProject(input: {

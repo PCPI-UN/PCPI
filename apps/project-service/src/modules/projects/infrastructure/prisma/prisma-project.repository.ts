@@ -23,7 +23,7 @@ type AddPendingParticipantInput = {
   status: 'PENDING' | 'INVITED' | 'JOINED';
 };
 
-type ListOpts = { courseId?: number; q?: string; page?: number; pageSize?: number; state?: ProjectState };
+type ListOpts = { courseId?: number; q?: string; currentPage?: number; itemsPerPage?: number; state?: ProjectState };
 
 @Injectable()
 export class PrismaProjectRepository implements ProjectRepository {
@@ -57,9 +57,9 @@ export class PrismaProjectRepository implements ProjectRepository {
     })) as unknown as Project | null;
   }
 
-  async listByFilter(eventId: number, opts?: ListOpts): Promise<{ items: Project[]; total: number, page: number; pageSize: number }> {
-    const page = opts?.page && opts.page > 0 ? opts.page : 1;
-    const pageSize = opts?.pageSize && opts.pageSize > 0 ? opts.pageSize : 10;
+  async listByFilter(eventId: number, opts?: ListOpts): Promise<{ items: Project[]; total: number, currentPage: number; itemsPerPage: number }> {
+    const currentPage = opts?.currentPage && opts.currentPage > 0 ? opts.currentPage : 1;
+    const itemsPerPage = opts?.itemsPerPage && opts.itemsPerPage > 0 ? opts.itemsPerPage : 10;
     const where: any = {
       eventId,
       ...(opts?.courseId ? { courseId: opts.courseId } : {}),
@@ -71,13 +71,13 @@ export class PrismaProjectRepository implements ProjectRepository {
       this.prisma.project.findMany({
         where,
         orderBy: { createdAt: 'desc' }, // camelCase
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        skip: (currentPage - 1) * itemsPerPage,
+        take: itemsPerPage,
       }),
       this.prisma.project.count({ where }),
     ]);
 
-    return { items: items as unknown as Project[], total, page, pageSize };
+    return { items: items as unknown as Project[], total, currentPage, itemsPerPage };
   }
 
   async updateProject(input: {
