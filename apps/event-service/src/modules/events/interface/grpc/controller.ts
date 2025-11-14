@@ -123,8 +123,9 @@ async listEventsRpc(
     onlyActive: req.onlyActive ?? undefined,
     userId: req.userId,     // 👈 muy importante
     isAdmin: req.isAdmin,   // 👈 muy importante
+    
   });
-    const userIdUsed = req.isAdmin ? null : req.userId;
+    
   return {
     items: result.items.map(toProtoEvent),
     page: result.page,
@@ -134,6 +135,9 @@ async listEventsRpc(
     hasNext: result.hasNext,
     hasPrev: result.hasPrev,
     userIdUsed: req.isAdmin ? null : req.userId,
+    
+    
+    
   };
 }
 

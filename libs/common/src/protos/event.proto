@@ -56,6 +56,8 @@ message CreateEventRequest {
   string endDate = 8;
   string description = 9;
   string location = 10;
+  int32 status = 11;
+  string statusText = 12;
 } 
 
 
