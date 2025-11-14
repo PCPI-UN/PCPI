@@ -2,7 +2,14 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": false,
-    "outDir": "../../dist/apps/event-service"
+    "outDir": "../../dist/apps/event-service",
+    "baseUrl": "./",
+    "paths": {
+      "@events/*": ["src/modules/events/*"],
+      "@event-members/*": ["src/modules/event-members/*"],
+      "@courses/*": ["src/modules/courses/*"],
+      "@app/common/*": ["../../libs/common/src/*"],
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]

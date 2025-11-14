@@ -8,6 +8,7 @@ import { ValidateRolesExistUseCase } from '@roles/application/use-cases/validate
 import { AssignPlatformRoleUseCase } from '@roles/application/use-cases/assign-platform-role.use-case';
 import { AssignPlatformRolesPublicUseCase } from '@roles/application/use-cases/assign-platform-roles-public.use-case';
 import { GetRolesByIdsUseCase } from '@roles/application/use-cases/get-roles-by-ids.use-case';
+import { GetRolesUseCase } from '@roles/application/use-cases/get-roles.use-case';
 import { RemovePlatformRoleUseCase } from '@roles/application/use-cases/remove-platform-role.use-case';
 import { RolesController } from '@roles/interface/grpc/roles.controller';
 
@@ -19,6 +20,7 @@ import { RolesController } from '@roles/interface/grpc/roles.controller';
     AssignPlatformRoleUseCase,
     AssignPlatformRolesPublicUseCase,
     GetRolesByIdsUseCase,
+    GetRolesUseCase,
     RemovePlatformRoleUseCase,
     {
       provide: RoleRepositoryPort,

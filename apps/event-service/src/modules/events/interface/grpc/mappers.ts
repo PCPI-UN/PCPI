@@ -1,5 +1,5 @@
 import { Event } from '../../domain/entities/event.entity';
-import { EventStatus as PbEventStatus } from 'libs/common/src/generated/event'; // <-- cambia este path
+import { EventStatus as PbEventStatus } from '@app/common/generated/event';
 import { EventStatus as DomainEventStatus } from '../../domain/events/event-status.enum';
 import { getEventStatus } from '../../domain/events/get-event-status.util';
 
@@ -31,6 +31,6 @@ export const toProtoEvent = (e: Event) => {
     createdAt: e.createdAt ? e.createdAt.toISOString() : '',
     updatedAt: e.updatedAt ? e.updatedAt.toISOString() : '',
     location: e.location ?? '',
-    status: mapStatus(domainStatus), // ✅ aquí colocamos el estado final
+    status: mapStatus(domainStatus),
   };
 };

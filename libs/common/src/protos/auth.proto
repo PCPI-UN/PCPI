@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 
 package auth;
 
@@ -42,6 +43,8 @@ service AuthService {
   rpc AssignPlatformRoles(AssignPlatformRolesRequest) returns (AssignPlatformRolesResponse) {}
   // Retrieves roles by their IDs
   rpc GetRolesByIds(GetRolesByIdsRequest) returns (GetRolesByIdsResponse) {}
+  // Retrieves all the roles in the system
+  rpc GetRoles(google.protobuf.Empty) returns (GetRolesByIdsResponse) {}
   // Removes a platform role from a user (soft delete)
   rpc RemovePlatformRole(RemovePlatformRoleRequest) returns (RemovePlatformRoleResponse) {}
 

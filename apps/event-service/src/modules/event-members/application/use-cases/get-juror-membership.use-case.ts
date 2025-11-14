@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { EventMemberRepository } from '../ports/event-member.repository';
+import { EventMemberRepository } from '../../domain/repositories/event-member.repository';
 import { GetJurorMembershipDTO } from '../dto/get-juror-membership.dto';
 import { AuthGrpcClient } from '../../../../common/grpc-clients/auth-grpc.client';
 import { firstValueFrom } from 'rxjs';

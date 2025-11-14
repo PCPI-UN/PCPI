@@ -30,4 +30,11 @@ export class PrismaRoleRepository implements RoleRepositoryPort {
       (role) => new Role(role.id, role.name, role.description, role.scope),
     );
   }
+
+  async findAll(): Promise<Role[]> {
+    const roles = await this.prisma.role.findMany();
+    return roles.map(
+      (role) => new Role(role.id, role.name, role.description, role.scope)
+    )
+  }
 }
