@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 import { EvaluationServiceModule } from './evaluation-service.module';
+import {
+  protobufPackage as evaluationProtobufPackage,
+} from '@app/common/generated/evaluation';
 import { MicroserviceOptions, Transport, RpcException } from '@nestjs/microservices';
 import { join } from 'path';
 
@@ -11,10 +14,10 @@ async function bootstrap() {
     {
       transport: Transport.GRPC,
       options: {
-        package: 'criterions',
+        package: evaluationProtobufPackage,
         protoPath: join(
           process.cwd(),
-          'libs/common/src/protos/criterions.proto',
+          'libs/common/src/protos/evaluation.proto',
         ),
         url: `${process.env.GRPC_HOST || '0.0.0.0'}:${
           process.env.GRPC_PORT || 50052

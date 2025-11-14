@@ -1,4 +1,4 @@
-import {JurorKey, Project, ProjectDocument, ProjectState, ProjectParticipant } from '../entities/project.entity';
+import {TypedDocument, JurorKey, Project, ProjectDocument, ProjectState, ProjectParticipant, StudentStatus, PendingProjectParticipant } from '../entities/project.entity';
 
 export interface ProjectRepository {
   create(input: {
@@ -12,10 +12,11 @@ export interface ProjectRepository {
 
   findById(id: number): Promise<Project | null>;
   findManyByIds(ids: number[]): Promise<Project[]>;
+  findProject(eventId: number, courseId: number, name: string): Promise<Project | null>;
 
-  listByEvent(
+  listByFilter(
     eventId: number,
-    opts?: { courseId?: number; q?: string; page?: number; pageSize?: number } 
+    opts?: { courseId?: number; q?: string; page?: number; pageSize?: number; state?: ProjectState } 
   ): Promise<{ items: Project[]; total: number }>;
 
   updateProject(input: {
@@ -28,18 +29,38 @@ export interface ProjectRepository {
   }): Promise<Project>;
 
   setProjectState(id: number, state: ProjectState): Promise<Project>;
+  setProjectStateWithReason(id: number, state: ProjectState, reason?: string): Promise<Project>;
 
   delete(id: number): Promise<void>;
 
-  addDocument(projectId: number, url: string): Promise<ProjectDocument>;
+  addDocument(projectId: number, url: string, type: TypedDocument ): Promise<ProjectDocument>;
 
   listDocuments(projectId: number): Promise<ProjectDocument[]>;
 
   upsertAssignment(projectId: number, juror: JurorKey): Promise<void>;
+  // Bulk assign juror to multiple projects in one operation
+  bulkUpsertAssignments(projectIds: number[], juror: JurorKey): Promise<void>;
   removeAssignment(projectId: number, juror: JurorKey): Promise<boolean>; // true si borró algo
   listAssignments(projectId: number): Promise<JurorKey[]>; // opcional útil
 
-  addParticipant(input: { projectId: number; userId: number; studentCode?: number | null }): Promise<ProjectParticipant>;
+  addParticipant(input: { projectId: number; userId: number; studentCode: String}): Promise<ProjectParticipant>;
   listParticipants(projectId: number): Promise<ProjectParticipant[]>;
+
+  addPendingParticipant(input: {
+    projectId: number;
+    firstName: string;
+    lastName?: string | null;
+    email: string;
+    studentCode: string;
+    status: StudentStatus;
+  }): Promise<PendingProjectParticipant>;
+  listPendingParticipants(projectId: number): Promise<PendingProjectParticipant[]>;
+
+  markPendingsInvited(projectId: number, emails: string[], invitedAt: Date): Promise<number>;
+
+  markPendingJoined(projectId: number, studentCode: string, joinedAt: Date): Promise<boolean>;
+
+  listAssignedToJuror(juror: JurorKey,opts?: { page?: number; pageSize?: number }
+  ): Promise<{ items: Project[]; total: number }>;
 
 }

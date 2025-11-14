@@ -47,14 +47,28 @@ export class PrismaInvitationRepository implements InvitationRepositoryPort {
 
   async findByTarget(targetType: string, targetId: number): Promise<Invitation[]> {
     const prismaInvitations = await this.prisma.invitation.findMany({
-      where: { 
+      where: {
         targetType: targetType as any,
-        targetId 
+        targetId
       },
       orderBy: { createdAt: 'desc' },
     });
 
     return prismaInvitations.map(InvitationMapper.toDomain);
+  }
+
+  async findPendingByEmailAndTargetType(email: string, targetType: string, targetId: number): Promise<Invitation | null> {
+    const prismaInvitation = await this.prisma.invitation.findFirst({
+      where: {
+        email,
+        targetType: targetType as any,
+        targetId,
+        status: 'PENDING',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return prismaInvitation ? InvitationMapper.toDomain(prismaInvitation) : null;
   }
 
   async delete(id: string): Promise<void> {

@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ProjectServiceModule } from './project-service.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { GrpcErrorFilter } from './modules/projects/interface/grpc/grpc-error.filter';
 import { join } from 'path';
 
 async function bootstrap() {
@@ -20,6 +21,7 @@ async function bootstrap() {
       },
     },
   );
+  app.useGlobalFilters(new GrpcErrorFilter());
   await app.listen();
 }
 bootstrap();

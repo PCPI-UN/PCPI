@@ -12,7 +12,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiSecurity,
   ApiBody,
 } from '@nestjs/swagger';
 import { Response, Request } from 'express';
@@ -38,26 +38,44 @@ export class AuthController {
   @Public()
   @Post('login')
   @ApiOperation({ summary: 'Login to the system' })
-  @ApiResponse({ status: 200, description: 'Login successful, returns access token and sets refresh token in cookie' })
+  @ApiResponse({ status: 200, description: 'Login successful. Sets access_token and refresh_token as HTTP-only cookies.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
     const { accessToken, refreshToken } = await this.authService.login(loginDto);
+
+    const accessTokenExpiration = this.configService.get<string>(
+      'JWT_ACCESS_TOKEN_EXPIRATION',
+      '15m',
+    );
+    const refreshTokenExpiration = this.configService.get<string>(
+      'JWT_REFRESH_TOKEN_EXPIRATION',
+      '7d',
+    );
+
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') !== 'development',
+      sameSite: 'strict',
+      maxAge: this.parseJwtExpiration(accessTokenExpiration),
+    });
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: this.configService.get('NODE_ENV') !== 'development',
       sameSite: 'strict',
+      maxAge: this.parseJwtExpiration(refreshTokenExpiration),
     });
-    return { accessToken };
+    return { success: true, message: 'Login successful' };
   }
 
   @Post('logout')
-  @ApiBearerAuth('JWT-auth')
+  @ApiSecurity('JWT-auth')
   @ApiOperation({ summary: 'Logout from the system' })
-  @ApiResponse({ status: 200, description: 'Logout successful, clears refresh token cookie' })
+  @ApiResponse({ status: 200, description: 'Logout successful, clears all auth cookies' })
   async logout(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie('access_token');
     response.clearCookie('refresh_token');
     return { message: 'Logged out successfully' };
   }
@@ -66,16 +84,32 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt-refresh'))
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({ status: 200, description: 'Returns new access token' })
+  @ApiResponse({ status: 200, description: 'Returns new access token and sets it in cookie' })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
-  async refresh(@Req() req: any) {
+  async refresh(
+    @Req() req: any,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const { refreshToken } = req.user;
     const { accessToken } = await this.authService.refresh(refreshToken);
-    return { accessToken };
+
+    const accessTokenExpiration = this.configService.get<string>(
+      'JWT_ACCESS_TOKEN_EXPIRATION',
+      '15m',
+    );
+
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV') !== 'development',
+      sameSite: 'strict',
+      maxAge: this.parseJwtExpiration(accessTokenExpiration),
+    });
+
+    return { success: true, message: 'Token refreshed successfully' };
   }
 
   @Get('me')
-  @ApiBearerAuth('JWT-auth')
+  @ApiSecurity('JWT-auth')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'Returns authenticated user profile with roles and permissions (platform-specific)' })
   @ApiResponse({ status: 401, description: 'Unauthorized - JWT token missing or invalid' })
@@ -103,7 +137,7 @@ export class AuthController {
   }
 
   @Put('password')
-  @ApiBearerAuth('JWT-auth')
+  @ApiSecurity('JWT-auth')
   @ApiOperation({ summary: 'Change password (authenticated users)' })
   @ApiResponse({ status: 200, description: 'Password changed successfully. All refresh tokens invalidated.' })
   @ApiResponse({ status: 400, description: 'Weak password or validation error' })
@@ -118,5 +152,27 @@ export class AuthController {
       dto.oldPassword,
       dto.newPassword,
     );
+  }
+
+    /**
+   * Converts JWT expiration string (e.g., '15m', '7d', '1h') to milliseconds
+   */
+  private parseJwtExpiration(expiration: string): number {
+    const match = expiration.match(/^(\d+)([smhd])$/);
+    if (!match) {
+      throw new Error(`Invalid expiration format: ${expiration}`);
+    }
+
+    const value = parseInt(match[1], 10);
+    const unit = match[2] as 's' | 'm' | 'h' | 'd';
+
+    const multipliers: Record<'s' | 'm' | 'h' | 'd', number> = {
+      s: 1000,
+      m: 60 * 1000,
+      h: 60 * 60 * 1000,
+      d: 24 * 60 * 60 * 1000,
+    };
+
+    return value * multipliers[unit];
   }
 }

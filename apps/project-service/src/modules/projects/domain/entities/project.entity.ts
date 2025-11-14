@@ -1,4 +1,7 @@
 export type ProjectState = 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+export type StudentStatus = 'PENDING' | 'INVITED' | 'JOINED';
+export type TypedDocument = 'LOGO' | 'POSTER' | 'SUPPORTING_DOCUMENT';
+export type Status = 'ACTIVE' | 'INACTIVE';
 
 export interface Project {
   id: number;
@@ -8,11 +11,14 @@ export interface Project {
   description?: string | null;
   eventNumber?: string | null;
   state: ProjectState;
+  rejectionReason?: string | null;
 }
 
 export interface ProjectDocument {
   id: number;
   projectId: number;
+  type: DocumentType;
+  state : Status;
   url: string;
 }
 
@@ -25,5 +31,14 @@ export interface JurorKey {
 export interface ProjectParticipant {
   userId: number;
   projectId: number;
-  studentCode?: number | null; 
+  studentCode: string;
+}
+
+export interface PendingProjectParticipant {
+  projectId: number;
+  firstName: string;
+  lastName?: string | null;
+  email: string;
+  studentCode: string;
+  status: StudentStatus;
 }

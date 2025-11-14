@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { GetProjectDTO } from '../dto/get-project.dto';
+import { NotFoundError } from '../../domain/errors';
 
 @Injectable()
 export class GetProjectUC {
@@ -8,7 +9,7 @@ export class GetProjectUC {
 
   async execute(input: GetProjectDTO) {
     const project = await this.repo.findById(input.id);
-    if (!project) throw new Error('Project not found');
+    if (!project) throw new NotFoundError('Project not found');
     return project;
   }
 }

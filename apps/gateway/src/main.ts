@@ -8,6 +8,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  
+  app.enableCors({
+    origin: frontendUrl,
+    credentials: true,
+  });
   app.use(cookieParser());
   
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -20,16 +26,15 @@ async function bootstrap() {
     .addTag('auth', 'Authentication and authorization endpoints')
     .addTag('users', 'User management endpoints')
     .addTag('events', 'Event management endpoints')
+    
     .addBearerAuth(
       {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
+        type: 'apiKey',
+        name: 'access_token',
+        in: 'cookie',
+        description: 'JWT access token stored in HTTP-only cookie. Set automatically after login.',
       },
-      'JWT-auth', // This name will be used in @ApiBearerAuth()
+      'JWT-auth',
     )
     .build();
   
@@ -39,7 +44,7 @@ async function bootstrap() {
     customfavIcon: 'https://nestjs.com/img/logo-small.svg',
     customCss: '.swagger-ui .topbar { display: none }',
   });
-  
+
   await app.listen(3000);
 }
 bootstrap();
