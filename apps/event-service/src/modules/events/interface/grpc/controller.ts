@@ -6,14 +6,24 @@ import { GetEventUC } from '../../application/use-cases/get-event.uc';
 import { ListEventsUC } from '../../application/use-cases/list-events.uc';
 import { DeleteEventUC } from '../../application/use-cases/delete-event.uc';
 import { toProtoEvent } from './mappers';
+import { GrpcAuthGuard } from 'apps/event-service/src/common/auth/grpc-auth.guard';
 import { Metadata } from '@grpc/grpc-js';
 import { CreateEventDTO } from '../../application/dto/create-event.dto';
+import { RequirePermission } from '../../../../../../gateway/src/common/decorators/require-permission.decorator';
 import { Inject } from '@nestjs/common';
 import { ClientGrpc, RpcException } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
 import { AuthServiceClient } from '@app/common/generated/auth';
 
 import { ListEventsDTO } from '@app/common/dtos';
+import { ForbiddenException } from '@nestjs/common';
+
+import { Logger } from '@nestjs/common';
+import { ListEventsRequestPage } from '@app/common/generated/event';
+const logger = new Logger('EventsController');
+
+
+
 
 @Controller()
 export class EventsController {
@@ -27,6 +37,7 @@ export class EventsController {
     
   ) {}
 
+  @RequirePermission('manage:events')
   @GrpcMethod('EventService', 'CreateEvent')
   async createEvent(data: any) {
     try {
@@ -62,6 +73,7 @@ export class EventsController {
     }
   }
 
+  @RequirePermission('update:events')
   @GrpcMethod('EventService', 'UpdateEvent')
   async updateEventRpc(req: any) {
   await this.updateUC.execute(req);
@@ -79,27 +91,68 @@ async getEventRpc(req: { id: number }) {
 }
 
 
-
-  @GrpcMethod('EventService', 'ListEventsPage')
-  async listEventsRpc(req: ListEventsDTO) {
-    const result = await this.listUC.execute(req);
-
-    return {
-      items: result.items.map(toProtoEvent),
-      page: result.page,
-      limit: result.limit,
-      total: result.total,
-      totalPages: result.totalPages,
-      hasNext: result.hasNext,
-      hasPrev: result.hasPrev,
-    };
-  }
   
+@GrpcMethod('EventService', 'ListEventsPage')
+async listEventsRpc(
+  req: ListEventsRequestPage & { userId: number; isAdmin: boolean },
+) {
+  try {
+    logger.log({
+      msg: 'ListEventsPage called',
+      isAdmin: req.isAdmin,
+      userId: req.userId,
+      page: req.page,
+      limit: req.limit,
+      onlyActive: req.onlyActive,
+      q: req.q,
+    });
+  } catch (e) {
+    logger.warn(
+      'Failed to log request info for ListEventsPage',
+      (e as any)?.message || e,
+    );
+  }
+
+  // ✅ Ya NO bloqueamos a los no admin.
+  // La diferencia admin/no admin la maneja el UC con isAdmin.
+
+  const result = await this.listUC.execute({
+    page: req.page ?? 1,
+    limit: req.limit ?? 10,
+    q: req.q || undefined,
+    onlyActive: req.onlyActive ?? undefined,
+    userId: req.userId,     // 👈 muy importante
+    isAdmin: req.isAdmin,   // 👈 muy importante
+    
+  });
+    
+  return {
+    items: result.items.map(toProtoEvent),
+    page: result.page,
+    limit: result.limit,
+    total: result.total,
+    totalPages: result.totalPages,
+    hasNext: result.hasNext,
+    hasPrev: result.hasPrev,
+    userIdUsed: req.isAdmin ? null : req.userId,
+    
+    
+    
+  };
+}
+
+
+
+  
+  @RequirePermission('delete:events')
   @GrpcMethod('EventService', 'DeleteEvent')
   async deleteEventRpc(req: { id: number }) {
     await this.deleteUC.execute(req);
     return { ok: true };
   }
+  
+  
+
 
 }
 

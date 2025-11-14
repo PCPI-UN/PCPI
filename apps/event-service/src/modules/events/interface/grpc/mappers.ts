@@ -1,20 +1,22 @@
 import { Event } from '../../domain/entities/event.entity';
-import { EventStatus as PbEventStatus } from '@app/common/generated/event';
+import { EventStatus as PbEventStatus } from 'libs/common/src/generated/event'; // <-- cambia este path
 import { EventStatus as DomainEventStatus } from '../../domain/events/event-status.enum';
 import { getEventStatus } from '../../domain/events/get-event-status.util';
 
-const mapStatus = (s: DomainEventStatus): PbEventStatus => {
-  switch (s) {
-    case DomainEventStatus.UPCOMING:  return PbEventStatus.EVENT_STATUS_UPCOMING;
-    case DomainEventStatus.AVAILABLE: return PbEventStatus.EVENT_STATUS_AVAILABLE;
-    case DomainEventStatus.CLOSED:    return PbEventStatus.EVENT_STATUS_CLOSED;
-    default:                          return PbEventStatus.EVENT_STATUS_UNSPECIFIED;
-  }
+const mapStatus: Record<DomainEventStatus, PbEventStatus> = {
+  [DomainEventStatus.UPCOMING]:   PbEventStatus.EVENT_STATUS_UPCOMING,
+  [DomainEventStatus.AVAILABLE]:  PbEventStatus.EVENT_STATUS_AVAILABLE,
+  [DomainEventStatus.CLOSED]:     PbEventStatus.EVENT_STATUS_CLOSED,
+  
 };
+
+
+console.log("log status",DomainEventStatus);
 
 export const toProtoEvent = (e: Event) => {
   const domainStatus = getEventStatus(e.startDate, e.endDate);
-
+  const pbStatus = mapStatus[domainStatus] ?? PbEventStatus.EVENT_STATUS_UNSPECIFIED;
+   const statusText = PbEventStatus[pbStatus]; 
   return {
     id: e.id,
     name: e.name ?? '',
@@ -31,6 +33,7 @@ export const toProtoEvent = (e: Event) => {
     createdAt: e.createdAt ? e.createdAt.toISOString() : '',
     updatedAt: e.updatedAt ? e.updatedAt.toISOString() : '',
     location: e.location ?? '',
-    status: mapStatus(domainStatus),
+    status: pbStatus,     // número (enum)
+    statusText,  // ✅ aquí colocamos el estado final
   };
 };

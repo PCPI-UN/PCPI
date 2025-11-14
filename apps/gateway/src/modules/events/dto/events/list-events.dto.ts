@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsBoolean, IsPositive, IsOptional, IsString} from 'class-validator';
-
+import { IsInt, IsBoolean, IsPositive, IsOptional, IsString} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class ListEventsDTO {
   @ApiProperty({
@@ -9,6 +9,7 @@ export class ListEventsDTO {
     required: false,
   })
   @IsOptional() @IsString()
+  @Type(() => String)
   q?: string;
 
   @ApiProperty({
@@ -16,7 +17,8 @@ export class ListEventsDTO {
     example: 1,
     required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
+  @Type(() => Number)
   page?: number;     // default 1
 
   @ApiProperty({
@@ -24,7 +26,8 @@ export class ListEventsDTO {
     example: 20,
     required: false,
   })
-  @IsNumber() @IsPositive() @IsOptional()
+  @IsInt() @IsPositive() @IsOptional()
+  @Type(() => Number)
   pageSize?: number; // default 20
 
   @ApiProperty({
@@ -33,5 +36,6 @@ export class ListEventsDTO {
     required: false,
   })
   @IsOptional() @IsBoolean()
+  @Type(() => Boolean)
   onlyActive?: boolean;
 }

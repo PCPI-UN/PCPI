@@ -112,7 +112,7 @@ services:
 
   notification-service:
     build:
-      target: production
+      target: production 
     environment:
       - NODE_ENV=production
       - EMAIL_SERVICE_ID=${EMAIL_SERVICE_ID}

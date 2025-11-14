@@ -1,7 +1,7 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
+import { first, firstValueFrom } from 'rxjs';
 import { CreateEventDTO } from './dto/events/create-event.dto';
 import { DeleteEventDTO } from './dto/events/delete-event.dto';
 import { GetEventDTO } from './dto/events/get-event.dto';
@@ -55,6 +55,7 @@ import { CreateEventRequest,
     ListCoursesByEventRequest,
     ListCoursesByEventResponse
  } from '@app/common/generated/event';
+import { AppUser } from '../auth/types/app-user.type';
 
 @Injectable()
 export class EventService implements OnModuleInit{
@@ -87,9 +88,27 @@ export class EventService implements OnModuleInit{
     async get(getEventDTO: GetEventDTO): Promise<GetEventResponse> {
         return firstValueFrom(this.eventService.getEvent(getEventDTO as GetEventRequest));
     }
+//////#################################
+    async listPage(
+  user: AppUser,
+  listEventsPageDTO: ListEventsPageDTO,
+): Promise<ListEventsResponsePage> {
+  const isAdmin = user.platformRoles[0]?.name === 'Admin';
+  //const isAdmin = false; // prueba usuario no admin harcoded :3
+  console.log("Es admin",isAdmin);
 
-    async listPage(listEventsPageDTO: ListEventsPageDTO): Promise<ListEventsResponsePage> {
-        return firstValueFrom(this.eventService.listEventsPage(listEventsPageDTO as ListEventsRequestPage));
+    const requestData: ListEventsRequestPage = {
+        isAdmin,
+        page: listEventsPageDTO.page ?? 1,         
+        limit: listEventsPageDTO.limit ?? 10,       
+        onlyActive: listEventsPageDTO.onlyActive ?? true,
+        q: listEventsPageDTO.q ?? '',
+        userId: user.id,
+    };
+    console.log('🚀 Gateway -> ListEventsPage requestData:', requestData);
+    return firstValueFrom(
+        this.eventService.listEventsPage(requestData)
+    );
     }
 
     async update(updateEventDTO: UpdateEventDTO): Promise<UpdateEventResponse> {
@@ -120,8 +139,8 @@ export class EventService implements OnModuleInit{
         return firstValueFrom(this.eventService.getCourse(getCourseDTO as GetCourseRequest));
     }
 
-    async listCourses(listCoursesDTO?: ListCoursesDTO): Promise<ListCoursesResponse> {
-        return firstValueFrom(this.eventService.listCourses(listCoursesDTO as ListCoursesRequest));
+    async findAllCourses(request: ListCoursesDTO): Promise<ListCoursesResponse> {
+        return firstValueFrom(this.eventService.listCourses(request as ListCoursesRequest));
     }
 
     async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO): Promise<ListCoursesByEventResponse> {

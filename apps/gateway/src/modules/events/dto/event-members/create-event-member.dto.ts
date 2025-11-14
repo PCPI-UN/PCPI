@@ -1,26 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, Min, Max, IsBoolean, IsPositive, IsOptional, IsNotEmpty} from 'class-validator';
+import { IsInt, Min, Max, IsBoolean, IsPositive, IsOptional, IsNotEmpty} from 'class-validator';
 
 export class CreateEventMemberDTO {
   @ApiProperty({
     description: 'ID of the user to be added as an event member',
     example: 1001,
   })
-  @IsNumber() @IsPositive() @IsNotEmpty()
+  @IsInt() @IsPositive() @IsNotEmpty()
   userId: number;
 
   @ApiProperty({
     description: 'ID of the event to which the user will be added',
     example: 1,
   })
-  @IsNumber() @IsPositive() @IsNotEmpty()
+  @IsInt() @IsPositive() @IsNotEmpty()
   eventId: number;
 
   @ApiProperty({
     description: 'Role ID of the user in the event',
     example: 2,
   })
-  @IsNumber() @Min(1) @Max(4) @IsNotEmpty()
+  @IsInt() @Min(1) @Max(4) @IsNotEmpty()
   roleId: number;
 
   @ApiProperty({

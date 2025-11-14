@@ -10,6 +10,7 @@ export class ListCoursesUseCase {
     const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 20;
 
     return this.repo.list({
+      eventId: Number(input.eventId),
       q: input.q,
       page,
       pageSize,

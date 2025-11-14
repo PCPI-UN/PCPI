@@ -13,4 +13,13 @@ export abstract class EventRepository {
     q?: string;
     onlyActive?: boolean;
   }): Promise<{ items: DomainEvent[]; total: number }>;
+
+
+  abstract findPaginatedByMember(params: {
+    page: number;
+    limit: number;
+    q?: string;
+    onlyActive?: boolean;
+    userId: number;
+  }): Promise<{ items: DomainEvent[]; total: number }>;
 }

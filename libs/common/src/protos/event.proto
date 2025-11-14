@@ -56,6 +56,8 @@ message CreateEventRequest {
   string endDate = 8;
   string description = 9;
   string location = 10;
+  int32 status = 11;
+  string statusText = 12;
 } 
 
 
@@ -124,6 +126,8 @@ message ListEventsRequestPage {
   int32 limit = 2;           // default 10, máx 100
   string q = 3;              // búsqueda por name/description
   bool onlyActive = 4;       // filtra activos=true
+  bool isAdmin = 5;
+  int32 userId = 6;
 }
 
 message ListEventsResponsePage {
@@ -134,6 +138,8 @@ message ListEventsResponsePage {
   int32 totalPages = 5;
   bool hasNext = 6;
   bool hasPrev = 7;
+  int32 userIdUsed = 8;
+
 }
 
 // =====================
