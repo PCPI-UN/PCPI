@@ -10,6 +10,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { UsersModule } from './modules/users/users.module';
+import { CacheModule } from './common/cache/cache.module';
+import { CacheManagementController } from './common/cache/cache-management.controller';
 
 @Module({
   imports: [
@@ -17,6 +19,7 @@ import { UsersModule } from './modules/users/users.module';
       isGlobal: true,
       envFilePath: './apps/gateway/.env',
     }),
+    CacheModule,
     AuthModule,
     UsersModule,
     EventsModule,
@@ -25,7 +28,7 @@ import { UsersModule } from './modules/users/users.module';
     InvitationsModule,
     CriterionsModule,
   ],
-  controllers: [],
+  controllers: [CacheManagementController],
   providers: [
     {
       provide: APP_GUARD,
