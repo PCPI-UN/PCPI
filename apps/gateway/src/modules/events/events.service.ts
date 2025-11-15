@@ -69,6 +69,7 @@ export class EventService implements OnModuleInit {
     private eventService: EventServiceClient;
     private authService: AuthServiceClient;
     private statusCache: EventStatusMapping[] | null = null;
+    private rolesCache: any[] | null = null;
 
     constructor(
         @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
@@ -186,17 +187,31 @@ export class EventService implements OnModuleInit {
     }
 
     /**
+     * Get all roles from auth-service and cache them
+     * TTL is managed at HTTP layer via Redis cache
+     */
+    private async getAndCacheRoles(): Promise<any[]> {
+        if (!this.rolesCache) {
+            const response = await firstValueFrom(this.authService.getRoles({}));
+            this.rolesCache = response.roles;
+        }
+        return this.rolesCache;
+    }
+
+    /**
      * Enrich a single event with human-readable status names
+     * Removes the numeric status field from response
      */
     private enrichSingleEventWithStatus<T extends EventProto | EventWithRole>(
         event: T,
         statuses: EventStatusMapping[],
     ): T & { statusName?: string; statusDescription?: string } {
+        const { status, ...eventWithoutStatus } = event;
         return {
-            ...event,
-            statusName: statuses.find(s => s.value === event.status)?.name,
-            statusDescription: statuses.find(s => s.value === event.status)?.description,
-        };
+            ...eventWithoutStatus,
+            statusName: statuses.find(s => s.value === status)?.name,
+            statusDescription: statuses.find(s => s.value === status)?.description,
+        } as T & { statusName?: string; statusDescription?: string };
     }
 
     /**
@@ -216,19 +231,40 @@ export class EventService implements OnModuleInit {
 
     /**
      * List events where the user is a member (with role information)
-     * Enriches events with human-readable status names
+     * Enriches events with human-readable status names and role details
      */
     async listMyEvents(userId: number, dto: ListMyEventsDTO): Promise<ListMyEventsResponse> {
         const response = await firstValueFrom(
             this.eventService.listMyEvents({ userId, ...dto } as ListMyEventsRequest)
         );
 
-        const statuses = await this.getAndCacheStatuses();
-        const enrichedEvents = this.enrichEventsWithStatus(response.events, statuses);
+        // Get cached statuses and roles
+        const [statuses, roles] = await Promise.all([
+            this.getAndCacheStatuses(),
+            this.getAndCacheRoles(),
+        ]);
+
+        // Enrich events with status and role information
+        const enrichedEvents = response.events.map(event => {
+            const { status, roleId, ...eventWithoutStatusAndRoleId } = event;
+            const role = roles.find(r => r.id === roleId);
+
+            return {
+                ...eventWithoutStatusAndRoleId,
+                statusName: statuses.find(s => s.value === status)?.name,
+                statusDescription: statuses.find(s => s.value === status)?.description,
+                role: role ? {
+                    id: role.id,
+                    name: role.name,
+                    scope: role.scope,
+                    description: role.description,
+                } : null,
+            };
+        });
 
         return {
             ...response,
-            events: enrichedEvents as EventWithRole[],
+            events: enrichedEvents as any,
         };
     }
 
