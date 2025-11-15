@@ -11,7 +11,11 @@ service EventService {
   rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse) {}
   rpc GetEvent (GetEventRequest) returns (GetEventResponse) {}
   rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
-  rpc ListEventsPage (ListEventsRequestPage) returns (ListEventsResponsePage) {}
+  rpc ListMyEvents (ListMyEventsRequest) returns (ListMyEventsResponse) {}
+  // Public endpoint for listing all events - used for public event browsing and admin event management
+  rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
+  // Get event status mappings for gateway caching
+  rpc GetEventStatuses (GetEventStatusesRequest) returns (GetEventStatusesResponse) {}
 
   // ---- EVENT MEMBERS ----
   rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
@@ -45,52 +49,8 @@ message Course {
 //      EVENTS MODULE
 // =====================
 
-message CreateEventRequest {
-  int32 organizationId = 1;
-  string name = 2;
-  string accessCode = 3;
-  bool isPubliclyJoinable = 4;
-  string inscriptionDeadline = 5;
-  bool evaluationsOpened = 6;
-  string startDate = 7;
-  string endDate = 8;
-  string description = 9;
-  string location = 10;
-  int32 status = 11;
-  string statusText = 12;
-} 
-
-
-message CreateEventResponse {
-  bool ok = 1;
-  string message = 2;
-}
-
-message UpdateEventRequest {
-  int32 id = 1;
-  string name = 2;
-  string description = 3;
-  string accessCode = 4;
-  bool isPubliclyJoinable = 5;
-  string inscriptionDeadline = 6;
-  bool evaluationsOpened = 7;
-  string startDate = 8;
-  string endDate = 9;
-  bool active = 10;
-    string location = 11;
-
-}
-
-message UpdateEventResponse {
-  bool ok = 1;
-  string message = 2;
-}
-
-message GetEventRequest {
-  int32 id = 1;
-}
-
-message GetEventResponse {
+// Event Proto - standard event representation
+message EventProto {
   int32 id = 1;
   string name = 2;
   string description = 3;
@@ -104,11 +64,50 @@ message GetEventResponse {
   string createdAt = 11;
   string updatedAt = 12;
   string location = 13;
-  EventStatus status = 17;
+  EventStatus status = 14;
+}
 
+message CreateEventRequest {
+  string name = 1;
+  string accessCode = 2;
+  bool isPubliclyJoinable = 3;
+  string inscriptionDeadline = 4;
+  bool evaluationsOpened = 5;
+  string startDate = 6;
+  string endDate = 7;
+  string description = 8;
+  string location = 9;
+  optional int32 createdByUserId = 10;
+}
 
+message CreateEventResponse {
+  EventProto event = 1;
+}
 
-  
+message UpdateEventRequest {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+  string location = 11;
+}
+
+message UpdateEventResponse {
+  EventProto event = 1;
+}
+
+message GetEventRequest {
+  int32 id = 1;
+}
+
+message GetEventResponse {
+  EventProto event = 1;
 }
 
 
@@ -121,25 +120,76 @@ message DeleteEventResponse {
   bool ok = 1;
 }
 
-message ListEventsRequestPage {
-  int32 page = 1;            // default 1
-  int32 limit = 2;           // default 10, máx 100
-  string q = 3;              // búsqueda por name/description
-  bool onlyActive = 4;       // filtra activos=true
-  bool isAdmin = 5;
-  int32 userId = 6;
+// New ListMyEvents messages
+message ListMyEventsRequest {
+  int32 userId = 1;
+  optional int32 page = 2;    // default: 1
+  optional int32 limit = 3;   // default: 10, max: 50
 }
 
-message ListEventsResponsePage {
-  repeated GetEventResponse items = 1;
-  int32 page = 2;
-  int32 limit = 3;
-  int32 total = 4;
-  int32 totalPages = 5;
-  bool hasNext = 6;
-  bool hasPrev = 7;
-  int32 userIdUsed = 8;
+message EventWithRole {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  string accessCode = 4;
+  bool isPubliclyJoinable = 5;
+  string inscriptionDeadline = 6;
+  bool evaluationsOpened = 7;
+  string startDate = 8;
+  string endDate = 9;
+  bool active = 10;
+  string createdAt = 11;
+  string updatedAt = 12;
+  string location = 13;
+  EventStatus status = 14;
+  int32 roleId = 15;  // Role ID only - gateway will enrich with role details
+}
 
+message EventRole {
+  int32 id = 1;
+  string name = 2;
+  string scope = 3;        // "PLATFORM" or "EVENT"
+  string description = 4;
+}
+
+message PaginationMetadata {
+  int32 total = 1;
+  int32 itemsOnCurrentPage = 2;
+  int32 itemsPerPage = 3;
+  int32 currentPage = 4;
+  int32 totalPages = 5;
+}
+
+message ListMyEventsResponse {
+  repeated EventWithRole events = 1;
+  PaginationMetadata meta = 2;
+}
+
+// Public listing of events - for browsing and admin management
+message ListEventsRequest {
+  optional int32 page = 1;       // default: 1
+  optional int32 limit = 2;      // default: 10
+  optional string q = 3;         // search query (name/description)
+  optional bool onlyActive = 4;  // default: true
+  optional EventStatus status = 5;  // filter by status (UPCOMING, AVAILABLE, CLOSED)
+}
+
+message ListEventsResponse {
+  repeated EventProto events = 1;
+  PaginationMetadata meta = 2;
+}
+
+// Get Event Statuses - for gateway caching
+message GetEventStatusesRequest {}
+
+message EventStatusMapping {
+  int32 value = 1;       // Numeric enum value (0, 1, 2, 3, 4)
+  string name = 2;       // String name (UNSPECIFIED, UPCOMING, REGISTRATION_CLOSED, AVAILABLE, CLOSED)
+  string description = 3; // Human-readable description
+}
+
+message GetEventStatusesResponse {
+  repeated EventStatusMapping statuses = 1;
 }
 
 // =====================
@@ -184,6 +234,7 @@ message ListEventMembersRequest {
   int32 eventId = 1;
   optional int32 roleId = 2;
   optional int32 page = 3;
+  optional int32 limit = 4;
 }
 
 message EventMemberProto {
@@ -197,9 +248,7 @@ message EventMemberProto {
 
 message ListEventMembersResponse {
   repeated EventMemberProto members = 1;
-  int32 total = 2;
-  int32 page = 3;
-  int32 total_pages = 4;
+  PaginationMetadata meta = 2;
 }
 
 // =====================
@@ -270,10 +319,11 @@ message ListCoursesByEventResponse {
 }
 
 enum EventStatus {
-  EVENT_STATUS_UNSPECIFIED = 0;
-  EVENT_STATUS_UPCOMING   = 1;  // PROXIMAMENTE
-  EVENT_STATUS_AVAILABLE  = 2;  // DISPONIBLE
-  EVENT_STATUS_CLOSED     = 3;  // CERRADO
+  UNSPECIFIED = 0;
+  UPCOMING   = 1;  // Event hasn't started, registrations still open
+  REGISTRATION_CLOSED = 2;  // Registrations closed, event hasn't started yet
+  AVAILABLE  = 3;  // Event is currently happening
+  CLOSED     = 4;  // Event has ended
 }
 
 message Empty {}

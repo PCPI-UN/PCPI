@@ -34,6 +34,7 @@ export class PrismaPermissionRepository implements PermissionRepositoryPort {
       id: ps.role.id,
       name: ps.role.name,
       scope: ps.role.scope,
+      description: ps.role.description,
     }));
 
     // Extract all permissions from all roles

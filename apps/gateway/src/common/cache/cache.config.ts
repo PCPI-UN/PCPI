@@ -16,29 +16,32 @@ export const CacheConfig = {
   ENDPOINT_TTL: {
     // User permissions - longer cache since platform permissions change infrequently
     'user-permissions': 900, // 15 minutes
-    
+
     // List endpoints - moderate cache
     'list': 300, // 5 minutes
-    
+
     // Criterions - relatively static during event lifecycle
     'criterions': 600, // 10 minutes
-    
+
+    // Event statuses - very long cache since enum values rarely change
+    'events/statuses': 10800, // 3 hours
+
     // Events - static during active events
     'events': 600, // 10 minutes
-    
+
     // Projects - changes frequently
     'projects': 180, // 3 minutes
-    
+
     // Evaluations - changes frequently
     'evaluations': 120, // 2 minutes
-    
+
     // Invitations - moderate change rate
     'invitations': 300, // 5 minutes
-    
+
     // Event members and roles - relatively static
     'event-members': 600, // 10 minutes
     'event-roles': 600, // 10 minutes
-    
+
     // Courses/Groups - static during event lifecycle
     'courses': 600, // 10 minutes
   },
@@ -72,16 +75,27 @@ export const CacheConfig = {
  * Helper function to get TTL for a specific endpoint
  */
 export function getTTLForEndpoint(path: string): number {
-  // Extract the main resource from the path (e.g., /api/criterions -> criterions)
-  const resource = path.split('/').filter(Boolean)[1] || '';
-  
-  // Check if we have a specific TTL for this resource
+  // Normalize path by removing leading/trailing slashes and 'api' prefix if present
+  const normalizedPath = path
+    .replace(/^\//, '')
+    .replace(/\/$/, '')
+    .replace(/^api\//, '');
+
+  // Check for exact matches first (more specific patterns)
   for (const [key, ttl] of Object.entries(CacheConfig.ENDPOINT_TTL)) {
-    if (resource.includes(key)) {
+    if (normalizedPath.startsWith(key)) {
       return ttl;
     }
   }
-  
+
+  // Extract the main resource from the path (e.g., criterions, events)
+  const resource = normalizedPath.split('/')[0] || '';
+
+  // Check if we have a TTL for this resource
+  if (resource in CacheConfig.ENDPOINT_TTL) {
+    return CacheConfig.ENDPOINT_TTL[resource as keyof typeof CacheConfig.ENDPOINT_TTL];
+  }
+
   // Return default TTL if no specific configuration found
   return CacheConfig.DEFAULT_TTL;
 }

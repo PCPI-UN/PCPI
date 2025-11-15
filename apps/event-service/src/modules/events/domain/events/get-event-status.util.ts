@@ -1,34 +1,38 @@
 import { EventStatus } from './event-status.enum';
 
-export const getEventStatus = (start: Date | string, end: Date | string): EventStatus => {
-  console.log(' getEventStatus called with:');
-  console.log('   start:', start);
-  console.log('   end:', end);
-
+export const getEventStatus = (
+  start: Date | string,
+  end: Date | string,
+  inscriptionDeadline?: Date | string | null,
+): EventStatus => {
   const startDate = start instanceof Date ? start : new Date(start);
-  const endDate   = end   instanceof Date ? end   : new Date(end);
+  const endDate = end instanceof Date ? end : new Date(end);
   const now = new Date();
 
-  console.log(' Parsed Dates:');
-  console.log('   startDate:', startDate.toISOString());
-  console.log('   endDate:', endDate.toISOString());
-  console.log('   now:', now.toISOString());
-
-  console.log(' Comparisons:');
-  console.log('   now < startDate ?', now < startDate);
-  console.log('   now > endDate ?', now > endDate);
-
-  if (now < startDate) {
-    console.log('Status = UPCOMING');
-    return EventStatus.UPCOMING;
-  }
-
+  // Event has ended
   if (now > endDate) {
-    console.log('Status = CLOSED');
     return EventStatus.CLOSED;
   }
 
-  console.log('Status = AVAILABLE');
-  return EventStatus.AVAILABLE; 
+  // Event is currently happening
+  if (now >= startDate && now <= endDate) {
+    return EventStatus.AVAILABLE;
+  }
+
+  // Event hasn't started yet - check registration deadline
+  if (inscriptionDeadline) {
+    const regDeadline =
+      inscriptionDeadline instanceof Date
+        ? inscriptionDeadline
+        : new Date(inscriptionDeadline);
+
+    // Registrations closed but event hasn't started
+    if (now >= regDeadline && now < startDate) {
+      return EventStatus.REGISTRATION_CLOSED;
+    }
+  }
+
+  // Registrations still open, event hasn't started
+  return EventStatus.UPCOMING;
 };
  
