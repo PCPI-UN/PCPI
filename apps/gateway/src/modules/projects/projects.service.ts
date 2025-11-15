@@ -15,6 +15,7 @@ import { RejectProjectDto } from './dto/reject-project.dto';
 import { TypedDocument, ProjectDocumentInputDto } from './dto/project-document-input.dto';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
+import { ListProjectsForReviewDto } from './dto/list-projects-for-review.dto';
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
@@ -293,4 +294,29 @@ export class ProjectsService implements OnModuleInit {
     };
     return mapping[type];
   }
+  
+
+  async listProjectsForReview(query: ListProjectsForReviewDto) {
+    const {
+      eventId,
+      courseId,
+      q,
+      currentPage,
+      itemsPerPage,
+    } = query;
+
+    const response = await firstValueFrom(
+      this.projectsService.listProjectsForReview({
+        eventId,
+        // solo envía si vienen definidos, respetando los "optional" del proto
+        courseId: courseId ?? undefined,
+        q: q ?? undefined,
+        currentPage: currentPage ?? 1,
+        itemsPerPage: itemsPerPage ?? 10,
+      }),
+    );
+
+    return response; // esto ya es el ListProjectsForReviewResponse generado
+  }
+
 }

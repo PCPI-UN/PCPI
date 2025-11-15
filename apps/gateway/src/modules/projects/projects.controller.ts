@@ -7,6 +7,8 @@ import {
   Post, 
   UploadedFiles,
   UseInterceptors,
+  Get,
+  Query
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
@@ -28,6 +30,7 @@ import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
 import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
 import { ApproveProjectDto } from './dto/approve-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
+import { ListProjectsForReviewDto } from './dto/list-projects-for-review.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -208,4 +211,18 @@ export class ProjectsController {
   ) {
     return this.projectsService.rejectProject({ id, reason: rejectDto.reason }, user.id);
   }
+
+
+  @Get('review')
+  @ApiOperation({
+    summary: 'Listar proyectos en estado UNDER_REVIEW para un evento',
+    description:
+      'Devuelve los proyectos del evento en estado UNDER_REVIEW, con filtros opcionales por curso, texto y paginación.',
+  })
+  async listProjectsForReview(
+    @Query() query: ListProjectsForReviewDto,
+  ) {
+    return this.projectsService.listProjectsForReview(query);
+  }
+
 }
