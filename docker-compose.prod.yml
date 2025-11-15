@@ -100,6 +100,9 @@ services:
       - AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}
       - AZURE_ACCOUNT_KEY=${AZURE_ACCOUNT_KEY}
       - AZURE_CONTAINER=${AZURE_CONTAINER}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "80:3000"
     restart: always

@@ -21,6 +21,7 @@ import { CreateCriterionDto } from './dto/create-criterion.dto';
 import { UpdateCriterionDto } from './dto/update-criterion.dto';
 import { ListCriterionsDto } from './dto/list-criterions.dto';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
+import { InvalidateCache } from '@common/cache/invalidate-cache.decorator';
 
 @ApiTags('criterions')
 @ApiSecurity('JWT-auth')
@@ -30,6 +31,9 @@ export class CriterionsController {
 
   @Post()
   @RequirePermission('manage:events')
+  @InvalidateCache({
+    endpoints: ['/criterions', '/api/criterions'],
+  })
   @ApiOperation({
     summary: 'Create a new criterion',
     description:
@@ -53,6 +57,9 @@ export class CriterionsController {
 
   @Put(':id')
   @RequirePermission('manage:events')
+  @InvalidateCache({
+    endpoints: ['/criterions', '/api/criterions'],
+  })
   @ApiOperation({
     summary: 'Update an existing criterion',
     description:
@@ -161,6 +168,9 @@ export class CriterionsController {
 
   @Delete(':id')
   @RequirePermission('manage:events')
+  @InvalidateCache({
+    endpoints: ['/criterions', '/api/criterions'],
+  })
   @ApiOperation({
     summary: 'Delete a criterion',
     description:

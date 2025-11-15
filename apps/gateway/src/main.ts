@@ -4,6 +4,8 @@ import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { GrpcExceptionFilter } from './common/filters/grpc-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HttpCacheInterceptor } from './common/cache/http-cache.interceptor';
+import { CacheInvalidationInterceptor } from './common/cache/cache-invalidation.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +20,12 @@ async function bootstrap() {
   
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new GrpcExceptionFilter());
+  
+  // Register cache interceptors globally
+  app.useGlobalInterceptors(
+    app.get(HttpCacheInterceptor),
+    app.get(CacheInvalidationInterceptor),
+  );
   
   const config = new DocumentBuilder()
     .setTitle('Iris API')
