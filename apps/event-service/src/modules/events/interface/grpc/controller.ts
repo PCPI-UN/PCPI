@@ -1,15 +1,13 @@
 import { Controller,UseGuards } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { CreateEventUC } from '../../application/use-cases/create-event.uc';
-import { UpdateEventUC } from '../../application/use-cases/update-event.uc';
-import { GetEventUC } from '../../application/use-cases/get-event.uc';
-import { ListEventsUC } from '../../application/use-cases/list-events.uc';
-import { DeleteEventUC } from '../../application/use-cases/delete-event.uc';
+import { CreateEventUC } from '@events/application/use-cases/create-event.uc';
+import { UpdateEventUC } from '@events/application/use-cases/update-event.uc';
+import { GetEventUC } from '@events/application/use-cases/get-event.uc';
+import { ListEventsUC } from '@events/application/use-cases/list-events.uc';
+import { DeleteEventUC } from '@events/application/use-cases/delete-event.uc';
 import { toProtoEvent } from './mappers';
-import { GrpcAuthGuard } from 'apps/event-service/src/common/auth/grpc-auth.guard';
 import { Metadata } from '@grpc/grpc-js';
-import { CreateEventDTO } from '../../application/dto/create-event.dto';
-import { RequirePermission } from '../../../../../../gateway/src/common/decorators/require-permission.decorator';
+import { CreateEventDTO } from '@events/application/dto/create-event.dto';
 import { Inject } from '@nestjs/common';
 import { ClientGrpc, RpcException } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
@@ -37,7 +35,6 @@ export class EventsController {
     
   ) {}
 
-  @RequirePermission('manage:events')
   @GrpcMethod('EventService', 'CreateEvent')
   async createEvent(data: any) {
     try {
@@ -73,7 +70,6 @@ export class EventsController {
     }
   }
 
-  @RequirePermission('update:events')
   @GrpcMethod('EventService', 'UpdateEvent')
   async updateEventRpc(req: any) {
   await this.updateUC.execute(req);
@@ -83,15 +79,12 @@ export class EventsController {
   };
 }
 
-
 @GrpcMethod('EventService', 'GetEvent')
 async getEventRpc(req: { id: number }) {
   const e = await this.getUC.execute(req);
   return toProtoEvent(e);  
 }
 
-
-  
 @GrpcMethod('EventService', 'ListEventsPage')
 async listEventsRpc(
   req: ListEventsRequestPage & { userId: number; isAdmin: boolean },
@@ -141,18 +134,11 @@ async listEventsRpc(
   };
 }
 
-
-
-  
-  @RequirePermission('delete:events')
   @GrpcMethod('EventService', 'DeleteEvent')
   async deleteEventRpc(req: { id: number }) {
     await this.deleteUC.execute(req);
     return { ok: true };
   }
-  
-  
-
 
 }
 

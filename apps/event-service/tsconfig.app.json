@@ -9,6 +9,7 @@
       "@event-members/*": ["src/modules/event-members/*"],
       "@courses/*": ["src/modules/courses/*"],
       "@app/common/*": ["../../libs/common/src/*"],
+      "@common/*": ["src/common/*"]
     }
   },
   "include": ["src/**/*"],
