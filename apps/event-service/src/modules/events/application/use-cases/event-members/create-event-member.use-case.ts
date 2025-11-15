@@ -43,6 +43,10 @@ export class CreateEventMemberUseCase {
       });
     }
 
+    // TODO: We should check first if the role being passed is a Participant. If not (Juror), we can allow
+    // adding that member
+
+    // TODO: if now > event.endDate, we should not allow new members
     if (now > event.inscriptionDeadline) {
       throw new RpcException({
         code: 9,

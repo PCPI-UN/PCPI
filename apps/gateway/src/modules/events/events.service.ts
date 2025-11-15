@@ -162,10 +162,6 @@ export class EventService implements OnModuleInit {
         return firstValueFrom(this.eventService.updateCourse(updateCourseDTO as UpdateCourseRequest));
     }
 
-    // =====================
-    // NEW METHODS FOR EVENT LISTING
-    // =====================
-
     /**
      * Get event statuses from service and cache them
      * This is called internally to enrich events with human-readable status
