@@ -51,6 +51,8 @@ service AuthService {
   // ---- PERMISSIONS MODULE ----
   // Gets a user's platform roles and permissions
   rpc GetUserPermissions(GetUserPermissionsRequest) returns (GetUserPermissionsResponse) {}
+  // Checks if a user is platform staff (has platform role)
+  rpc IsPlatformStaff(IsPlatformStaffRequest) returns (IsPlatformStaffResponse) {}
 
 }
 
@@ -300,4 +302,18 @@ message RemovePlatformRoleRequest {
 message RemovePlatformRoleResponse {
   bool success = 1;
   string message = 2;
+}
+
+// The request message for checking if a user is platform staff
+message IsPlatformStaffRequest {
+  oneof identifier {
+    int32 userId = 1;
+    string email = 2;
+  }
+}
+
+// The response message for platform staff check
+message IsPlatformStaffResponse {
+  bool isPlatformStaff = 1;
+  optional Role role = 2;
 }

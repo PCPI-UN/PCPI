@@ -1,0 +1,99 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../../../common/prisma/prisma.service';
+import { EventMemberRepository } from '../../domain/repositories/event-member.repository';
+import { EventMember } from '../../domain/entities/event-member.entity';
+
+@Injectable()
+export class PrismaEventMemberRepository implements EventMemberRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(input: {
+    userId: number;
+    eventId: number;
+    roleId: number;
+    active?: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Promise<EventMember> {
+    const result = await this.prisma.eventMember.create({
+      data: {
+        userId: input.userId,
+        eventId: input.eventId,
+        roleId: input.roleId,
+        active: input.active ?? true,
+        createdAt: input.createdAt,
+        updatedAt: input.updatedAt,
+      },
+    });
+
+    return result as EventMember;
+  }
+
+  async softDelete(userId: number, eventId: number): Promise<void> {
+    await this.prisma.eventMember.updateMany({
+      where: { userId, eventId },
+      data: { active: false, updatedAt: new Date() },
+    });
+  }
+
+  async findByUserAndEvent(
+    userId: number,
+    eventId: number,
+  ): Promise<EventMember | null> {
+    const result = await this.prisma.eventMember.findFirst({
+      where: { userId, eventId },
+    });
+
+    return result as EventMember | null;
+  }
+
+  async findActiveByUserAndEvent(
+    userId: number,
+    eventId: number,
+  ): Promise<EventMember | null> {
+    const result = await this.prisma.eventMember.findFirst({
+      where: {
+        userId,
+        eventId,
+        active: true,
+      },
+    });
+
+    return result as EventMember | null;
+  }
+
+  async findByEventId(
+    eventId: number,
+    roleId?: number,
+    page = 1,
+    limit = 20,
+    activeOnly = true,
+  ): Promise<[EventMember[], number]> {
+    const where: any = {
+      eventId,
+    };
+
+    if (activeOnly) {
+      where.active = true;
+    }
+
+    if (roleId !== undefined) {
+      where.roleId = roleId;
+    }
+
+    // Calculate skip from page and limit
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.eventMember.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.eventMember.count({ where }),
+    ]);
+
+    return [data as EventMember[], total];
+  }
+}

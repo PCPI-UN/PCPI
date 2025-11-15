@@ -11,7 +11,6 @@ datasource db {
 /**** EVENTS ****/
 model Event {
   id                  Int       @id @default(autoincrement())
-  organizationId      Int?      @map("organization_id") // 👈 nuevo
   name                String    @db.VarChar(255)
   description         String?   @db.Text
   accessCode          String    @unique @map("access_code") @db.VarChar(100)
@@ -23,8 +22,8 @@ model Event {
   active              Boolean   @map("active") @default(true)
   createdAt           DateTime  @map("created_at") @default(now()) @db.Timestamp()
   updatedAt           DateTime  @map("updated_at") @updatedAt @db.Timestamp()
-  createdByUserId     Int?       
-  location          String?   @db.VarChar(255) 
+  createdByUserId     Int?
+  location            String?   @db.VarChar(255)
 
   participants        EventMember[]
   courses             Course[]
@@ -45,7 +44,7 @@ model EventMember {
   event   Event  @relation(fields: [eventId], references: [id])
 
 
-  @@id([userId, eventId, roleId])
+  @@id([userId, eventId])
   @@map("event_members")
 }
 

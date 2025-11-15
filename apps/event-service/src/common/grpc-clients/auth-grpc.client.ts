@@ -1,6 +1,13 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { Observable } from 'rxjs';
+import {
+  AUTH_SERVICE_NAME,
+  GetRolesByIdsRequest,
+  GetRolesByIdsResponse,
+  GetUserRequest,
+  User
+} from "@app/common/generated/auth"
 
 // Auth service gRPC client interface
 export interface Role {
@@ -10,19 +17,10 @@ export interface Role {
   scope: string;
 }
 
-export interface GetRolesByIdsRequest {
-  roleIds: number[];
-}
-
-export interface GetRolesByIdsResponse {
-  roles: Role[];
-}
-
 export interface AuthServiceClient {
   getRolesByIds(request: GetRolesByIdsRequest): Observable<GetRolesByIdsResponse>;
+  getUser(request: GetUserRequest): Observable<User>;
 }
-
-export const AUTH_SERVICE_NAME = 'AuthService';
 
 @Injectable()
 export class AuthGrpcClient implements OnModuleInit {
@@ -38,5 +36,9 @@ export class AuthGrpcClient implements OnModuleInit {
 
   getRolesByIds(roleIds: number[]): Observable<GetRolesByIdsResponse> {
     return this.authService.getRolesByIds({ roleIds });
+  }
+
+  getUser(userId: number): Observable<User> {
+    return this.authService.getUser({ id: userId });
   }
 }

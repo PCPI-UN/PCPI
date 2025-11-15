@@ -228,9 +228,13 @@ export class CreateInvitationUseCase implements OnModuleInit {
     invitationLink: string,
   ): Promise<EmailData> {
     // Fetch event details from event-service
-    const event = await firstValueFrom(
+    const eventResponse = await firstValueFrom(
       this.eventService.getEvent({ id: eventId }),
     );
+
+    if (!eventResponse.event) {
+      throw new Error(`Event with ID ${eventId} not found`);
+    }
 
     let roleText = '';
     if (roleIds.length > 0) {
@@ -243,10 +247,10 @@ export class CreateInvitationUseCase implements OnModuleInit {
     }
 
     return {
-      subject: `Invitation to Event: ${event.name}`,
+      subject: `Invitation to Event: ${eventResponse.event.name}`,
       body: this.buildEmailBody(
         `Hi ${userName}`,
-        `You've been invited to participate in the event:\n\n${event.name}\n\n${event.description || ''}\n\n${roleText}\n\nClick the link below to accept your invitation.`,
+        `You've been invited to participate in the event:\n\n${eventResponse.event.name}\n\n${eventResponse.event.description || ''}\n\n${roleText}\n\nClick the link below to accept your invitation.`,
         invitationLink,
       ),
     };
@@ -272,15 +276,19 @@ export class CreateInvitationUseCase implements OnModuleInit {
     const project = projectResponse.project;
 
     // Fetch event details using the project's eventId
-    const event = await firstValueFrom(
+    const eventResponse = await firstValueFrom(
       this.eventService.getEvent({ id: project.eventId }),
     );
+
+    if (!eventResponse.event) {
+      throw new Error(`Event with ID ${project.eventId} not found`);
+    }
 
     return {
       subject: 'Congratulations! Your Project Has Been Approved',
       body: this.buildEmailBody(
         `Hi ${userName}`,
-        `Congratulations! Your project "${project.name}" has been approved for the event "${event.name}"!\n\nYou are now invited to join the platform as a participant.\n`,
+        `Congratulations! Your project "${project.name}" has been approved for the event "${eventResponse.event.name}"!\n\nYou are now invited to join the platform as a participant.\n`,
         invitationLink,
       ),
     };

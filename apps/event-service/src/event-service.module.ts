@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventsModule } from './modules/events/events.module';
-import { EventMembersModule } from './modules/event-members/event-members.module';
+import { PrismaModule } from './common/prisma/prisma.module';
+import { CoursesModule } from './modules/course/course.module';
 
 @Module({
   imports: [
@@ -9,7 +10,10 @@ import { EventMembersModule } from './modules/event-members/event-members.module
       isGlobal: true,
       envFilePath: './apps/event-service/.env',
     }),
-    EventsModule, EventMembersModule],
+    PrismaModule,
+    EventsModule,
+    CoursesModule,
+  ],
   controllers: [],
   providers: [],
 })

@@ -1,6 +1,7 @@
 export enum EventStatus {
-  UPCOMING = 'PROXIMAMENTE',
-  AVAILABLE = 'DISPONIBLE',
-  CLOSED = 'CERRADO',
+  UPCOMING = 1,
+  REGISTRATION_CLOSED = 2,
+  AVAILABLE = 3,
+  CLOSED = 4,
 }
  

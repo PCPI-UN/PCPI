@@ -5,6 +5,7 @@ export interface UserPermissionsData {
     id: number;
     name: string;
     scope: string;
+    description: string;
   }>;
   permissions: Permission[];
 }

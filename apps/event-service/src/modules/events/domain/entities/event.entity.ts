@@ -1,6 +1,5 @@
 export interface Event {
   id: number;
-  organizationId?: number | null;
   name: string;
   description?: string | null;
   accessCode: string;
@@ -12,7 +11,7 @@ export interface Event {
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
-  createdByUserId: number;
+  createdByUserId?: number | null;
   location?: string | null;
 }
 

@@ -1,15 +1,22 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { EventRepository } from '../../domain/repositories/event.repository';
 import { DeleteEventDTO } from '../dto/delete-event.dto';
 
 @Injectable()
 export class DeleteEventUC {
-  constructor(@Inject('EventRepository') private readonly repo: EventRepository) {}
+  constructor(private readonly repo: EventRepository) {}
 
   async execute(input: DeleteEventDTO) {
     const exists = await this.repo.findById(input.id);
-    if (!exists) throw new Error('Event not found');
+    if (!exists) {
+      throw new RpcException({
+        code: 5,
+        message: `Event with id ${input.id} not found`,
+      });
+    }
 
+    // Soft delete: sets active = false
     await this.repo.delete(input.id);
   }
 }
