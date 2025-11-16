@@ -234,6 +234,13 @@ export class EventService implements OnModuleInit {
             this.eventService.listMyEvents({ userId, ...dto } as ListMyEventsRequest)
         );
 
+        if (!response.events || response.events.length === 0) {
+            return {
+                ...response,
+                events: [],
+            };
+        }
+
         // Get cached statuses and roles
         const [statuses, roles] = await Promise.all([
             this.getAndCacheStatuses(),
