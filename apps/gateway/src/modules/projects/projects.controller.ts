@@ -30,7 +30,7 @@ import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
 import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
 import { ApproveProjectDto } from './dto/approve-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
-import { ListProjectsForReviewDto } from './dto/list-projects-for-review.dto';
+import { ListProjectsByEventDto } from './dto/list-projects-by-event.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -213,16 +213,35 @@ export class ProjectsController {
   }
 
 
-  @Get('review')
+  @Get('by-event/:eventId')
   @ApiOperation({
-    summary: 'Listar proyectos en estado UNDER_REVIEW para un evento',
+    summary: 'List projects by event',
     description:
-      'Devuelve los proyectos del evento en estado UNDER_REVIEW, con filtros opcionales por curso, texto y paginación.',
+      'Returns paginated projects for a given event, with optional filters by course, search text, and state.',
   })
-  async listProjectsForReview(
-    @Query() query: ListProjectsForReviewDto,
+  @ApiParam({
+    name: 'eventId',
+    type: Number,
+    description: 'ID of the event to filter projects',
+    example: 1,
+  })
+  async listProjectsByEvent(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() query: ListProjectsByEventDto,
   ) {
-    return this.projectsService.listProjectsForReview(query);
+    const res = await this.projectsService.listProjectsByEvent(
+      eventId,
+      query,
+    );
+
+    return {
+      items: res.items,
+      total: res.total,
+      currentPage: res.currentPage,
+      itemsOnCurrentPage: res.itemsOnCurrentPage,
+      itemsPerPage: res.itemsPerPage,
+      totalPages: res.totalPages,
+    };
   }
 
 }

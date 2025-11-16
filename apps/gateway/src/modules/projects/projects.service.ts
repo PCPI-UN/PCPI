@@ -1,9 +1,12 @@
 import { Injectable, Inject, OnModuleInit, BadRequestException, Logger } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import {
   PROJECTS_SERVICE_NAME,
   ProjectsServiceClient,
+  ProjectState,
+  ListProjectsByEventRequest,
+  ListProjectsResponse,
   TypedDocument as ProtoTypedDocument,
 } from '@app/common/generated/project';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
@@ -15,7 +18,7 @@ import { RejectProjectDto } from './dto/reject-project.dto';
 import { TypedDocument, ProjectDocumentInputDto } from './dto/project-document-input.dto';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
-import { ListProjectsForReviewDto } from './dto/list-projects-for-review.dto';
+import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
@@ -295,28 +298,37 @@ export class ProjectsService implements OnModuleInit {
     return mapping[type];
   }
   
+  private mapStateToProto(
+    state?: ProjectStateFilter,
+  ): ProjectState | undefined {
+    switch (state) {
+      case ProjectStateFilter.UNDER_REVIEW:
+        return ProjectState.UNDER_REVIEW;
+      case ProjectStateFilter.APPROVED:
+        return ProjectState.APPROVED;
+      case ProjectStateFilter.REJECTED:
+        return ProjectState.REJECTED;
+      default:
+        return undefined;
+    }
+  }
 
-  async listProjectsForReview(query: ListProjectsForReviewDto) {
-    const {
+  async listProjectsByEvent(
+    eventId: number,
+    query: ListProjectsByEventDto,
+  ): Promise<ListProjectsResponse> {
+    const request: ListProjectsByEventRequest = {
       eventId,
-      courseId,
-      q,
-      currentPage,
-      itemsPerPage,
-    } = query;
+      q: query.q ?? undefined,
+      courseId: query.courseId ?? undefined,
+      currentPage: query.currentPage ?? 1,
+      itemsPerPage: query.itemsPerPage ?? 20,
+      state: this.mapStateToProto(query.state),
+    };
 
-    const response = await firstValueFrom(
-      this.projectsService.listProjectsForReview({
-        eventId,
-        // solo envía si vienen definidos, respetando los "optional" del proto
-        courseId: courseId ?? undefined,
-        q: q ?? undefined,
-        currentPage: currentPage ?? 1,
-        itemsPerPage: itemsPerPage ?? 10,
-      }),
+    return lastValueFrom(
+      this.projectsService.listProjectsByEvent(request),
     );
-
-    return response; // esto ya es el ListProjectsForReviewResponse generado
   }
 
 }
