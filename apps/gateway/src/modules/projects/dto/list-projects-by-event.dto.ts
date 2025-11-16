@@ -29,7 +29,7 @@ export class ListProjectsByEventDto {
   state?: ProjectStateFilter;
 
   @ApiPropertyOptional({
-    description: 'Text search in project name/description',
+    description: 'Text search in project name',
   })
   @IsOptional()
   @IsString()
@@ -56,5 +56,5 @@ export class ListProjectsByEventDto {
   @IsInt()
   @Min(1)
   itemsPerPage?: number;
-  
+
 }
