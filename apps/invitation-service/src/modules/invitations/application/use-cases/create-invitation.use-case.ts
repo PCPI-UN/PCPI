@@ -1,6 +1,6 @@
 import { Injectable, Inject, OnModuleInit,  } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientGrpc } from '@nestjs/microservices';
+import { ClientGrpc, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { randomUUID } from 'crypto';
 import { firstValueFrom } from 'rxjs';
@@ -64,7 +64,75 @@ export class CreateInvitationUseCase implements OnModuleInit {
   async execute(dto: CreateInvitationDto): Promise<{ invitation: Invitation; invitationRoles: InvitationRole[] }> {
     const { email, firstName, lastName, roleIds, ...rest } = dto;
 
-    // Step 1: Get or create user
+    // Step 1: Check for existing pending invitation (idempotent behavior)
+    const existingInvitation = await this.invitationRepository.findPendingByEmailAndTargetType(
+      email,
+      rest.targetType,
+      rest.targetId,
+    );
+
+    if (existingInvitation) {
+      // Return existing invitation with its roles
+      const existingRoles = await this.invitationRoleRepository.findByInvitationId(
+        existingInvitation.id,
+      );
+      return { invitation: existingInvitation, invitationRoles: existingRoles };
+    }
+
+    // Step 2: Validate target exists (fail fast)
+    switch (rest.targetType) {
+      case InvitationTargetType.EVENT:
+        try {
+          const eventResponse = await firstValueFrom(
+            this.eventService.getEvent({ id: rest.targetId }),
+          );
+          if (!eventResponse.event) {
+            throw new RpcException({
+              code: status.NOT_FOUND,
+              message: `Event with ID ${rest.targetId} not found`,
+            });
+          }
+        } catch (error) {
+          // Re-throw as RpcException with proper code
+          throw new RpcException({
+            code: error.code || status.INTERNAL,
+            message: error.details || error.message || `Event with ID ${rest.targetId} not found`,
+          });
+        }
+        break;
+
+      case InvitationTargetType.PROJECT:
+        try {
+          const projectResponse = await firstValueFrom(
+            this.projectService.getProject({ id: rest.targetId }),
+          );
+          if (!projectResponse.project) {
+            throw new RpcException({
+              code: status.NOT_FOUND,
+              message: `Project with ID ${rest.targetId} not found`,
+            });
+          }
+        } catch (error) {
+          // Re-throw as RpcException with proper code
+          throw new RpcException({
+            code: error.code || status.INTERNAL,
+            message: error.details || error.message || `Project with ID ${rest.targetId} not found`,
+          });
+        }
+        break;
+
+      case InvitationTargetType.PLATFORM:
+        // No validation needed for platform invitations
+        break;
+
+      default:
+        throw new RpcException({
+          code: status.INVALID_ARGUMENT,
+          message: `Invalid target type: ${rest.targetType}`,
+        });
+    }
+
+    // Step 3: Get or create user
     let user;
     try {
       user = await firstValueFrom(this.authService.getUserByEmail({ email }));
@@ -88,7 +156,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
       2 * 24 * 60 * 60 // 2 days by default!
     );
 
-    // Step 2: Create invitation record
+    // Step 4: Create invitation record
     const token = randomUUID();
     const now = new Date();
     const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
@@ -108,7 +176,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
 
     const savedInvitation = await this.invitationRepository.save(invitation);
 
-    // Step 3: Save invitation roles
+    // Step 5: Save invitation roles
     const savedInvitationRoles: InvitationRole[] = [];
     if (roleIds && roleIds.length > 0) {
       const invitationRoles = roleIds.map(
@@ -120,7 +188,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
       }
     }
 
-    // Step 4: Prepare email subject and body based on targetType
+    // Step 6: Prepare email subject and body based on targetType
     const emailData = await this.prepareEmailData(
       rest.targetType,
       rest.targetId,
@@ -129,7 +197,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
       user.firstName,
     );
 
-    // Step 5: Send email
+    // Step 7: Send email
     await firstValueFrom(
       this.notificationService.sendEmail({
         to: email,

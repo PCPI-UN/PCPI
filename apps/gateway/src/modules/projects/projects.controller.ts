@@ -209,7 +209,7 @@ export class ProjectsController {
     @Body() rejectDto: RejectProjectDto,
     @GetUser() user: AppUser,
   ) {
-    return this.projectsService.rejectProject({ id, reason: rejectDto.reason }, user.id);
+    return this.projectsService.rejectProject({ id, ...rejectDto }, user.id);
   }
 
 

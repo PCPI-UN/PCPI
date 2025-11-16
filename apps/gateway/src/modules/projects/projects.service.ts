@@ -271,7 +271,7 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
-  async rejectProject(dto: RejectProjectDto, actingUserId: number) {
+  async rejectProject(dto: { id: number; reason?: string }, actingUserId: number) {
     const response = await firstValueFrom(
       this.projectsService.rejectProject({
         id: dto.id,
