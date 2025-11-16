@@ -7,8 +7,8 @@ export class EventServiceAdapter implements EventServicePort {
   constructor(private readonly grpc: EventGrpcClient) {}
 
   async getEventById(id: number) {
-    const res = await this.grpc.getEvent(id);
-    return res ?? null;
+    const res = await this.grpc.getEvent(id); //res.event
+    return res.event ?? null;
   }
 
   async getCourseById(id: number) {
