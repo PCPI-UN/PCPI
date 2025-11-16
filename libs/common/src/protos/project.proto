@@ -67,6 +67,22 @@ message Project {
   optional string rejectionReason = 10;
 }
 
+message ProjectComplete {
+  int32 id = 1;
+  int32 eventId = 2;
+  string name = 3;
+  optional string description = 4;
+  optional string eventNumber = 5;
+  string createdAt = 6; 
+  string updatedAt = 7; 
+  int32 courseId = 8;
+  ProjectState state = 9;
+  optional string rejectionReason = 10;
+  repeated ProjectParticipant participants = 11;
+  repeated ProjectDocument documents = 12;
+  repeated PendingProjectParticipant pendingParticipants = 13;
+}
+
 message ProjectDocument {
   int32 id = 1;
   int32 projectId = 2;
@@ -131,7 +147,7 @@ message ListProjectsByEventRequest {
   optional ProjectState state = 6;   // filter by project state
 }
 message ListProjectsResponse {
-  repeated Project items = 1;
+  repeated ProjectComplete items = 1;
   int32 total = 2;
   int32 currentPage = 3;           // current page number
   int32 itemsOnCurrentPage = 4;
@@ -256,10 +272,11 @@ message ListProjectsForReviewRequest  {
   optional int32 courseId = 5;
   }
 message ListProjectsForReviewResponse { 
-  repeated Project items = 1;
+  repeated ProjectComplete items = 1;
   int32 total = 2;
   int32 currentPage = 3;           // current page number
   int32 itemsOnCurrentPage = 4;
   int32 itemsPerPage = 5;          // items per page
   int32 totalPages = 6;     // total number of pages
   }
+  

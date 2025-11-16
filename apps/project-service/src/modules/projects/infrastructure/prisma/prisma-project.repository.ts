@@ -73,6 +73,11 @@ export class PrismaProjectRepository implements ProjectRepository {
         orderBy: { createdAt: 'desc' }, // camelCase
         skip: (currentPage - 1) * itemsPerPage,
         take: itemsPerPage,
+        include: {
+          participants: true,
+          documents: true,
+          pendingParticipants: true,
+        },
       }),
       this.prisma.project.count({ where }),
     ]);

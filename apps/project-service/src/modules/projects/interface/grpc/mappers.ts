@@ -103,3 +103,9 @@ export const toProtoPendingParticipant = (p: any) => ({
   createdAt: p.createdAt?.toISOString?.() ?? p.created_at,
   updatedAt: p.updatedAt?.toISOString?.() ?? p.updated_at,
 });
+export const toProtoProjectComplete = (p: any) => ({
+  ...toProtoProject(p),
+  participants: (p.participants ?? []).map(toProtoParticipant),
+  documents: (p.documents ?? []).map(toProtoDocument),
+  pendingParticipants: (p.pendingParticipants ?? []).map(toProtoPendingParticipant),
+});

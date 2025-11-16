@@ -6,7 +6,7 @@ import { GetProjectUC } from '../../application/use-cases/get-project.uc';
 import { AddProjectDocumentUC } from '../../application/use-cases/add-document.uc';
 import { ListDocumentsUC } from '../../application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
-import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument } from './mappers';
+import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument, toProtoProjectComplete } from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
@@ -72,8 +72,11 @@ export class ProjectsController {
 
    @GrpcMethod('ProjectsService', 'ListProjectsByEvent')
   async listProjectsByEventRpc(req: ListProjectsByFilterDTO) {
+    if (req.state){
+      req.state = protoToState(parseInt(req.state)); 
+    }
     const res = await this.listByEvent.execute(req);
-    return { items: res.items.map(toProtoProject), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage, itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
+    return { items: res.items.map(toProtoProjectComplete), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage, itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
   }
 
   @GrpcMethod('ProjectsService', 'AddProjectDocumentFromUrl')
