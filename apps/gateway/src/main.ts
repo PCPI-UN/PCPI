@@ -53,6 +53,6 @@ async function bootstrap() {
     customCss: '.swagger-ui .topbar { display: none }',
   });
 
-  await app.listen(3000);
+  await app.listen(50050);
 }
 bootstrap();
