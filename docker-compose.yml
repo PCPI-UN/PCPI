@@ -16,7 +16,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     networks:
-      - iris-network
+      - dokploy-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -40,7 +40,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - iris-network
+      - dokploy-network
     command: >
       sh -c "npx prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma &&
              npx prisma db seed"
@@ -71,7 +71,7 @@ services:
       auth-migration:
         condition: service_completed_successfully
     networks:
-      - iris-network
+      - dokploy-network
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50051}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -96,7 +96,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - iris-network
+      - dokploy-network
     command: npx prisma migrate deploy --schema=./apps/evaluation-service/prisma/schema.prisma
     restart: "no"
 
@@ -116,7 +116,7 @@ services:
       evaluation-migration:
         condition: service_completed_successfully
     networks:
-      - iris-network
+      - dokploy-network
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50052}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -141,7 +141,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - iris-network
+      - dokploy-network
     command: npx prisma migrate deploy --schema=./apps/event-service/prisma/schema.prisma
     restart: "no"
 
@@ -161,7 +161,7 @@ services:
       event-migration:
         condition: service_completed_successfully
     networks:
-      - iris-network
+      - dokploy-network
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50053}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -186,7 +186,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - iris-network
+      - dokploy-network
     command: npx prisma migrate deploy --schema=./apps/invitation-service/prisma/schema.prisma
     restart: "no"
 
@@ -206,7 +206,7 @@ services:
       invitation-migration:
         condition: service_completed_successfully
     networks:
-      - iris-network
+      - dokploy-network
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50054}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -231,7 +231,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - iris-network
+      - dokploy-network
     command: npx prisma migrate deploy --schema=./apps/project-service/prisma/schema.prisma
     restart: "no"
 
@@ -251,7 +251,7 @@ services:
       project-migration:
         condition: service_completed_successfully
     networks:
-      - iris-network
+      - dokploy-network
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50055}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -309,7 +309,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - iris-network
+      - dokploy-network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
       interval: 30s
@@ -335,7 +335,7 @@ services:
       - EMAIL_PUBLIC_KEY=${EMAIL_PUBLIC_KEY}
       - EMAIL_PRIVATE_KEY=${EMAIL_PRIVATE_KEY}
     networks:
-      - iris-network
+      - dokploy-network
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50056}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -354,7 +354,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - iris-network
+      - dokploy-network
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
@@ -363,9 +363,8 @@ services:
       retries: 10
 
 networks:
-  iris-network:
-    driver: bridge
-    name: iris-network
+  dokploy-network:
+    external: true
 
 volumes:
   postgres_data:
