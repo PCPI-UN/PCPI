@@ -12,6 +12,7 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
 import { UsersModule } from './modules/users/users.module';
 import { CacheModule } from './common/cache/cache.module';
 import { CacheManagementController } from './common/cache/cache-management.controller';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { CacheManagementController } from './common/cache/cache-management.contr
     InvitationsModule,
     CriterionsModule,
   ],
-  controllers: [CacheManagementController],
+  controllers: [CacheManagementController, HealthController],
   providers: [
     {
       provide: APP_GUARD,

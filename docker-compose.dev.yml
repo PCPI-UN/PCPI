@@ -1,24 +1,8 @@
 services:
-  # PostgreSQL Databases - expose ports for local dev access
-  auth-db:
+  # PostgreSQL Database - expose port for local dev access
+  postgres:
     ports:
       - "5432:5432"
-
-  evaluation-db:
-    ports:
-      - "5433:5432"
-
-  event-db:
-    ports:
-      - "5434:5432"
-
-  invitation-db:
-    ports:
-      - "5435:5432"
-
-  project-db:
-    ports:
-      - "5436:5432"
 
   # NestJS Services - Development mode with hot reload
   auth-service:

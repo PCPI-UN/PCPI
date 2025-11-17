@@ -57,13 +57,13 @@ export class AuthController {
 
     response.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') !== 'development',
+      secure: this.isSecureContext(),
       sameSite: 'strict',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') !== 'development',
+      secure: this.isSecureContext(),
       sameSite: 'strict',
       maxAge: this.parseJwtExpiration(refreshTokenExpiration),
     });
@@ -100,7 +100,7 @@ export class AuthController {
 
     response.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') !== 'development',
+      secure: this.isSecureContext(),
       sameSite: 'strict',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
@@ -154,7 +154,22 @@ export class AuthController {
     );
   }
 
-    /**
+  /**
+   * Determines if cookies should use the 'secure' flag
+   * Returns true only in production AND when insecure cookies are not explicitly allowed
+   * This allows testing production builds locally over HTTP
+   */
+  private isSecureContext(): boolean {
+    const nodeEnv = this.configService.get('NODE_ENV');
+    const isProduction = nodeEnv === 'production';
+
+    // Allow insecure cookies in production if explicitly set (for local testing)
+    const allowInsecure = this.configService.get('ALLOW_INSECURE_COOKIES') === 'true';
+
+    return isProduction && !allowInsecure;
+  }
+
+  /**
    * Converts JWT expiration string (e.g., '15m', '7d', '1h') to milliseconds
    */
   private parseJwtExpiration(expiration: string): number {
