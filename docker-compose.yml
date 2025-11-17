@@ -42,8 +42,8 @@ services:
     networks:
       - dokploy-network
     command: >
-      sh -c "npx prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma &&
-             npx prisma db seed"
+      sh -c "prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma &&
+             node dist/apps/auth-service/prisma/seed.js"
     restart: "no"
 
   auth-service:
@@ -97,7 +97,7 @@ services:
         condition: service_healthy
     networks:
       - dokploy-network
-    command: npx prisma migrate deploy --schema=./apps/evaluation-service/prisma/schema.prisma
+    command: prisma migrate deploy --schema=./apps/evaluation-service/prisma/schema.prisma
     restart: "no"
 
   evaluation-service:
@@ -142,7 +142,7 @@ services:
         condition: service_healthy
     networks:
       - dokploy-network
-    command: npx prisma migrate deploy --schema=./apps/event-service/prisma/schema.prisma
+    command: prisma migrate deploy --schema=./apps/event-service/prisma/schema.prisma
     restart: "no"
 
   event-service:
@@ -187,7 +187,7 @@ services:
         condition: service_healthy
     networks:
       - dokploy-network
-    command: npx prisma migrate deploy --schema=./apps/invitation-service/prisma/schema.prisma
+    command: prisma migrate deploy --schema=./apps/invitation-service/prisma/schema.prisma
     restart: "no"
 
   invitation-service:
@@ -232,7 +232,7 @@ services:
         condition: service_healthy
     networks:
       - dokploy-network
-    command: npx prisma migrate deploy --schema=./apps/project-service/prisma/schema.prisma
+    command: prisma migrate deploy --schema=./apps/project-service/prisma/schema.prisma
     restart: "no"
 
   project-service:

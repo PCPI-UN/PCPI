@@ -49,17 +49,19 @@ RUN apk add --no-cache dumb-init openssl
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm temporarily for production install
-RUN npm install -g pnpm && \
-    pnpm install --prod --frozen-lockfile
+# Install pnpm and prisma globally to avoid npx auto-install issues
+RUN npm install -g pnpm prisma@6.16.2
+
+# Install production dependencies
+RUN pnpm install --prod --frozen-lockfile
 
 # Copy Prisma schema
 COPY --from=builder /app/apps/project-service/prisma ./apps/project-service/prisma
 
-# Generate Prisma client for production
-RUN npx prisma generate --schema=./apps/project-service/prisma/schema.prisma
+# Generate Prisma client for production using globally installed prisma
+RUN prisma generate --schema=./apps/project-service/prisma/schema.prisma
 
-# Uninstall pnpm after all installations
+# Uninstall pnpm after all installations (keep prisma for migrations)
 RUN npm uninstall -g pnpm
 
 # Copy built artifacts from builder
