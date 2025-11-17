@@ -339,4 +339,25 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
     return res.count > 0;
   }
 
+  async findDocumentById(id: number): Promise<ProjectDocument | null> {
+    return (await this.prisma.projectDocument.findUnique({
+      where: { id },
+    })) as unknown as ProjectDocument | null;
+  }
+  async updateDocument(input: {
+    id: number;
+    url?: string;
+    type?: TypedDocument;
+    state?: 'ACTIVE' | 'INACTIVE';
+  }): Promise<ProjectDocument> {
+    const data: any = {};
+    if (input.url !== undefined) data.url = input.url;
+    if (input.type !== undefined) data.type = input.type;
+    if (input.state !== undefined) data.state = input.state;
+    return (await this.prisma.projectDocument.update({
+      where: { id: input.id },
+      data,
+    })) as unknown as ProjectDocument;
+  }
+
 }

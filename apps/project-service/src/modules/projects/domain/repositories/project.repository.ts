@@ -1,4 +1,4 @@
-import {TypedDocument, JurorKey, Project, ProjectDocument, ProjectState, ProjectParticipant, StudentStatus, PendingProjectParticipant } from '../entities/project.entity';
+import {TypedDocument, JurorKey, Project, ProjectDocument, ProjectState, ProjectParticipant, StudentStatus, PendingProjectParticipant, Status } from '../entities/project.entity';
 
 export interface ProjectRepository {
   create(input: {
@@ -63,4 +63,12 @@ export interface ProjectRepository {
   listAssignedToJuror(juror: JurorKey,opts?: { page?: number; pageSize?: number }
   ): Promise<{ items: Project[]; total: number }>;
 
+  findDocumentById(id: number): Promise<ProjectDocument | null>;
+
+  updateDocument(input: {
+    id: number;
+    url?: string;
+    type?: TypedDocument;
+    state?: Status;
+  }): Promise<ProjectDocument>;
 }

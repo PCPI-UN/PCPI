@@ -15,6 +15,7 @@ service ProjectsService {
   // rpc IssueUploadUrl (IssueUploadUrlRequest) returns (IssueUploadUrlResponse);
   rpc AddProjectDocumentFromUrl (AddProjectDocumentFromUrlRequest) returns (ProjectDocumentResponse);
   rpc ListProjectDocuments (ListProjectDocumentsRequest) returns (ListProjectDocumentsResponse);
+  rpc UpdateProjectDocument (UpdateProjectDocumentRequest) returns (ProjectDocumentResponse);
 
   // Participantes
   rpc AddParticipant (AddParticipantRequest) returns (AddParticipantResponse);
@@ -32,6 +33,7 @@ service ProjectsService {
 
   rpc ListProjectsForReview(ListProjectsForReviewRequest) returns (ListProjectsForReviewResponse);
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
+  
 }
 
 enum ProjectState {
@@ -46,6 +48,12 @@ enum TypedDocument {
   LOGO = 1;
   POSTER = 2;
   SUPPORTING_DOCUMENT = 3;
+}
+
+enum DocumentStatus {
+  DOCUMENT_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
 }
 
 /************** Messages **************/
@@ -91,6 +99,7 @@ message ProjectDocument {
   TypedDocument type = 4;
   string createdAt = 5;
   string updatedAt = 6;
+  DocumentStatus state = 7;
 }
 
 message ProjectParticipant {
@@ -283,3 +292,9 @@ message ListProjectsForReviewResponse {
   int32 totalPages = 6;     // total number of pages
   }
   
+message UpdateProjectDocumentRequest {
+  int32 id = 1;           // ID del documento
+  string url = 2;         // si viene vacío, no lo cambias
+  TypedDocument type = 3;  // si viene DOCUMENT_TYPE_UNSPECIFIED, no lo cambias
+  DocumentStatus state = 4; // igual idea
+}
