@@ -66,11 +66,11 @@ RUN addgroup -g 1001 -S nodejs && \
 
 USER nestjs
 
-EXPOSE 3000
+EXPOSE 50050
 
 # Health check for HTTP endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:50050/health || exit 1
 
 # Use dumb-init to handle signals properly
 CMD ["dumb-init", "node", "dist/apps/gateway/main"]
