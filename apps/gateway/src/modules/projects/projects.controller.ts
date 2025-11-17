@@ -244,4 +244,21 @@ export class ProjectsController {
     };
   }
 
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get project by id',
+    description: 'Returns a single project for the given id.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: 'Project identifier',
+    example: 1,
+  })
+  async getProject(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.projectsService.getProjectById(id);
+  }
+
 }

@@ -5,6 +5,7 @@ package project;
 service ProjectsService {
   rpc CreateProject (CreateProjectRequest)   returns (ProjectResponse);
   rpc GetProject    (GetProjectRequest)      returns (ProjectResponse);
+  rpc GetProjectComplete    (GetProjectRequest)      returns (ProjectCompleteResponse);
   rpc ListProjectsByEvent (ListProjectsByEventRequest) returns (ListProjectsResponse);
 
   rpc CreateProjectWithPendingParticipants(CreateProjectWithParticipantsRequest)
@@ -135,6 +136,8 @@ message CreateProjectRequest {
   ProjectState state = 6; // opcional en la práctica; si no se envía, default en UC
 }
 message ProjectResponse { Project project = 1; }
+
+message ProjectCompleteResponse { repeated ProjectComplete items = 1; }
 
 message GetProjectRequest { int32 id = 1; }
 

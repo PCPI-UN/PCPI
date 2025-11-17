@@ -266,4 +266,27 @@ async listProjectsForReviewRpc(req: ListProjectsByFilterDTO) {
   
 }
 
+@GrpcMethod('ProjectsService', 'GetProjectComplete')
+async getProjectCompleteRpc(req: { id: number }) {
+
+  const project = await this.getProject.execute({ id: req.id });
+
+  const [participants, documents, pending] = await Promise.all([
+    this.listParticipantsUC.execute({ projectId: project.id }),
+    this.listDocs.execute({ projectId: project.id }),
+    this.listPendingParticipantsUC.execute({ projectId: project.id }),
+  ]);
+
+  const projectComplete = {
+    ...project,
+    participants,
+    documents,
+    pendingParticipants: pending,
+  };
+
+  return {
+    items: [toProtoProjectComplete(projectComplete)],
+  };
+}
+
 }

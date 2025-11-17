@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import {
@@ -7,7 +7,10 @@ import {
   ProjectState,
   ListProjectsByEventRequest,
   ListProjectsResponse,
+  GetProjectRequest,
+  ProjectCompleteResponse,
   TypedDocument as ProtoTypedDocument,
+  ProjectComplete,
 } from '@app/common/generated/project';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
@@ -330,5 +333,21 @@ export class ProjectsService implements OnModuleInit {
       this.projectsService.listProjectsByEvent(request),
     );
   }
+
+  async getProjectById(id: number): Promise<ProjectComplete> {
+    const request: GetProjectRequest = { id };
+
+    const res: ProjectCompleteResponse = await lastValueFrom(
+      this.projectsService.getProjectComplete(request),
+    );
+
+    const project = res.items[0];
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return project;
+  }  
 
 }
