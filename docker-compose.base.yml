@@ -1,91 +1,26 @@
 services:
-  # PostgreSQL Databases
-  auth-db:
+  # PostgreSQL Database - Single instance with multiple databases
+  postgres:
     image: postgres:16-alpine
-    container_name: iris-auth-db
+    container_name: iris-postgres
     environment:
-      POSTGRES_DB: auth_service
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+      # Pass individual database passwords to init script
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:-postgres}
+      EVALUATION_DB_PASSWORD: ${EVALUATION_DB_PASSWORD:-postgres}
+      EVENT_DB_PASSWORD: ${EVENT_DB_PASSWORD:-postgres}
+      INVITATION_DB_PASSWORD: ${INVITATION_DB_PASSWORD:-postgres}
+      PROJECT_DB_PASSWORD: ${PROJECT_DB_PASSWORD:-postgres}
     volumes:
-      - auth_db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     networks:
       - iris-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_service"]
-      interval: 5s
-      timeout: 3s 
-      retries: 10
-
-  evaluation-db:
-    image: postgres:16-alpine
-    container_name: iris-evaluation-db
-    environment:
-      POSTGRES_DB: evaluation_service
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${EVALUATION_DB_PASSWORD:-postgres}
-    volumes:
-      - evaluation_db_data:/var/lib/postgresql/data
-    networks:
-      - iris-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d evaluation_service"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  event-db:
-    image: postgres:16-alpine
-    container_name: iris-event-db
-    environment:
-      POSTGRES_DB: event_service
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${EVENT_DB_PASSWORD:-postgres}
-    volumes:
-      - event_db_data:/var/lib/postgresql/data
-    networks:
-      - iris-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d event_service"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  invitation-db:
-    image: postgres:16-alpine
-    container_name: iris-invitation-db
-    environment:
-      POSTGRES_DB: invitation_service
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${INVITATION_DB_PASSWORD:-postgres}
-    volumes:
-      - invitation_db_data:/var/lib/postgresql/data
-    networks:
-      - iris-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d invitation_service"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
-  project-db:
-    image: postgres:16-alpine
-    container_name: iris-project-db
-    environment:
-      POSTGRES_DB: project_service
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${PROJECT_DB_PASSWORD:-postgres}
-    volumes:
-      - project_db_data:/var/lib/postgresql/data
-    networks:
-      - iris-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d project_service"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -97,7 +32,7 @@ services:
       dockerfile: apps/auth-service/Dockerfile
     container_name: iris-auth-service
     depends_on:
-      auth-db:
+      postgres:
         condition: service_healthy
     networks:
       - iris-network
@@ -108,7 +43,7 @@ services:
       dockerfile: apps/evaluation-service/Dockerfile
     container_name: iris-evaluation-service
     depends_on:
-      evaluation-db:
+      postgres:
         condition: service_healthy
     networks:
       - iris-network
@@ -119,7 +54,7 @@ services:
       dockerfile: apps/event-service/Dockerfile
     container_name: iris-event-service
     depends_on:
-      event-db:
+      postgres:
         condition: service_healthy
     networks:
       - iris-network
@@ -130,7 +65,7 @@ services:
       dockerfile: apps/invitation-service/Dockerfile
     container_name: iris-invitation-service
     depends_on:
-      invitation-db:
+      postgres:
         condition: service_healthy
     networks:
       - iris-network
@@ -141,7 +76,7 @@ services:
       dockerfile: apps/project-service/Dockerfile
     container_name: iris-project-service
     depends_on:
-      project-db:
+      postgres:
         condition: service_healthy
     networks:
       - iris-network
@@ -190,15 +125,7 @@ networks:
     name: iris-network
 
 volumes:
-  auth_db_data:
-    name: iris-auth-db-data
-  evaluation_db_data:
-    name: iris-evaluation-db-data
-  event_db_data:
-    name: iris-event-db-data
-  invitation_db_data:
-    name: iris-invitation-db-data
-  project_db_data:
-    name: iris-project-db-data
+  postgres_data:
+    name: iris-postgres-data
   redis_data:
     name: iris-redis-data

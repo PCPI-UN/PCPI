@@ -31,6 +31,22 @@ dev-logs: ## Show logs for all development services
 dev-restart: ## Restart all development services
 	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml restart
 
+# Development targets with explicit .env file
+dev-env-up: ## Start all services in development mode with .env file
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.dev.yml up
+
+dev-env-up-d: ## Start all services in development mode with .env file (detached)
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.dev.yml up -d
+
+dev-env-build: ## Build all development services with .env file
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.dev.yml build
+
+dev-env-rebuild: ## Rebuild all development services with .env file (no cache)
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.dev.yml build --no-cache
+
+dev-env-logs: ## Show logs for all development services with .env file
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.dev.yml logs -f
+
 # Production targets
 prod-up: ## Start all services in production mode
 	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up -d
@@ -43,6 +59,25 @@ prod-build: ## Build all production services
 
 prod-logs: ## Show logs for all production services
 	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml logs -f
+
+prod-restart: ## Restart all production services
+	docker compose -f docker-compose.base.yml -f docker-compose.prod.yml restart
+
+# Production targets with explicit .env file
+prod-env-up: ## Start all services in production mode with .env file
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.prod.yml up -d
+
+prod-env-down: ## Stop all production services with .env file
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.prod.yml down
+
+prod-env-build: ## Build all production services with .env file
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.prod.yml build
+
+prod-env-rebuild: ## Rebuild all production services with .env file (no cache)
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.prod.yml build --no-cache
+
+prod-env-logs: ## Show logs for all production services with .env file
+	docker compose --env-file .env -f docker-compose.base.yml -f docker-compose.prod.yml logs -f
 
 # Utility targets
 proto-gen: ## Generate protobuf TypeScript files
