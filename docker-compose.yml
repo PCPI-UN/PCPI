@@ -291,7 +291,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     expose:
-      - 50050
+      - 3000
     restart: always
     depends_on:
       auth-service:
@@ -310,13 +310,13 @@ services:
         condition: service_healthy
     networks:
       - dokploy-network
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.iris-gateway.rule=Host(${IRIS_GATEWAY_DOMAIN})
-      - traefik.http.routers.iris-gateway.entrypoints=web
-      - traefik.http.services.iris-gateway.loadbalancer.server.port=50050
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.iris-gateway.rule=Host(${IRIS_GATEWAY_DOMAIN})
+    #   - traefik.http.routers.iris-gateway.entrypoints=web
+    #   - traefik.http.services.iris-gateway.loadbalancer.server.port=3000
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:50050/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
