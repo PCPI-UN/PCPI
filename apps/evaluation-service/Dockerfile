@@ -26,13 +26,22 @@ RUN npm run proto:generate || echo "Proto generation failed - some proto files m
 # Build the application
 RUN pnpm run build evaluation-service
 
-# Development stage
+# Development stage - self-contained with all dev tools
 FROM node:lts-alpine AS development
 
 WORKDIR /app
 
-# Install protoc for development
+# Install development dependencies and tools
 RUN apk add --no-cache protobuf-dev
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Copy built node_modules from builder (includes all dev dependencies)
+COPY --from=builder /app/node_modules ./node_modules
 
 USER root
 

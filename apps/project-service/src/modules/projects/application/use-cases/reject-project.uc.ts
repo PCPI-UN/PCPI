@@ -2,10 +2,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { NotFoundError, ValidationError } from '../../domain/errors';
 import { NOTIFICATION_SERVICE_PORT, NotificationServicePort } from '../ports/notification-service.port';
+import { EmailTemplate } from '@app/common/generated/notification';
 
 @Injectable()
 export class RejectProjectUC {
-  
+
   constructor(
     @Inject('ProjectRepository') private readonly repo: ProjectRepository,
     @Inject(NOTIFICATION_SERVICE_PORT)
@@ -36,27 +37,21 @@ export class RejectProjectUC {
 
     // Notify all pending participants about the rejection
     const pendings = await this.repo.listPendingParticipants(project.id!);
-    
-    const reasonText = input.reason 
-      ? `\n\nMotivo del rechazo: ${input.reason}` 
-      : '';
 
     for (const pending of pendings) {
       const firstName = pending.firstName || 'Estudiante';
       const lastName = pending.lastName || '';
-      
-      const subject = `IRIS | PROYECTO RECHAZADO`;
-      const body = `Hola ${firstName} ${lastName},\n\n
-Lamentamos informarte que tu proyecto "${project.name}" ha sido rechazado.${reasonText}\n\n
-Por favor, revisa las observaciones y realiza las correcciones necesarias antes de volver a enviarlo.\n\n
-Saludos,\n
-Equipo IRIS`;
 
       try {
         await this.notificationService.sendEmail({
           to: pending.email,
-          subject,
-          body,
+          template: EmailTemplate.PROJECT_REJECTED,
+          params: {
+            firstName,
+            lastName,
+            projectName: project.name,
+            rejectionReason: input.reason || '',
+          },
         });
       } catch (error) {
         console.error(`Failed to send rejection email to ${pending.email}:`, error);

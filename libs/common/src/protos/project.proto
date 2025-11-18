@@ -294,7 +294,7 @@ message ListProjectsForReviewResponse {
   
 message UpdateProjectDocumentRequest {
   int32 id = 1;           // ID del documento
-  string url = 2;         // si viene vacío, no lo cambias
-  TypedDocument type = 3;  // si viene DOCUMENT_TYPE_UNSPECIFIED, no lo cambias
-  DocumentStatus state = 4; // igual idea
+  optional string url = 2;         // si viene vacío, no lo cambias
+  optional TypedDocument type = 3;  // si viene DOCUMENT_TYPE_UNSPECIFIED, no lo cambias
+  optional DocumentStatus state = 4; // igual idea
 }

@@ -310,11 +310,6 @@ services:
         condition: service_healthy
     networks:
       - dokploy-network
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.iris-gateway.rule=Host(${IRIS_GATEWAY_DOMAIN})
-      - traefik.http.routers.iris-gateway.entrypoints=web
-      - traefik.http.services.iris-gateway.loadbalancer.server.port=3000
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
       interval: 30s
@@ -335,10 +330,16 @@ services:
       - NODE_ENV=production
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50056}
-      - EMAIL_SERVICE_ID=${EMAIL_SERVICE_ID}
-      - EMAIL_TEMPLATE_ID=${EMAIL_TEMPLATE_ID}
-      - EMAIL_PUBLIC_KEY=${EMAIL_PUBLIC_KEY}
-      - EMAIL_PRIVATE_KEY=${EMAIL_PRIVATE_KEY}
+      - EMAILJS_SERVICE_ID=${EMAILJS_SERVICE_ID}
+      - EMAILJS_PUBLIC_KEY=${EMAILJS_PUBLIC_KEY}
+      - EMAILJS_PRIVATE_KEY=${EMAILJS_PRIVATE_KEY}
+      - EMAILJS_TEMPLATE_PROJECT_SUBMITTED_ID=${EMAILJS_TEMPLATE_PROJECT_SUBMITTED_ID}
+      - EMAILJS_TEMPLATE_PROJECT_APPROVED_ID=${EMAILJS_TEMPLATE_PROJECT_APPROVED_ID}
+      - EMAILJS_TEMPLATE_PROJECT_REJECTED_ID=${EMAILJS_TEMPLATE_PROJECT_REJECTED_ID}
+      - EMAILJS_TEMPLATE_JUROR_INVITATION_ID=${EMAILJS_TEMPLATE_JUROR_INVITATION_ID}
+      - EMAILJS_TEMPLATE_PASSWORD_CHANGED_ID=${EMAILJS_TEMPLATE_PASSWORD_CHANGED_ID}
+      - EMAILJS_TEMPLATE_PASSWORD_RESET_ID=${EMAILJS_TEMPLATE_PASSWORD_RESET_ID}
+      - EMAILJS_TEMPLATE_PLATFORM_INVITATION_ID=${EMAILJS_TEMPLATE_PLATFORM_INVITATION_ID}
     networks:
       - dokploy-network
     restart: always
@@ -355,7 +356,12 @@ services:
 
   redis:
     image: redis:7-alpine
+    image: redis:7-alpine
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - dokploy-network
     volumes:
       - redis_data:/data
     networks:

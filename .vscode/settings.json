@@ -1,0 +1,37 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5434,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "pene",
+            "database": "event_service",
+            "username": "postgres"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5436,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "name": "proyectos",
+            "username": "postgres",
+            "database": "project_service"
+        },
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "askForPassword": true,
+            "driver": "PostgreSQL",
+            "database": "auth_service",
+            "username": "postgres",
+            "name": "auth"
+        }
+    ]
+}

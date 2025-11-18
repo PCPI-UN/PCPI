@@ -29,13 +29,25 @@ RUN pnpm run build auth-service
 # Compile the seed script for production use
 RUN npx tsc apps/auth-service/prisma/seed.ts --outDir dist/apps/auth-service/prisma --esModuleInterop --resolveJsonModule --skipLibCheck --module commonjs --target es2020
 
-# Development stage
+# Development stage - self-contained with all dev tools
 FROM node:lts-alpine AS development
 
 WORKDIR /app
 
-# Install protoc for development
+# Install development dependencies and tools
 RUN apk add --no-cache protobuf-dev
+
+# Install pnpm globally
+RUN npm install -g pnpm
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Copy built node_modules from builder (includes all dev dependencies)
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy compiled seed script from builder for seeding
+COPY --from=builder /app/dist/apps/auth-service/prisma ./dist/apps/auth-service/prisma
 
 USER root
 
