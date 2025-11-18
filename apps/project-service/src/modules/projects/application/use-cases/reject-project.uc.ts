@@ -2,10 +2,11 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { NotFoundError, ValidationError } from '../../domain/errors';
 import { NOTIFICATION_SERVICE_PORT, NotificationServicePort } from '../ports/notification-service.port';
+import { EmailTemplate } from '@app/common/generated/notification';
 
 @Injectable()
 export class RejectProjectUC {
-  
+
   constructor(
     @Inject('ProjectRepository') private readonly repo: ProjectRepository,
     @Inject(NOTIFICATION_SERVICE_PORT)
@@ -44,7 +45,7 @@ export class RejectProjectUC {
       try {
         await this.notificationService.sendEmail({
           to: pending.email,
-          template: 'PROJECT_REJECTED',
+          template: EmailTemplate.PROJECT_REJECTED,
           params: {
             firstName,
             lastName,

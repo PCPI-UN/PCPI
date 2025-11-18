@@ -2,9 +2,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { Observable, firstValueFrom } from 'rxjs';
+import {
+  EmailTemplate,
+  SendEmailRequest,
+  SendEmailResponse
+} from '@app/common/generated/notification';
 
 interface NotificationServiceGrpc {
-  sendEmail(data: { to: string; subject: string; body: string }): Observable<{ success: boolean }>;
+  sendEmail(data: SendEmailRequest): Observable<SendEmailResponse>;
 }
 
 @Injectable()
@@ -20,7 +25,7 @@ export class NotificationGrpcClient implements OnModuleInit {
     this.svc = this.client.getService<NotificationServiceGrpc>('NotificationService');
   }
 
-  async sendEmail(to: string, subject: string, body: string) {
-    return firstValueFrom(this.svc.sendEmail({ to, subject, body }));
+  async sendEmail(to: string, template: EmailTemplate, params: Record<string, any>) {
+    return firstValueFrom(this.svc.sendEmail({ to, template, params }));
   }
 }

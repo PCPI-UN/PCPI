@@ -2,6 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { NotificationServicePort } from '../../application/ports/notification-service.port';
 import { NotificationGrpcClient } from './notification.grpc-client';
+import { EmailTemplate } from '@app/common/generated/notification';
 
 @Injectable()
 export class NotificationServiceAdapter implements NotificationServicePort {
@@ -9,7 +10,7 @@ export class NotificationServiceAdapter implements NotificationServicePort {
 
   constructor(private readonly grpc: NotificationGrpcClient) {}
 
-  async sendEmail(params: { to: string; template: string; params: Record<string, any> }) {
+  async sendEmail(params: { to: string; template: EmailTemplate; params: Record<string, any> }) {
     try {
       const res = await this.grpc.sendEmail(params.to, params.template, params.params)
       return { success: res.success };
