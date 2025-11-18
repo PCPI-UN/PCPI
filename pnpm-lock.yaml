@@ -68,6 +68,9 @@ importers:
       passport-jwt:
         specifier: ^4.0.1
         version: 4.0.1
+      protobufjs:
+        specifier: ^7.5.4
+        version: 7.5.4
       redis:
         specifier: ^5.9.0
         version: 5.9.0

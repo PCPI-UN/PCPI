@@ -1,10 +1,11 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { first, firstValueFrom } from 'rxjs';
 import { EmailServicePort } from '@common/ports/email-service.port';
 import {
   NOTIFICATION_SERVICE_NAME,
   NotificationServiceClient,
+  EmailTemplate,
 } from '@app/common/generated/notification';
 
 @Injectable()
@@ -33,18 +34,16 @@ export class NotificationServiceAdapter
     token: string,
     expiresInMinutes: number,
   ): Promise<void> {
-    const subject = 'Password Reset Request';
-    const body = `
-      <h1>Password Reset Request</h1>
-      <p>You requested to reset your password. Use the token below:</p>
-      <p><strong>${token}</strong></p>
-      <p>This token will expire in ${expiresInMinutes} minutes.</p>
-      <p>If you didn't request this, please ignore this email.</p>
-    `;
-
     try {
       await firstValueFrom(
-        this.notificationService.sendEmail({ to, subject, body }),
+        this.notificationService.sendEmail({
+          to,
+          template: EmailTemplate.PASSWORD_RESET,
+          params: {
+            token,
+            expiresInMinutes: expiresInMinutes.toString(),
+          },
+        }),
       );
     } catch (error) {
       // Log error but don't throw - email failures shouldn't block password reset
@@ -54,19 +53,17 @@ export class NotificationServiceAdapter
 
   async sendPasswordChangeConfirmation(
     to: string,
-    userName: string,
+    firstName: string,
   ): Promise<void> {
-    const subject = 'Password Changed Successfully';
-    const body = `
-      <h1>Password Changed</h1>
-      <p>Hi ${userName},</p>
-      <p>Your password was successfully changed.</p>
-      <p>If you didn't make this change, please contact support immediately.</p>
-    `;
-
     try {
       await firstValueFrom(
-        this.notificationService.sendEmail({ to, subject, body }),
+        this.notificationService.sendEmail({
+          to,
+          template: EmailTemplate.PASSWORD_CHANGED,
+          params: {
+            firstName,
+          },
+        }),
       );
     } catch (error) {
       console.error('Failed to send password change confirmation:', error);

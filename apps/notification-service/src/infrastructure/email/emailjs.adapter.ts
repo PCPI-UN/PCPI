@@ -15,7 +15,9 @@ export class EmailJsAdapter implements EmailServicePort, OnModuleInit {
   private PROJECT_APPROVED_TEMPLATE_ID: string | undefined;
   private PROJECT_REJECTED_TEMPLATE_ID: string | undefined;
   private JUROR_INVITATION_TEMPLATE_ID: string | undefined;
-  private CHANGE_PASSWORD_TEMPLATE_ID: string | undefined;
+  private PASSWORD_CHANGED_TEMPLATE_ID: string | undefined;
+  private PASSWORD_RESET_TEMPLATE_ID: string | undefined;
+  private PLATFORM_INVITATION_TEMPLATE_ID: string | undefined;
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
@@ -33,13 +35,17 @@ export class EmailJsAdapter implements EmailServicePort, OnModuleInit {
     this.PROJECT_APPROVED_TEMPLATE_ID = this.configService.get<string>('EMAILJS_TEMPLATE_PROJECT_APPROVED_ID');
     this.PROJECT_REJECTED_TEMPLATE_ID = this.configService.get<string>('EMAILJS_TEMPLATE_PROJECT_REJECTED_ID');
     this.JUROR_INVITATION_TEMPLATE_ID = this.configService.get<string>('EMAILJS_TEMPLATE_JUROR_INVITATION_ID');
-    this.CHANGE_PASSWORD_TEMPLATE_ID = this.configService.get<string>('EMAILJS_TEMPLATE_CHANGE_PASSWORD_ID');
+    this.PASSWORD_CHANGED_TEMPLATE_ID = this.configService.get<string>('EMAILJS_TEMPLATE_PASSWORD_CHANGED_ID');
+    this.PASSWORD_RESET_TEMPLATE_ID = this.configService.get<string>('EMAILJS_TEMPLATE_PASSWORD_RESET_ID');
+    this.PLATFORM_INVITATION_TEMPLATE_ID = this.configService.get<string>('EMAILJS_TEMPLATE_PLATFORM_INVITATION_ID');
 
     if (!this.PROJECT_SUBMITTED_TEMPLATE_ID ||
         !this.PROJECT_APPROVED_TEMPLATE_ID ||
         !this.PROJECT_REJECTED_TEMPLATE_ID ||
         !this.JUROR_INVITATION_TEMPLATE_ID ||
-        !this.CHANGE_PASSWORD_TEMPLATE_ID) {
+        !this.PASSWORD_CHANGED_TEMPLATE_ID ||
+        !this.PASSWORD_RESET_TEMPLATE_ID ||
+        !this.PLATFORM_INVITATION_TEMPLATE_ID) {
       this.logger.error('One or more EmailJS template IDs are not configured properly');
       throw new Error('EmailJS template IDs configuration error');
     }
@@ -68,9 +74,16 @@ export class EmailJsAdapter implements EmailServicePort, OnModuleInit {
         break;
       case EmailTemplate.JUROR_INVITATION:
         templateId = this.JUROR_INVITATION_TEMPLATE_ID!;
+        this.logger.debug('Using juror invitation template ID:', templateId);
         break;
-      case EmailTemplate.CHANGE_PASSWORD:
-        templateId = this.CHANGE_PASSWORD_TEMPLATE_ID!;
+      case EmailTemplate.PASSWORD_CHANGED:
+        templateId = this.PASSWORD_CHANGED_TEMPLATE_ID!;
+        break;
+      case EmailTemplate.PASSWORD_RESET:
+        templateId = this.PASSWORD_RESET_TEMPLATE_ID!;
+        break;
+      case EmailTemplate.PLATFORM_INVITATION:
+        templateId = this.PLATFORM_INVITATION_TEMPLATE_ID!;
         break;
       default:
         throw new Error(`Unsupported email template: ${template}`);

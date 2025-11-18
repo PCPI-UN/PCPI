@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit,  } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientGrpc, RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
@@ -15,25 +15,16 @@ import {
   AUTH_SERVICE_NAME,
   AuthServiceClient,
 } from '@app/common/generated/auth';
-import {
-  NOTIFICATION_SERVICE_NAME,
-  NotificationServiceClient,
-} from '@app/common/generated/notification';
 import { EventServiceClient } from '@app/common/generated/event';
 import { ProjectsServiceClient } from '@app/common/generated/project';
 import { InvitationRole } from '../../domain/entities/invitation-role.entity';
 import { InvitationRoleRepositoryPort } from '../../domain/repositories/invitation-role.repository.port';
 import { EVENT_SERVICE_NAME, PROJECT_SERVICE_NAME } from '../../invitations.module';
-
-interface EmailData {
-  subject: string;
-  body: string;
-}
+import { NotificationServicePort } from '../../infrastructure/ports/notification-service.port';
 
 @Injectable()
 export class CreateInvitationUseCase implements OnModuleInit {
   private authService: AuthServiceClient;
-  private notificationService: NotificationServiceClient;
   private eventService: EventServiceClient;
   private projectService: ProjectsServiceClient;
 
@@ -41,8 +32,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
     private readonly invitationRepository: InvitationRepositoryPort,
     private readonly invitationRoleRepository: InvitationRoleRepositoryPort,
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
-    @Inject(NOTIFICATION_SERVICE_NAME)
-    private readonly notificationClient: ClientGrpc,
+    private readonly notificationService: NotificationServicePort,
     private readonly configService: ConfigService,
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
     @Inject(PROJECT_SERVICE_NAME) private readonly projectClient: ClientGrpc,
@@ -51,10 +41,6 @@ export class CreateInvitationUseCase implements OnModuleInit {
   onModuleInit() {
     this.authService =
       this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
-    this.notificationService =
-      this.notificationClient.getService<NotificationServiceClient>(
-        NOTIFICATION_SERVICE_NAME,
-      );
     this.eventService =
       this.eventClient.getService<EventServiceClient>(EVENT_SERVICE_NAME);
     this.projectService =
@@ -79,7 +65,10 @@ export class CreateInvitationUseCase implements OnModuleInit {
       return { invitation: existingInvitation, invitationRoles: existingRoles };
     }
 
-    // Step 2: Validate target exists (fail fast)
+    // Step 2: Validate target exists and fetch data (to avoid duplicate calls later)
+    let eventData: any = null;
+    let projectData: any = null;
+
     switch (rest.targetType) {
       case InvitationTargetType.EVENT:
         try {
@@ -92,6 +81,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
               message: `Event with ID ${rest.targetId} not found`,
             });
           }
+          eventData = eventResponse.event; // Store for later use
         } catch (error) {
           // Re-throw as RpcException with proper code
           throw new RpcException({
@@ -112,6 +102,19 @@ export class CreateInvitationUseCase implements OnModuleInit {
               message: `Project with ID ${rest.targetId} not found`,
             });
           }
+          projectData = projectResponse.project; // Store for later use
+
+          // Also fetch the event for the project
+          const eventResponse = await firstValueFrom(
+            this.eventService.getEvent({ id: projectData.eventId }),
+          );
+          if (!eventResponse.event) {
+            throw new RpcException({
+              code: status.NOT_FOUND,
+              message: `Event with ID ${projectData.eventId} not found`,
+            });
+          }
+          eventData = eventResponse.event; // Store for later use
         } catch (error) {
           // Re-throw as RpcException with proper code
           throw new RpcException({
@@ -188,195 +191,90 @@ export class CreateInvitationUseCase implements OnModuleInit {
       }
     }
 
-    // Step 6: Prepare email subject and body based on targetType
-    const emailData = await this.prepareEmailData(
-      rest.targetType,
-      rest.targetId,
-      roleIds || [],
-      token,
-      user.firstName,
-    );
+    // Step 6: Send invitation email based on target type
+    const invitationLink = `${this.configService.get('FRONTEND_URL', 'http://localhost:4200')}/accept-invitation?token=${token}`;
 
-    // Step 7: Send email
-    await firstValueFrom(
-      this.notificationService.sendEmail({
-        to: email,
-        subject: emailData.subject,
-        body: emailData.body,
-      }),
-    );
+    await this.sendInvitationEmail({
+      targetType: rest.targetType,
+      to: email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      invitationLink,
+      roleIds: roleIds || [],
+      eventData,
+      projectData,
+    });
 
     return { invitation: savedInvitation, invitationRoles: savedInvitationRoles };
   }
 
   /**
-   * Prepares email subject and body based on invitation type
+   * Sends invitation email based on target type using already-fetched data
    */
-  private async prepareEmailData(
-    targetType: InvitationTargetType,
-    targetId: number,
-    roleIds: number[],
-    token: string,
-    userName: string,
-  ): Promise<EmailData> {
-    const invitationLink = `http://localhost:4200/accept-invitation?token=${token}`;
+  private async sendInvitationEmail(params: {
+    targetType: InvitationTargetType;
+    to: string;
+    firstName: string;
+    lastName?: string;
+    invitationLink: string;
+    roleIds: number[];
+    eventData: any;
+    projectData: any;
+  }): Promise<void> {
+    switch (params.targetType) {
+      case InvitationTargetType.PLATFORM: {
+        // Fetch role names if provided
+        let roles = '';
+        if (params.roleIds.length > 0) {
+          const rolesResponse = await firstValueFrom(
+            this.authService.getRolesByIds({ roleIds: params.roleIds }),
+          );
+          roles = rolesResponse.roles.map((role) => role.name).join(', ');
+        }
 
-    switch (targetType) {
-      case InvitationTargetType.PLATFORM:
-        return await this.preparePlatformInvitationEmail(
-          roleIds,
-          userName,
-          invitationLink,
-        );
+        await this.notificationService.sendPlatformInvitationEmail({
+          to: params.to,
+          firstName: params.firstName,
+          lastName: params.lastName,
+          invitationLink: params.invitationLink,
+          roles,
+        });
+        break;
+      }
 
-      case InvitationTargetType.EVENT:
-        return await this.prepareEventInvitationEmail(
-          targetId,
-          roleIds,
-          userName,
-          invitationLink,
-        );
+      case InvitationTargetType.EVENT: {
+        // NOTE: EVENT invitations use JUROR_INVITATION template
+        // This is because currently just jurors receive event invitations
+        await this.notificationService.sendJurorInvitationEmail({
+          to: params.to,
+          firstName: params.firstName,
+          lastName: params.lastName,
+          invitationLink: params.invitationLink,
+          eventName: params.eventData.name,
+          eventDescription: params.eventData.description || '',
+          roles: 'Jurado',
+        });
+        break;
+      }
 
-      case InvitationTargetType.PROJECT:
-        return await this.prepareProjectInvitationEmail(
-          targetId,
-          userName,
-          invitationLink,
-        );
+      case InvitationTargetType.PROJECT: {
+        // A PROJECT invitation is always for project approval
+        await this.notificationService.sendProjectApprovedInvitationEmail({
+          to: params.to,
+          firstName: params.firstName,
+          lastName: params.lastName,
+          invitationLink: params.invitationLink,
+          projectName: params.projectData.name,
+          eventName: params.eventData.name,
+        });
+        break;
+      }
 
       default:
-        // Fallback generic invitation
-        return {
-          subject: 'You have been invited!',
-          body: this.buildEmailBody(
-            `Hi ${userName}`,
-            'You have been invited to join the platform.',
-            invitationLink,
-          ),
-        };
+        throw new RpcException({
+          code: status.INVALID_ARGUMENT,
+          message: `Unsupported invitation target type: ${params.targetType}`,
+        });
     }
-  }
-
-  /**
-   * Prepares email for PLATFORM invitation
-   */
-  private async preparePlatformInvitationEmail(
-    roleIds: number[],
-    userName: string,
-    invitationLink: string,
-  ): Promise<EmailData> {
-    let roleText = 'You have been invited to join the platform';
-
-    if (roleIds.length > 0) {
-      // Fetch role names from auth-service
-      const rolesResponse = await firstValueFrom(
-        this.authService.getRolesByIds({ roleIds }),
-      );
-      const roleNames = rolesResponse.roles.map((role) => role.name).join(', ');
-      roleText = `You have been assigned platform role(s): ${roleNames}`;
-    }
-
-    return {
-      subject: 'Welcome to the Platform - Invitation',
-      body: this.buildEmailBody(
-        `Hi ${userName}`,
-        `You've been invited to join our platform!\n\n${roleText}.\n`,
-        invitationLink,
-      ),
-    };
-  }
-
-  /**
-   * Prepares email for EVENT invitation
-   */
-  private async prepareEventInvitationEmail(
-    eventId: number,
-    roleIds: number[],
-    userName: string,
-    invitationLink: string,
-  ): Promise<EmailData> {
-    // Fetch event details from event-service
-    const eventResponse = await firstValueFrom(
-      this.eventService.getEvent({ id: eventId }),
-    );
-
-    if (!eventResponse.event) {
-      throw new Error(`Event with ID ${eventId} not found`);
-    }
-
-    let roleText = '';
-    if (roleIds.length > 0) {
-      // Fetch role names from auth-service
-      const rolesResponse = await firstValueFrom(
-        this.authService.getRolesByIds({ roleIds }),
-      );
-      const roleNames = rolesResponse.roles.map((role) => role.name).join(', ');
-      roleText = `Your role(s): ${roleNames}`;
-    }
-
-    return {
-      subject: `Invitation to Event: ${eventResponse.event.name}`,
-      body: this.buildEmailBody(
-        `Hi ${userName}`,
-        `You've been invited to participate in the event:\n\n${eventResponse.event.name}\n\n${eventResponse.event.description || ''}\n\n${roleText}\n\nClick the link below to accept your invitation.`,
-        invitationLink,
-      ),
-    };
-  }
-
-  /**
-   * Prepares email for PROJECT invitation
-   */
-  private async prepareProjectInvitationEmail(
-    projectId: number,
-    userName: string,
-    invitationLink: string,
-  ): Promise<EmailData> {
-    // Fetch project details from project-service
-    const projectResponse = await firstValueFrom(
-      this.projectService.getProject({ id: projectId }),
-    );
-
-    if (!projectResponse.project) {
-      throw new Error(`Project with ID ${projectId} not found`);
-    }
-
-    const project = projectResponse.project;
-
-    // Fetch event details using the project's eventId
-    const eventResponse = await firstValueFrom(
-      this.eventService.getEvent({ id: project.eventId }),
-    );
-
-    if (!eventResponse.event) {
-      throw new Error(`Event with ID ${project.eventId} not found`);
-    }
-
-    return {
-      subject: 'Congratulations! Your Project Has Been Approved',
-      body: this.buildEmailBody(
-        `Hi ${userName}`,
-        `Congratulations! Your project "${project.name}" has been approved for the event "${eventResponse.event.name}"!\n\nYou are now invited to join the platform as a participant.\n`,
-        invitationLink,
-      ),
-    };
-  }
-
-  /**
-   * Helper to build consistent plain text email bodies
-   */
-  private buildEmailBody(
-    greeting: string,
-    message: string,
-    invitationLink: string,
-  ): string {
-    return `${greeting}!
-
-${message}
-
-Click the link below to accept your invitation:
-${invitationLink}
-
-If you did not expect this invitation, you can safely ignore this email.`;
   }
 }
