@@ -16,17 +16,12 @@ export class NotificateStudentUC {
     const email = input.email;
     const lastName = input.lastName || '';
     
-
-    const subject = `IRIS | INSCRIPCIÓN DE PROYECTO`;
-    const body = `Hola ${firstName} ${lastName},\n\n
-    Tu proyecto ha sido creado y está en revisión. Está atent@ a la respuesta de Decanatura para la aprobación de tu proyecto.\n\n
-    Saludos,\n
-    Equipo IRIS`;
+    
     
     const result = await this.notificationService.sendEmail({
       to: email,
-      subject,
-      body,
+      template: 'PROJECT_SUBMMITTED',
+      params: { firstName, lastName, },
     });
     if (!result.success) {
         throw new ConflictError('Error sending notification email');

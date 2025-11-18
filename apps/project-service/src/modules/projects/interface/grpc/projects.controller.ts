@@ -232,6 +232,7 @@ async createProjectWithPendingParticipantsRpc(req: any) {
         firstName: firstParticipant.firstName,
         lastName: firstParticipant.lastName ?? '',
         email: firstParticipant.email,
+        projectName: project.name,
       });
     }
 
