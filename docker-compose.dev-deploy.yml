@@ -368,6 +368,6 @@ networks:
 
 volumes:
   postgres_data:
-    name: iris-postgres-data
+    name: iris-dev-deploy-postgres-data
   redis_data:
-    name: iris-redis-data
+    name: iris-dev-deploy-redis-data
