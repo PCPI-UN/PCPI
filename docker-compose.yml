@@ -312,7 +312,7 @@ services:
       - dokploy-network
     labels:
       - traefik.enable=true
-      - traefik.http.routers.iris-gateway.rule=Host(`iris-gateway.dokploy.com`)
+      - traefik.http.routers.iris-gateway.rule=Host(${IRIS_GATEWAY_DOMAIN})
       - traefik.http.routers.iris-gateway.entrypoints=web
       - traefik.http.services.iris-gateway.loadbalancer.server.port=50050
     healthcheck:
