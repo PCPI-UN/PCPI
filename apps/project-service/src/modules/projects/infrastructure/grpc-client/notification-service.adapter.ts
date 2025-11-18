@@ -9,9 +9,9 @@ export class NotificationServiceAdapter implements NotificationServicePort {
 
   constructor(private readonly grpc: NotificationGrpcClient) {}
 
-  async sendEmail(params: { to: string; subject: string; body: string }) {
+  async sendEmail(params: { to: string; template: string; params: Record<string, any> }) {
     try {
-      const res = await this.grpc.sendEmail(params.to, params.subject, params.body);
+      const res = await this.grpc.sendEmail(params.to, params.template, params.params)
       return { success: res.success };
     } catch (err) {
       // no queremos tumbar el flujo de creación del proyecto por un correo
