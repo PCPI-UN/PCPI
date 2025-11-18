@@ -1,7 +1,8 @@
+import { EmailTemplate } from "@app/common/generated/notification";
 export interface SendEmailParams {
   to: string;
-  subject: string;
-  body: string;
+  params: Record<string, any>;
+  template: EmailTemplate;
 }
 
 export abstract class EmailServicePort {

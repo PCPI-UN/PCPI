@@ -12,13 +12,13 @@ export class SendEmailUseCase {
   async execute(sendEmailDto: SendEmailDto): Promise<SendEmailResponse> {
     this.logger.log('Attempting to send email...', {
       to: sendEmailDto.to,
-      subject: sendEmailDto.subject,
+      template: sendEmailDto.template,
     });
 
     const result = await this.emailService.sendEmail({
       to: sendEmailDto.to,
-      subject: sendEmailDto.subject,
-      body: sendEmailDto.body,
+      template: sendEmailDto.template,
+      params: sendEmailDto.params,
     });
 
     if (!result.success) {
