@@ -9,7 +9,7 @@ service NotificationService {
 message SendEmailRequest {
   string to = 1;
   string subject = 2;
-  string body = 3; // HTML or plain text email body
+  map<string, string> body = 3; // HTML or plain text email body
 }
 
 message SendEmailResponse {

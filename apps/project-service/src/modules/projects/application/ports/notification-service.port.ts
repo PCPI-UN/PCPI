@@ -4,7 +4,7 @@ export const NOTIFICATION_SERVICE_PORT = 'NOTIFICATION_SERVICE_PORT';
 export interface NotificationServicePort {
   sendEmail(params: {
     to: string;
-    subject: string;
-    body: string;
+    template: string;
+    params: Record<string, any>;
   }): Promise<{ success: boolean }>;
 }
