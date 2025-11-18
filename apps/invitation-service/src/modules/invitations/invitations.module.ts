@@ -33,6 +33,9 @@ import { InvitationRoleRepositoryPort } from './domain/repositories/invitation-r
 // Infrastructure
 import { PrismaInvitationRepository } from './infrastructure/prisma/prisma-invitation.repository';
 import { PrismaInvitationRoleRepository } from './infrastructure/prisma/prisma-invitation-role.repository';
+import { NotificationGrpcClient } from './infrastructure/grpc-client/notification.grpc-client';
+import { NotificationServiceAdapter } from './infrastructure/grpc-client/notification-service.adapter';
+import { NOTIFICATION_SERVICE_PORT } from './application/ports/notification-service.port';
 
 // Interface
 import { InvitationController } from './interface/grpc/invitation.controller';
@@ -124,6 +127,13 @@ import { InvitationController } from './interface/grpc/invitation.controller';
     {
       provide: InvitationRoleRepositoryPort,
       useClass: PrismaInvitationRoleRepository,
+    },
+
+    // Notification Service - gRPC Client and Adapter
+    NotificationGrpcClient,
+    {
+      provide: NOTIFICATION_SERVICE_PORT,
+      useClass: NotificationServiceAdapter,
     },
   ],
   exports: [
