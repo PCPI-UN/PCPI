@@ -30,6 +30,7 @@ service EventService {
   rpc ListCourses (ListCoursesRequest) returns (ListCoursesResponse) {}
   rpc DeleteCourse (DeleteCourseRequest) returns (DeleteCourseResponse) {}
   rpc ListCoursesByEvent (ListCoursesByEventRequest) returns (ListCoursesResponse);
+  rpc ListCoursesForDropdown (ListCoursesForDropdownRequest) returns (ListCoursesForDropdownResponse) {}
 }
 
 // =====================
@@ -288,15 +289,16 @@ message GetCourseResponse {
 }
 
 message ListCoursesRequest {
-  int32 eventId = 1; // opcional para filtrar cursos por evento
-  int32 pageSize = 2;
-  string pageToken = 3;
-  bool onlyActive = 4;
+  optional int32 eventId = 1; // optional filter by event
+  optional bool onlyActive = 2;
+  optional int32 page = 3;
+  optional int32 limit = 4;
+  optional string q = 5; // search by code/description
 }
 
 message ListCoursesResponse {
   repeated Course courses = 1;
-  string nextPageToken = 2;
+  PaginationMetadata meta = 2;
 }
 
 message DeleteCourseRequest {
@@ -307,15 +309,26 @@ message DeleteCourseResponse {
   bool ok = 1;
 }
 message ListCoursesByEventRequest {
-  int32 eventId = 1;      // ← requerido
-  bool onlyActive = 2;    // opcional
-  int32 page = 3;         // opcional (default 1)
-  int32 pageSize = 4;     // opcional (default 20)
-  string q = 5;           // opcional (code/description)
+  int32 eventId = 1;      // required
+  optional bool onlyActive = 2;
+  optional int32 page = 3;
+  optional int32 limit = 4;
+  optional string q = 5; // search by code/description
 }
-message ListCoursesByEventResponse {
-  repeated Course courses = 1;
-  string nextPageToken = 2; // deja vacío por ahora
+
+message CourseDropdown {
+  int32 id = 1;
+  string code = 2;
+  string description = 3;
+}
+
+message ListCoursesForDropdownRequest {
+  int32 eventId = 1;      // required
+  optional bool onlyActive = 2; // default: true
+}
+
+message ListCoursesForDropdownResponse {
+  repeated CourseDropdown courses = 1;
 }
 
 enum EventStatus {

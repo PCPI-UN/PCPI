@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { CourseRepository } from '../../domain/repositories/course.repository';
-import { Course } from '../../domain/entities/course.entity';
+import { PrismaService } from '@common/prisma/prisma.service';
+import { CourseRepository } from '@courses/domain/repositories/course.repository';
+import { Course } from '@courses/domain/entities/course.entity';
 
 const map = (c: any): Course =>
   new Course(c.id, c.eventId, c.code, c.description ?? null, c.active, c.createdAt, c.updatedAt);
 
 @Injectable()
-export class PrismaCourseRepository implements CourseRepository {
-  constructor(private prisma: PrismaService) {}
+export class PrismaCourseRepository extends CourseRepository {
+  constructor(private prisma: PrismaService) {
+    super();
+  }
 
   async create(data: { eventId: number; code: string; description?: string | null; active?: boolean }): Promise<Course> {
     const c = await this.prisma.course.create({ data });

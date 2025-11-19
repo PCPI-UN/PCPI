@@ -60,13 +60,15 @@ export class AuthController {
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
-      sameSite: 'strict',
+      sameSite: 'none',
+      domain: '.uninorte.edu.co',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
-      sameSite: 'strict',
+      sameSite: 'none',
+      domain: '.uninorte.edu.co',
       maxAge: this.parseJwtExpiration(refreshTokenExpiration),
     });
     return { success: true, message: 'Login successful' };
@@ -77,8 +79,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout from the system' })
   @ApiResponse({ status: 200, description: 'Logout successful, clears all auth cookies' })
   async logout(@Res({ passthrough: true }) response: Response) {
-    response.clearCookie('access_token');
-    response.clearCookie('refresh_token');
+    response.clearCookie('access_token', {
+      domain: '.uninorte.edu.co',
+      httpOnly: true,
+      secure: this.isSecureContext(),
+      sameSite: 'none',
+    });
+    response.clearCookie('refresh_token', {
+      domain: '.uninorte.edu.co',
+      httpOnly: true,
+      secure: this.isSecureContext(),
+      sameSite: 'none',
+    });
     return { message: 'Logged out successfully' };
   }
 
@@ -103,7 +115,8 @@ export class AuthController {
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
-      sameSite: 'strict',
+      sameSite: 'none',
+      domain: '.uninorte.edu.co',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
 

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventsModule } from './modules/events/events.module';
 import { PrismaModule } from './common/prisma/prisma.module';
-import { CoursesModule } from './modules/course/course.module';
+import { CoursesModule } from './modules/courses/courses.module';
 
 @Module({
   imports: [

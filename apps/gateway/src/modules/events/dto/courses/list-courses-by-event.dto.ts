@@ -36,7 +36,7 @@ export class ListCoursesByEventDTO {
   })
   @IsInt() @IsOptional() @IsPositive()
   @Type(() => Number)
-  pageSize?: number;
+  limit?: number;
 
   @ApiProperty({
     description: 'Search query to filter courses by code or description',

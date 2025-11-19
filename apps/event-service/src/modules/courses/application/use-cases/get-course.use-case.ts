@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { status } from '@grpc/grpc-js';
 import { CourseRepository } from '../../domain/repositories/course.repository';
 import { GetCourseDTO } from '../dto/get-course.dto';
 
@@ -9,7 +11,12 @@ export class GetCourseUseCase {
   async execute(input: GetCourseDTO) {
     const id = Number(input.id);                 
     const c = await this.repo.findById(id);      
-    if (!c) throw new NotFoundException('Course not found');
+    if (!c) {
+      throw new RpcException({
+        code: status.NOT_FOUND,
+        message: 'Course not found',
+      });
+    }
     return c;
   }
 }
