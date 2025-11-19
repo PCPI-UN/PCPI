@@ -31,6 +31,6 @@ import { RolesController } from '@roles/interface/grpc/roles.controller';
       useClass: PrismaPlatformStaffRepository,
     },
   ],
-  exports: [ValidateRolesExistUseCase, AssignPlatformRoleUseCase],
+  exports: [ValidateRolesExistUseCase, AssignPlatformRoleUseCase, GetRolesUseCase],
 })
 export class RolesModule {}

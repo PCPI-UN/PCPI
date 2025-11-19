@@ -1,4 +1,5 @@
 import { EventStatus } from './event-status.enum';
+import { parseBogotaToUTC } from '../utils/timezone.util';
 
 export const getEventStatus = (
   start: Date | string,

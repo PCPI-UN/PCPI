@@ -1,34 +1,21 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
+import { AuthClientPort } from '../ports/auth-client.port';
 import {
-  AuthClientPort,
-  IsPlatformStaffResult,
-  PlatformRole,
-} from '../ports/auth-client.port';
-import { AUTH_SERVICE_NAME } from '@app/common/generated/auth';
-
-interface IsPlatformStaffRequest {
-  userId?: number;
-  email?: string;
-}
-
-interface IsPlatformStaffResponse {
-  isPlatformStaff: boolean;
-  role?: PlatformRole;
-}
-
-interface AuthServiceGrpc {
-  IsPlatformStaff(
-    data: IsPlatformStaffRequest,
-  ): Promise<IsPlatformStaffResponse>;
-}
+  AUTH_SERVICE_NAME,
+  AuthServiceClient,
+  GetRolesByIdsResponse,
+  IsPlatformStaffResponse,
+  User,
+} from '@app/common/generated/auth';
 
 @Injectable()
 export class GrpcAuthClientAdapter
   extends AuthClientPort
   implements OnModuleInit
 {
-  private authService: AuthServiceGrpc;
+  private authService: AuthServiceClient;
 
   constructor(
     @Inject(AUTH_SERVICE_NAME) private readonly client: ClientGrpc,
@@ -37,14 +24,18 @@ export class GrpcAuthClientAdapter
   }
 
   onModuleInit() {
-    this.authService = this.client.getService<AuthServiceGrpc>(AUTH_SERVICE_NAME);
+    this.authService = this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
   }
 
-  async isPlatformStaff(userId: number): Promise<IsPlatformStaffResult> {
-    const response = await this.authService.IsPlatformStaff({ userId });
-    return {
-      isPlatformStaff: response.isPlatformStaff,
-      role: response.role,
-    };
+  async isPlatformStaff(userId: number): Promise<IsPlatformStaffResponse> {
+    return lastValueFrom(this.authService.isPlatformStaff({ userId }));
+  }
+
+  async getRolesByIds(roleIds: number[]): Promise<GetRolesByIdsResponse> {
+    return lastValueFrom(this.authService.getRolesByIds({ roleIds }));
+  }
+
+  async getUser(userId: number): Promise<User> {
+    return lastValueFrom(this.authService.getUser({ id: userId }));
   }
 }

@@ -15,13 +15,13 @@ model Event {
   description         String?   @db.Text
   accessCode          String    @unique @map("access_code") @db.VarChar(100)
   isPubliclyJoinable  Boolean   @map("is_publicly_joinable")
-  inscriptionDeadline DateTime  @map("inscription_deadline") @db.Timestamp()
+  inscriptionDeadline DateTime  @map("inscription_deadline") @db.Timestamptz()
   evaluationsOpened   Boolean   @map("evaluations_opened")
-  startDate           DateTime  @map("start_date") @db.Timestamp()
-  endDate             DateTime  @map("end_date") @db.Timestamp()
+  startDate           DateTime  @map("start_date") @db.Timestamptz()
+  endDate             DateTime  @map("end_date") @db.Timestamptz()
   active              Boolean   @map("active") @default(true)
-  createdAt           DateTime  @map("created_at") @default(now()) @db.Timestamp()
-  updatedAt           DateTime  @map("updated_at") @updatedAt @db.Timestamp()
+  createdAt           DateTime  @map("created_at") @default(now()) @db.Timestamptz()
+  updatedAt           DateTime  @map("updated_at") @updatedAt @db.Timestamptz()
   createdByUserId     Int?
   location            String?   @db.VarChar(255)
 
@@ -38,8 +38,8 @@ model EventMember {
   eventId Int @map("event_id")
   roleId  Int @map("role_id")
   active  Boolean
-  createdAt DateTime @map("created_at") @default(now()) @db.Timestamp()
-  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamp()
+  createdAt DateTime @map("created_at") @default(now()) @db.Timestamptz()
+  updatedAt DateTime @map("updated_at") @updatedAt @db.Timestamptz()
 
   event   Event  @relation(fields: [eventId], references: [id])
 
@@ -55,8 +55,8 @@ model Course {
   code           String               @db.VarChar(100)
   description    String?              @db.Text
   active         Boolean              @map("active") @default(true)
-  createdAt      DateTime             @map("created_at") @default(now()) @db.Timestamp()
-  updatedAt      DateTime             @map("updated_at") @updatedAt @db.Timestamp()
+  createdAt      DateTime             @map("created_at") @default(now()) @db.Timestamptz()
+  updatedAt      DateTime             @map("updated_at") @updatedAt @db.Timestamptz()
 
   event          Event                @relation(fields: [eventId], references: [id])
 

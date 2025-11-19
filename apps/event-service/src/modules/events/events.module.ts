@@ -17,7 +17,6 @@ import { DeleteEventMemberUseCase } from './application/use-cases/event-members/
 import { FindEventMemberByUserAndEventUseCase } from './application/use-cases/event-members/get-event-member.use-case';
 import { ListEventMembersUseCase } from './application/use-cases/event-members/list-event-members.use-case';
 import { GetJurorMembershipUseCase } from './application/use-cases/event-members/get-juror-membership.use-case';
-import { AuthGrpcClient } from '../../common/grpc-clients/auth-grpc.client';
 import { AuthClientPort } from './infrastructure/ports/auth-client.port';
 import { GrpcAuthClientAdapter } from './infrastructure/adapters/grpc-auth-client.adapter';
 import { EventRepository } from './domain/repositories/event.repository';
@@ -41,7 +40,6 @@ import { AUTH_SERVICE_NAME, protobufPackage } from '@app/common/generated/auth';
   controllers: [EventsController, EventMemberController],
   providers: [
     PrismaService,
-    AuthGrpcClient,
     {
       provide: EventRepository,
       useClass: PrismaEventRepository,

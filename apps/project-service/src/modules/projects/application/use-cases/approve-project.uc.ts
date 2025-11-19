@@ -60,7 +60,7 @@ export class ApproveProjectUC implements OnModuleInit  {
         targetType: 'PROJECT',
         targetId: project.id!,
         invitedByUserId: input.actingUserId ?? 1, // AJUSTA: quién envía la invitación
-        roleIds: [3], // AJUSTA: roles si es necesario
+        roleIds: [5], // AJUSTA: roles si es necesario
         firstName: pending.firstName,
         lastName: pending.lastName ?? '',
       });
