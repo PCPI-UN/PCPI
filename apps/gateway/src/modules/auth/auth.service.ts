@@ -50,6 +50,12 @@ export class AuthService implements OnModuleInit {
     );
   }
 
+  async validateToken(token: string): Promise<ValidateTokenResponse> {
+    return firstValueFrom(
+      this.authService.validateToken({ token } as ValidateTokenRequest),
+    );
+  }
+
   async getUser(id: number): Promise<User> {
     return firstValueFrom(this.authService.getUser({ id } as GetUserRequest));
   }

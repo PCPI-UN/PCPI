@@ -23,19 +23,11 @@ import { InvitationsService } from './invitations.service';
           transport: Transport.GRPC,
           options: {
             package: invitationProtobufPackage,
-            loader:{
-              keepCase: true,
-              longs: String,
-              enums: String,
-              defaults: true,
-              oneofs: true,
-              arrays: true
-            },
             protoPath: join(
               process.cwd(),
               'libs/common/src/protos/invitation.proto',
             ),
-            url: configService.get<string>('INVITATION_SERVICE_URL'),
+            url: configService.get<string>('INVITATION_SERVICE_URL') || 'invitation-service:50054',
           },
         }),
         inject: [ConfigService],

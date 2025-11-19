@@ -134,6 +134,7 @@ export class InvitationsService implements OnModuleInit {
       }),
     );
 
+    console.log('Created/Retrieved Invitation:', invitation);
     // Enrich response with role details
     const roles: Role[] = [];
     if (invitation.roleIds && invitation.roleIds.length > 0) {

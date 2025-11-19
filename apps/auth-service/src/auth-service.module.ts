@@ -7,10 +7,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/auth-service/.env',
-    }),
+    ConfigModule.forRoot({isGlobal: true}),
     AuthModule,
     UsersModule,
     RolesModule,

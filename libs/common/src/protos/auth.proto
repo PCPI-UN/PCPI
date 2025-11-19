@@ -98,7 +98,6 @@ message ValidateTokenRequest {
 // The response message for a token validation.
 message ValidateTokenResponse {
   bool valid = 1;
-  int32 userId = 2;
 }
 
 message ActivateUserRequest {

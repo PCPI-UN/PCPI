@@ -23,11 +23,12 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new GrpcExceptionFilter());
   
+  // NOTE: Temporaly commented because it's not completely ready yet!
   // Register cache interceptors globally
-  app.useGlobalInterceptors(
-    app.get(HttpCacheInterceptor),
-    app.get(CacheInvalidationInterceptor),
-  );
+  // app.useGlobalInterceptors(
+  //   app.get(HttpCacheInterceptor),
+  //   app.get(CacheInvalidationInterceptor),
+  // );
   
   const config = new DocumentBuilder()
     .setTitle('Iris API')

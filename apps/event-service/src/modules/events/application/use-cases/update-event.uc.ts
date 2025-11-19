@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { EventRepository } from '../../domain/repositories/event.repository';
 import { UpdateEventDTO } from '../dto/update-event.dto';
+import { parseBogotaToUTC } from '@events/domain/utils/timezone.util';
 
 @Injectable()
 export class UpdateEventUC {
@@ -16,14 +17,17 @@ export class UpdateEventUC {
       });
     }
 
+    // Convert input dates from Colombia timezone (UTC-5) to UTC for storage
     // Date validation when dates are being updated
     const inscriptionDeadline = input.inscriptionDeadline
-      ? new Date(input.inscriptionDeadline)
+      ? parseBogotaToUTC(input.inscriptionDeadline)
       : existing.inscriptionDeadline;
     const startDate = input.startDate
-      ? new Date(input.startDate)
+      ? parseBogotaToUTC(input.startDate)
       : existing.startDate;
-    const endDate = input.endDate ? new Date(input.endDate) : existing.endDate;
+    const endDate = input.endDate 
+      ? parseBogotaToUTC(input.endDate)  
+      : existing.endDate;
 
     if (inscriptionDeadline >= startDate) {
       throw new RpcException({
@@ -57,11 +61,15 @@ export class UpdateEventUC {
       accessCode: input.accessCode,
       isPubliclyJoinable: input.isPubliclyJoinable,
       inscriptionDeadline: input.inscriptionDeadline
-        ? new Date(input.inscriptionDeadline)
+        ? parseBogotaToUTC(input.inscriptionDeadline)
         : undefined,
       evaluationsOpened: input.evaluationsOpened,
-      startDate: input.startDate ? new Date(input.startDate) : undefined,
-      endDate: input.endDate ? new Date(input.endDate) : undefined,
+      startDate: input.startDate 
+        ? parseBogotaToUTC(input.startDate) 
+        : undefined,
+      endDate: input.endDate 
+        ? parseBogotaToUTC(input.endDate) 
+        : undefined,
       active: input.active,
       location: input.location ?? null,
     });
