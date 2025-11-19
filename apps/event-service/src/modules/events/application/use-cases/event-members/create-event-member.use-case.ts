@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
 import { EventMemberRepository } from '@events/domain/repositories/event-member.repository';
 import { EventRepository } from '@events/domain/repositories/event.repository';
 import { CreateEventMemberDTO } from '@events/application/dto/event-members/create-event-member.dto';
 import { EventMember } from '@events/domain/entities/event-member.entity';
-import { AuthGrpcClient } from '@common/grpc-clients/auth-grpc.client';
+import { AuthClientPort } from '@events/infrastructure/ports/auth-client.port';
+import { parseBogotaToUTC } from '@events/domain/utils/timezone.util';
 
 @Injectable()
 export class CreateEventMemberUseCase {
@@ -14,10 +14,11 @@ export class CreateEventMemberUseCase {
   constructor(
     private readonly eventMemberRepository: EventMemberRepository,
     private readonly eventRepository: EventRepository,
-    private readonly authGrpcClient: AuthGrpcClient,
+    private readonly authClient: AuthClientPort,
   ) {}
 
   async execute(input: CreateEventMemberDTO): Promise<EventMember> {
+    // 1. Validate event exists
     const event = await this.eventRepository.findById(input.eventId);
     if (!event) {
       throw new RpcException({
@@ -26,9 +27,7 @@ export class CreateEventMemberUseCase {
       });
     }
 
-    // 2. Validate event is accepting members
-    const now = new Date();
-
+    // 2. Validate event is active
     if (!event.active) {
       throw new RpcException({
         code: 9,
@@ -43,19 +42,9 @@ export class CreateEventMemberUseCase {
       });
     }
 
-    // TODO: We should check first if the role being passed is a Participant. If not (Juror), we can allow
-    // adding that member
-
-    // TODO: if now > event.endDate, we should not allow new members
-    if (now > event.inscriptionDeadline) {
-      throw new RpcException({
-        code: 9,
-        message: 'Event inscription deadline has passed',
-      });
-    }
-
+    // 3. Validate user exists
     try {
-      const user = await lastValueFrom(this.authGrpcClient.getUser(input.userId));
+      const user = await this.authClient.getUser(input.userId);
       if (!user) {
         throw new RpcException({
           code: 3,
@@ -70,10 +59,10 @@ export class CreateEventMemberUseCase {
       });
     }
 
+    // 4. Validate role exists and is EVENT-scoped
+    let role;
     try {
-      const rolesResponse = await lastValueFrom(
-        this.authGrpcClient.getRolesByIds([input.roleId]),
-      );
+      const rolesResponse = await this.authClient.getRolesByIds([input.roleId]);
 
       if (!rolesResponse.roles || rolesResponse.roles.length === 0) {
         throw new RpcException({
@@ -82,7 +71,7 @@ export class CreateEventMemberUseCase {
         });
       }
 
-      const role = rolesResponse.roles[0];
+      role = rolesResponse.roles[0];
       if (role.scope !== 'EVENT') {
         throw new RpcException({
           code: 3,
@@ -100,6 +89,18 @@ export class CreateEventMemberUseCase {
       });
     }
 
+    const now = new Date();
+    const isJuror = role.name.toLowerCase() === 'juror';
+
+    // Event has already ended - no one can join
+    if (now > event.endDate) {
+      this.logger.log(`Event ${input.eventId} has already ended on ${event.endDate.toISOString()}. Cannot add new members.`);
+      throw new RpcException({
+        code: 9,
+        message: 'Event has already ended',
+      });
+    }
+
     const existingMember = await this.eventMemberRepository.findActiveByUserAndEvent(
       input.userId,
       input.eventId,
@@ -112,6 +113,7 @@ export class CreateEventMemberUseCase {
       return existingMember;
     }
 
+    // 7. Create the event member
     return this.eventMemberRepository.create({
       userId: input.userId,
       eventId: input.eventId,

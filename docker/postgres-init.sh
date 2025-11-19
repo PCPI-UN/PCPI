@@ -19,10 +19,12 @@ create_database_and_user() {
         DO \$\$
         BEGIN
             IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '$db_user') THEN
-                CREATE USER $db_user WITH PASSWORD '$db_password';
-                RAISE NOTICE 'User $db_user created';
+                CREATE USER $db_user WITH PASSWORD '$db_password' CREATEDB;
+                RAISE NOTICE 'User $db_user created with CREATEDB privilege';
             ELSE
-                RAISE NOTICE 'User $db_user already exists';
+                -- Grant CREATEDB to existing user if they don't have it
+                ALTER USER $db_user CREATEDB;
+                RAISE NOTICE 'User $db_user already exists, CREATEDB privilege granted';
             END IF;
         END
         \$\$;

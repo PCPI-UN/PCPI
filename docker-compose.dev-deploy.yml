@@ -200,6 +200,11 @@ services:
       - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres:5432/invitation_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50054}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
+      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     depends_on:
       postgres:
         condition: service_healthy

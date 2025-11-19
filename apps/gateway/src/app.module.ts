@@ -16,10 +16,7 @@ import { HealthController } from './health.controller';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/gateway/.env',
-    }),
+    ConfigModule.forRoot({isGlobal: true}),
     CacheModule,
     AuthModule,
     UsersModule,
