@@ -1,15 +1,14 @@
 import { Controller } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { RequirePermission } from '../../../../../../gateway/src/common/decorators/require-permission.decorator';
-import { CreateEventMemberUseCase } from '../../application/use-cases/event-members/create-event-member.use-case';
-import { DeleteEventMemberUseCase } from '../../application/use-cases/event-members/delete-event-member.use-case';
-import { FindEventMemberByUserAndEventUseCase } from '../../application/use-cases/event-members/get-event-member.use-case';
-import { ListEventMembersUseCase } from '../../application/use-cases/event-members/list-event-members.use-case';
-import { EventMemberMapper } from '../../application/mappers/event-member.mapper';
-import { CreateEventMemberDTO } from '../../application/dto/event-members/create-event-member.dto';
-import { DeleteEventMemberDTO } from '../../application/dto/event-members/delete-event-member.dto';
-import { GetEventMemberDTO } from '../../application/dto/event-members/get-event-member.dto';
-import { ListEventMembersDTO } from '../../application/dto/event-members/list-event-members.dto';
+import { CreateEventMemberUseCase } from '@events/application/use-cases/event-members/create-event-member.use-case';
+import { DeleteEventMemberUseCase } from '@events/application/use-cases/event-members/delete-event-member.use-case';
+import { FindEventMemberByUserAndEventUseCase } from '@events/application/use-cases/event-members/get-event-member.use-case';
+import { ListEventMembersUseCase } from '@events/application/use-cases/event-members/list-event-members.use-case';
+import { EventMemberMapper } from '@events/application/mappers/event-member.mapper';
+import { CreateEventMemberDTO } from '@events/application/dto/event-members/create-event-member.dto';
+import { DeleteEventMemberDTO } from '@events/application/dto/event-members/delete-event-member.dto';
+import { GetEventMemberDTO } from '@events/application/dto/event-members/get-event-member.dto';
+import { ListEventMembersDTO } from '@events/application/dto/event-members/list-event-members.dto';
 import {
   CreateEventMemberResponse,
   DeleteEventMemberResponse,
@@ -27,7 +26,6 @@ export class EventMemberController {
     private readonly listUC: ListEventMembersUseCase,
   ) {}
 
-  @RequirePermission('manage:events')
   @GrpcMethod(EVENT_SERVICE_NAME, 'CreateEventMember')
   async CreateEventMemberRpc(
     request: CreateEventMemberDTO,

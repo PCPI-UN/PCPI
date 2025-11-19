@@ -115,7 +115,18 @@ export class AcceptInvitationUseCase implements OnModuleInit {
 
         const project = projectResponse.project;
 
-        // Create event member  for each role
+        // Add as project participant
+        await firstValueFrom(
+          this.projectService.addParticipant({
+            userId: invitation.invitedUserId,
+            projectId: invitation.targetId,
+            studentCode: dto.studentCode || '', 
+          }),
+        );
+
+        // Once the user is a project participant, assign event roles
+        // This makes sense. If the role is participant, the method makes
+        // a validation to check if the user is part of a project
         for (const roleId of roleIds) {
           await firstValueFrom(
             this.eventService.createEventMember({
@@ -126,14 +137,7 @@ export class AcceptInvitationUseCase implements OnModuleInit {
           );
         }
 
-        // Add as project participant
-        await firstValueFrom(
-          this.projectService.addParticipant({
-            userId: invitation.invitedUserId,
-            projectId: invitation.targetId,
-            studentCode: dto.studentCode || '', 
-          }),
-        );
+
         break;
     }
 
