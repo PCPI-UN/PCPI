@@ -29,7 +29,6 @@ export class ListCoursesDTO {
   })
   @IsInt() @IsOptional() @Min(1)
   @Type(() => Number)
-  
   page?: number = 1;
 
   @ApiProperty({
@@ -40,7 +39,7 @@ export class ListCoursesDTO {
   })
   @IsInt() @IsOptional() @Min(1)
   @Type(() => Number)
-  pageSize?: number = 10;
+  limit?: number = 10;
   
   @ApiProperty({
     description: 'Search query to filter courses by code or description',

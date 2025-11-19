@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PrismaService } from '@common/prisma/prisma.service';
-import { AuthGrpcClient } from '@common/grpc-clients/auth-grpc.client';
 import { EventsController } from '@events/interface/grpc/controller';
 import { EventMemberController } from '@events/interface/grpc/event-members.controller';
 import { PrismaEventRepository } from '@events/infrastructure/prisma/prisma-event.repository';

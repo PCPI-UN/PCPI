@@ -43,6 +43,7 @@ import { UpdateCourseDTO } from './dto/courses/update-course.dto';
 import { ListCoursesDTO } from './dto/courses/list-course.dto';
 import { GetCourseDTO } from './dto/courses/get-course.dto';
 import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
+import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
 
 @ApiTags('events')
 @ApiSecurity('JWT-auth')
@@ -308,7 +309,6 @@ export class EventsController {
   }
 
   @Public()
-  @RequirePermission('read:courses')
   @Get('courses/:id')
   @ApiOperation({ summary: 'Get course by ID' })
   @ApiParam({ name: 'id', description: 'Course ID', type: Number })
@@ -320,13 +320,15 @@ export class EventsController {
   }
 
   @Public()
-  @RequirePermission('read:courses')
   @Get('courses/event/:eventId')
-  @ApiOperation({ summary: 'Get courses by event ID' })
-  @ApiResponse({ status: 200, description: 'Returns list of courses for the event' })
+  @ApiOperation({ summary: 'Get courses for dropdown (minimal data)' })
+  @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
+  @ApiResponse({ status: 200, description: 'Returns list of courses with id, code, and description only' })
   @ApiResponse({ status: 403, description: 'Forbidden - Missing read:courses permission' })
   @ApiResponse({ status: 404, description: 'Event not found' })
-  async listCoursesByEvent(@Query() listCoursesByEventDTO: ListCoursesByEventDTO) {
-    return this.eventsService.listCoursesByEvent(listCoursesByEventDTO);
+  async listCoursesForDropdown(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ) {
+    return this.eventsService.listCoursesForDropdown({ eventId, onlyActive: true });
   }
 }

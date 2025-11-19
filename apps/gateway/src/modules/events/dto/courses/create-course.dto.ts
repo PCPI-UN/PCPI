@@ -14,14 +14,7 @@ export class CreateCourseDTO {
     example: 'CS101',
   })
   @IsString() @IsNotEmpty()
-  code: string;             // Unique code for the course within the event
-
-  @ApiProperty({
-    description: 'Name of the course',
-    example: 'Introduction to Computer Science',
-  })
-  @IsString() @IsNotEmpty()
-  name: string;           // Course name
+  code: string;
 
   @ApiProperty({
     description: 'Detailed description of the course',
@@ -37,5 +30,5 @@ export class CreateCourseDTO {
     required: false,
   })
   @IsBoolean() @IsOptional()
-  active?: boolean;         // true by default in DB
+  active?: boolean;
 }

@@ -60,7 +60,7 @@ export class EventServiceClient implements OnModuleInit {
       eventId,
       onlyActive: onlyActive ?? false,
       page: 1,
-      pageSize: 100,
+      limit: 100,
       q: '',
     };
     const response = await firstValueFrom(

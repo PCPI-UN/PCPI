@@ -17,6 +17,7 @@ import { UpdateCourseDTO } from './dto/courses/update-course.dto';
 import { ListCoursesDTO } from './dto/courses/list-course.dto';
 import { GetCourseDTO } from './dto/courses/get-course.dto';
 import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
+import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
 import {
   EVENT_SERVICE_NAME,
   EventServiceClient,
@@ -52,7 +53,8 @@ import {
   GetCourseRequest,
   GetCourseResponse,
   ListCoursesByEventRequest,
-  ListCoursesByEventResponse,
+  ListCoursesForDropdownRequest,
+  ListCoursesForDropdownResponse,
   ListMyEventsRequest,
   ListMyEventsResponse,
   ListEventsRequest,
@@ -154,8 +156,12 @@ export class EventService implements OnModuleInit {
         return firstValueFrom(this.eventService.listCourses(request as ListCoursesRequest));
     }
 
-    async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO): Promise<ListCoursesByEventResponse> {
+    async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO): Promise<ListCoursesResponse> {
         return firstValueFrom(this.eventService.listCoursesByEvent(listCoursesByEventDTO as ListCoursesByEventRequest));
+    }
+
+    async listCoursesForDropdown(dto: ListCoursesForDropdownDTO): Promise<ListCoursesForDropdownResponse> {
+        return firstValueFrom(this.eventService.listCoursesForDropdown(dto as ListCoursesForDropdownRequest));
     }
 
     async updateCourse(updateCourseDTO: UpdateCourseDTO): Promise<UpdateCourseResponse> {
