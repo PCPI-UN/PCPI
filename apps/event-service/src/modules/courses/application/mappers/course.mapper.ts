@@ -5,6 +5,9 @@ import {
   DeleteCourseResponse,
   ListCoursesResponse,
   Course as CourseProto,
+  PaginationMetadata,
+  ListCoursesForDropdownResponse,
+  CourseDropdown,
 } from '@app/common/generated/event';
 import { Course } from '@courses/domain/entities/course.entity';
 
@@ -47,10 +50,33 @@ export class CourseMapper {
     };
   }
 
-  static toListCoursesResponse(courses: Course[]): ListCoursesResponse {
+  static toListCoursesResponse(
+    courses: Course[],
+    total: number,
+    page: number,
+    limit: number,
+  ): ListCoursesResponse {
+    const meta: PaginationMetadata = {
+      total,
+      itemsOnCurrentPage: courses.length,
+      itemsPerPage: limit,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    };
+
     return {
       courses: courses.map((c) => this.toCourseProto(c)),
-      nextPageToken: '', // Not implementing pagination tokens yet
+      meta,
+    };
+  }
+
+  static toListCoursesForDropdownResponse(courses: Course[]): ListCoursesForDropdownResponse {
+    return {
+      courses: courses.map((c): CourseDropdown => ({
+        id: c.id,
+        code: c.code,
+        description: c.description ?? '',
+      })),
     };
   }
 }

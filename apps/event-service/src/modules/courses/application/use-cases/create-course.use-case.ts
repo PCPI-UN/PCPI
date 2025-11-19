@@ -1,14 +1,34 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { status } from '@grpc/grpc-js';
 import { CourseRepository } from '../../domain/repositories/course.repository';
+import { EventRepository } from '@events/domain/repositories/event.repository';
 import { CreateCourseDTO } from '../dto/create-course.dto';
 
 @Injectable()
 export class CreateCourseUseCase {
-  constructor(private repo: CourseRepository) {}
+  constructor(
+    private repo: CourseRepository,
+    private eventRepo: EventRepository,
+  ) {}
 
   async execute(input: CreateCourseDTO) {
+    // Validate event exists
+    const event = await this.eventRepo.findById(input.eventId);
+    if (!event) {
+      throw new RpcException({
+        code: status.NOT_FOUND,
+        message: 'Event not found',
+      });
+    }
+
     const exists = await this.repo.existsByEventAndCode(input.eventId, input.code);
-    if (exists) throw new BadRequestException('Course code already exists for this event');
+    if (exists) {
+      throw new RpcException({
+        code: status.ALREADY_EXISTS,
+        message: 'Course code already exists for this event',
+      });
+    }
     return this.repo.create(input);
   }
 }

@@ -1,28 +1,31 @@
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Min, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ListCoursesDTO {
-  @IsInt() @IsOptional()
+  @IsInt()
+  @IsOptional()
   @Type(() => Number)
-  eventId?: number;     //  para filtrar por evento
+  eventId?: number;
 
+  @IsBoolean()
   @IsOptional()
   @Type(() => Boolean)
   onlyActive?: boolean;
 
-  @IsInt() @IsOptional() @Min(1)
+  @IsInt()
+  @IsOptional()
+  @Min(1)
   @Type(() => Number)
-  page?: number;        //  si tu UC usa paginación por página
+  page?: number;
 
-  @IsInt() @IsOptional() @Min(1)
+  @IsInt()
+  @IsOptional()
+  @Min(1)
   @Type(() => Number)
-  pageSize?: number;
+  limit?: number;
 
-  @IsString() @IsOptional()
+  @IsString()
+  @IsOptional()
   @Type(() => String)
-  q?: string;           // búsqueda por code/description
-
-  @IsString() @IsOptional()
-  @Type(() => String)
-  pageToken?: string;   // opcional si luego implementas tokens
+  q?: string;
 }

@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { status } from '@grpc/grpc-js';
 import { CourseRepository } from '../../domain/repositories/course.repository';
 import { UpdateCourseDTO } from '../dto/update-course.dto';
 
@@ -9,12 +11,22 @@ export class UpdateCourseUseCase {
   async execute(input: UpdateCourseDTO) {
     // Validar existencia
     const current = await this.repo.findById(input.id);
-    if (!current) throw new NotFoundException('Course not found');
+    if (!current) {
+      throw new RpcException({
+        code: status.NOT_FOUND,
+        message: 'Course not found',
+      });
+    }
 
     // Validar unicidad del código dentro del mismo evento
     if (input.code && input.code !== current.code) {
       const exists = await this.repo.existsByEventAndCode(current.eventId, input.code);
-      if (exists) throw new BadRequestException('Course code already exists for this event');
+      if (exists) {
+        throw new RpcException({
+          code: status.ALREADY_EXISTS,
+          message: 'Course code already exists for this event',
+        });
+      }
     }
 
     // Actualizar curso

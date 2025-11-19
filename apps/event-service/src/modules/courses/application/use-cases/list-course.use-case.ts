@@ -7,13 +7,13 @@ export class ListCoursesUseCase {
   constructor(private repo: CourseRepository) {}
   async execute(input: ListCoursesDTO) {
     const page = input.page && input.page > 0 ? input.page : 1;
-    const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 20;
+    const limit = input.limit && input.limit > 0 ? input.limit : 20;
 
     return this.repo.list({
-      eventId: Number(input.eventId),
+      eventId: input.eventId ? Number(input.eventId) : undefined,
       q: input.q,
       page,
-      pageSize,
+      pageSize: limit,
       onlyActive: input.onlyActive,
     });
   }

@@ -8,9 +8,12 @@ import { ListCoursesUseCase } from '@courses/application/use-cases/list-course.u
 import { UpdateCourseUseCase } from '@courses/application/use-cases/update-course.use-case';
 import { DeleteCourseUseCase } from '@courses/application/use-cases/delete-course.use-case';
 import { ListCoursesByEventUseCase } from '@courses/application/use-cases/list-courses-by-event.use-case';
-import { CoursesController } from '@courses/interface/grpc/controllers';
+import { ListCoursesForDropdownUseCase } from '@courses/application/use-cases/list-courses-for-dropdown.use-case';
+import { CoursesController } from '@courses/interface/grpc/courses.controller';
+import { EventsModule } from '@events/events.module';
 
 @Module({
+  imports: [EventsModule],
   controllers: [CoursesController],
   providers: [
     PrismaService,
@@ -24,6 +27,7 @@ import { CoursesController } from '@courses/interface/grpc/controllers';
     UpdateCourseUseCase,
     DeleteCourseUseCase,
     ListCoursesByEventUseCase,
+    ListCoursesForDropdownUseCase,
   ],
   exports: [CourseRepository],
 })

@@ -22,7 +22,7 @@ export class ListCoursesByEventDTO {
   @IsInt()
   @Min(1)
   @Type(() => Number)
-  pageSize?: number;
+  limit?: number;
 
   @IsOptional()
   @IsString()
