@@ -28,10 +28,7 @@ export class AuthMapper {
   }
 
   static toValidateTokenResponse(valid: boolean, userId: number): ValidateTokenResponse {
-    return {
-      valid,
-      userId,
-    };
+    return {valid};
   }
 
   static toForgotPasswordResponse(success: boolean, message: string): ForgotPasswordResponse {
