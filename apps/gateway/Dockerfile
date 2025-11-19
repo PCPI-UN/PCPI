@@ -80,6 +80,5 @@ EXPOSE 3000
 # Health check for HTTP endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
-
 # Use dumb-init to handle signals properly
 CMD ["dumb-init", "node", "dist/apps/gateway/main"]
