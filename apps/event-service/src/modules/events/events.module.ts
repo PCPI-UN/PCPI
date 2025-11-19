@@ -41,7 +41,6 @@ import { AUTH_SERVICE_NAME, protobufPackage } from '@app/common/generated/auth';
   controllers: [EventsController, EventMemberController],
   providers: [
     PrismaService,
-    AuthGrpcClient,
     {
       provide: EventRepository,
       useClass: PrismaEventRepository,

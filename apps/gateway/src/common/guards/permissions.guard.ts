@@ -53,6 +53,13 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('User does not have required permissions');
     }
 
+    // Admin users bypass all permission checks
+    const isAdmin = user.platformRoles?.some(role => role.name === 'Admin');
+    if (isAdmin) {
+      this.logger.debug(`User ${user.id} is Admin - bypassing permission check`);
+      return true;
+    }
+
     // Try to get cached permission check result
     const cacheKey = this.cacheService.generatePermissionCacheKey(
       user.id,

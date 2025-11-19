@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, Inject, OnModuleInit, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import {
@@ -7,7 +7,14 @@ import {
   ProjectState,
   ListProjectsByEventRequest,
   ListProjectsResponse,
+  GetProjectRequest,
+  ProjectCompleteResponse,
   TypedDocument as ProtoTypedDocument,
+  ProjectComplete,
+  UpdateProjectDocumentRequest,
+  ProjectDocumentResponse,
+  ProjectDocument,
+  DocumentStatus,
 } from '@app/common/generated/project';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
@@ -19,6 +26,7 @@ import { TypedDocument, ProjectDocumentInputDto } from './dto/project-document-i
 import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
 import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
+import { UpdateProjectDocumentDto, DocumentStatusFilter } from './dto/update-project-document.dto';
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
@@ -331,4 +339,65 @@ export class ProjectsService implements OnModuleInit {
     );
   }
 
+  async getProjectById(id: number): Promise<ProjectComplete> {
+    const request: GetProjectRequest = { id };
+
+    const res: ProjectCompleteResponse = await lastValueFrom(
+      this.projectsService.getProjectComplete(request),
+    );
+
+    const project = res.items[0];
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    return project;
+  }  
+
+  private mapDocumentStatusToProto(
+    state: DocumentStatusFilter,
+  ): DocumentStatus | undefined {
+    switch (state) {
+      case DocumentStatusFilter.ACTIVE:
+        return DocumentStatus.ACTIVE;
+      case DocumentStatusFilter.INACTIVE:
+        return DocumentStatus.INACTIVE;
+      default:
+        return DocumentStatus.DOCUMENT_STATUS_UNSPECIFIED;
+    }
+  }
+
+  async updateProjectDocument(
+    id: number,
+    dto: UpdateProjectDocumentDto,
+    file?: Express.Multer.File,
+  ): Promise<ProjectDocument> {
+    const request: UpdateProjectDocumentRequest = { id };
+
+    if (file) {
+      const uploadResult = await this.azureBlobUploadService.uploadFile(file);
+      request.url = uploadResult.url;
+    } else if (dto.url && dto.url.trim() !== '') {
+      request.url = dto.url.trim();
+    }
+    if (dto.type !== undefined) {
+      request.type = this.mapDocumentTypeToProto(dto.type);
+    }
+    if (dto.state !== undefined) {
+      request.state = this.mapDocumentStatusToProto(dto.state);
+    }
+
+    const res: ProjectDocumentResponse = await lastValueFrom(
+      this.projectsService.updateProjectDocument(request),
+    );
+
+    if (!res.document) {
+      throw new NotFoundException('Project document not found');
+    }
+
+    return res.document;
+  }
+
 }
+

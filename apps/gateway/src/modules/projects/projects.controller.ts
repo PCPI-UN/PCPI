@@ -4,13 +4,14 @@ import {
   Param, 
   ParseIntPipe, 
   Patch, 
-  Post, 
+  Post,
+  UploadedFile, 
   UploadedFiles,
   UseInterceptors,
   Get,
   Query
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -31,6 +32,8 @@ import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
 import { ApproveProjectDto } from './dto/approve-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
 import { ListProjectsByEventDto } from './dto/list-projects-by-event.dto';
+import { DocumentStatusFilter, UpdateProjectDocumentDto } from './dto/update-project-document.dto';
+import { TypedDocument } from './dto/project-document-input.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -242,6 +245,61 @@ export class ProjectsController {
       itemsPerPage: res.itemsPerPage,
       totalPages: res.totalPages,
     };
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get project by id',
+    description: 'Returns a single project for the given id.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: 'Project identifier',
+    example: 1,
+  })
+  async getProject(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.projectsService.getProjectById(id);
+  }
+
+  @Patch('documents/:id')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'New document file (optional)',
+        },
+        type: {
+          type: 'string',
+          enum: Object.values(TypedDocument),
+          description: 'New document type (optional)',
+        },
+        state: {
+          type: 'string',
+          enum: Object.values(DocumentStatusFilter),
+          description: 'Document state (optional)',
+        },
+      },
+    },
+  })
+  async updateDocument(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: UpdateProjectDocumentDto,
+  ) {
+    const updated = await this.projectsService.updateProjectDocument(
+      id,
+      body,
+      file,
+    );
+    return updated;
   }
 
 }

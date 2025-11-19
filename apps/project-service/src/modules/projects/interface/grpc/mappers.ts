@@ -1,4 +1,4 @@
-import { TypedDocument ,ProjectState, ProjectDocument, Project, JurorKey } from '../../domain/entities/project.entity';
+import { TypedDocument ,ProjectState, ProjectDocument, Project, JurorKey, Status } from '../../domain/entities/project.entity';
 
 // Mapear enum de dominio a enum del proto (numérico)
 const stateToProto = (s: ProjectState): number => {
@@ -56,6 +56,22 @@ export const protoToStatus = (n?: number): any => {
   }
 };
 
+const documentStatusToProto = (s: any): number => {
+  switch (s) {
+    case 'ACTIVE': return 1;
+    case 'INACTIVE': return 2;
+    default:        return 0; // DOCUMENT_STATUS_UNSPECIFIED
+  }
+};
+
+export const protoToDocumentStatus = (n?: number): any => {
+  switch (n) {
+    case 1: return 'ACTIVE';
+    case 2: return 'INACTIVE';
+    default: return 'ACTIVE';
+  }
+};
+
 export const toProtoProject = (p: any) => ({
   id: p.id,
   eventId: p.eventId ?? p.event_id,
@@ -76,6 +92,7 @@ export const toProtoDocument = (d: any) => ({
   type: TypedDocumentToProto(d.type as TypedDocument),
   createdAt: d.createdAt?.toISOString?.() ?? d.created_at,
   updatedAt: d.updatedAt?.toISOString?.() ?? d.updated_at,
+  state: documentStatusToProto(d.state as Status),
 });
 
 export const protoToJurorKey = (jk: any): JurorKey => ({

@@ -1,16 +1,15 @@
-import { SendEmailRequest } from '@app/common/generated/notification';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { SendEmailRequest, EmailTemplate } from '@app/common/generated/notification';
+import { IsEmail, IsEnum, IsNotEmpty, IsObject, IsString } from 'class-validator';
 
 export class SendEmailDto implements SendEmailRequest {
   @IsEmail()
   @IsNotEmpty()
   to: string;
 
-  @IsString()
+  @IsEnum(EmailTemplate)
   @IsNotEmpty()
-  subject: string;
+  template: EmailTemplate;
 
-  @IsString()
-  @IsNotEmpty()
-  body: string;
+  @IsObject()
+  params: Record<string, any>;
 }

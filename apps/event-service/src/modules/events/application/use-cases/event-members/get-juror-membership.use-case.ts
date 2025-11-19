@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventMemberRepository } from '../../../domain/repositories/event-member.repository';
 import { GetJurorMembershipDTO } from '../../dto/event-members/get-juror-membership.dto';
-import { AuthGrpcClient } from '@common/grpc-clients/auth-grpc.client';
-import { firstValueFrom } from 'rxjs';
+import { AuthClientPort } from '@events/infrastructure/ports/auth-client.port';
 
 export interface JurorMembership {
   memberUserId: number;
@@ -13,9 +12,8 @@ export interface JurorMembership {
 @Injectable()
 export class GetJurorMembershipUseCase {
   constructor(
-    
     private readonly eventMemberRepository: EventMemberRepository,
-    private readonly authGrpcClient: AuthGrpcClient,
+    private readonly authClient: AuthClientPort,
   ) {}
 
   async execute(input: GetJurorMembershipDTO): Promise<JurorMembership | null> {
@@ -29,9 +27,7 @@ export class GetJurorMembershipUseCase {
     }
 
     // 2. Query auth-service to get role information
-    const rolesResponse = await firstValueFrom(
-      this.authGrpcClient.getRolesByIds([membership.roleId]),
-    );
+    const rolesResponse = await this.authClient.getRolesByIds([membership.roleId]);
 
     // If role not found, return null
     if (!rolesResponse.roles || rolesResponse.roles.length === 0) {

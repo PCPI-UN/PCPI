@@ -26,11 +26,11 @@ model Invitation {
   targetType      InvitationTargetType @map("target_type")
   targetId        Int                  @map("target_id")
   status          InvitationStatus
-  expiresAt       DateTime             @map("expires_at") @db.Timestamp()
+  expiresAt       DateTime             @map("expires_at") @db.Timestamptz()
   invitedByUserId Int                  @map("invited_by_user_id")
   invitedUserId   Int                  @map("invited_user_id")
-  createdAt       DateTime             @map("created_at") @default(now()) @db.Timestamp()
-  updatedAt       DateTime             @map("updated_at") @updatedAt @db.Timestamp()
+  createdAt       DateTime             @map("created_at") @default(now()) @db.Timestamptz()
+  updatedAt       DateTime             @map("updated_at") @updatedAt @db.Timestamptz()
 
   roles          InvitationRole[]        @relation("invitation_roles")
   @@map("invitations")

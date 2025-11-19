@@ -6,7 +6,7 @@ import { GetProjectUC } from '../../application/use-cases/get-project.uc';
 import { AddProjectDocumentUC } from '../../application/use-cases/add-document.uc';
 import { ListDocumentsUC } from '../../application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
-import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument, toProtoProjectComplete } from './mappers';
+import { toProtoProject, toProtoDocument, protoToState , protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument, toProtoProjectComplete, protoToDocumentStatus } from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
@@ -21,6 +21,7 @@ import { NotificateStudentUC } from '../../application/use-cases/notificate-stud
 import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
 import { ListProjectsForReviewUC } from '../../application/use-cases/list-projects-for-review.uc';
 import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto';
+import { UpdateProjectDocumentUC } from '../../application/use-cases/update-document.uc';
 
 @Controller()
 export class ProjectsController {
@@ -44,6 +45,7 @@ export class ProjectsController {
     private readonly listAssignedToJurorUC: ListProjectsAssignedToJurorUC,
     private readonly notificateStudentUC: NotificateStudentUC,  
     private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
+    private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
 
   ) {}
 
@@ -230,6 +232,7 @@ async createProjectWithPendingParticipantsRpc(req: any) {
         firstName: firstParticipant.firstName,
         lastName: firstParticipant.lastName ?? '',
         email: firstParticipant.email,
+        projectName: project.name,
       });
     }
 
@@ -266,4 +269,38 @@ async listProjectsForReviewRpc(req: ListProjectsByFilterDTO) {
   
 }
 
+@GrpcMethod('ProjectsService', 'GetProjectComplete')
+async getProjectCompleteRpc(req: { id: number }) {
+
+  const project = await this.getProject.execute({ id: req.id });
+
+  const [participants, documents, pending] = await Promise.all([
+    this.listParticipantsUC.execute({ projectId: project.id }),
+    this.listDocs.execute({ projectId: project.id }),
+    this.listPendingParticipantsUC.execute({ projectId: project.id }),
+  ]);
+
+  const projectComplete = {
+    ...project,
+    participants,
+    documents,
+    pendingParticipants: pending,
+  };
+
+  return {
+    items: [toProtoProjectComplete(projectComplete)],
+  };
+}
+
+@GrpcMethod('ProjectsService', 'UpdateProjectDocument')
+async updateProjectDocumentRpc(req: any) {
+  const updatedDoc = await this.updateProjectDocumentUC.execute({
+    id: req.id,
+    url: req.url,
+    type: req.type ? protoToTypedDocument(req.type) : undefined,
+    state: req.state ? protoToDocumentStatus(req.state) : undefined,
+  });
+  return { document: toProtoDocument(updatedDoc) };
+
+}
 }

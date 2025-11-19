@@ -17,24 +17,25 @@ export class ValidateTokenUseCase {
   async execute(token: string): Promise<ValidateTokenUseCaseResponse> {
     const userToken = await this.userTokenRepository.findByToken(token);
 
+    // We default to NOT valid and throw NOT_FOUND for any invalid case to avoid leaking information
     if (!userToken) {
       throw new RpcException({
         code: status.NOT_FOUND,
-        message: 'Token not found',
+        message: 'Token not found, expired or already used',
       });
     }
 
     if (userToken.usedAt) {
       throw new RpcException({
-        code: status.FAILED_PRECONDITION,
-        message: 'Token has already been used',
+        code: status.NOT_FOUND,
+        message: 'Token not found, expired or already used',
       });
     }
 
     if (userToken.expiresAt < new Date()) {
       throw new RpcException({
-        code: status.DEADLINE_EXCEEDED,
-        message: 'Token has expired',
+        code: status.NOT_FOUND,
+        message: 'Token not found, expired or already used',
       });
     }
 

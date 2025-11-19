@@ -6,12 +6,15 @@ import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { CreateBasicUserDto } from '../dto/create-basic-user.dto';
+import { GetRolesUseCase } from '@roles/application/use-cases/get-roles.use-case';
+import { Role } from '@roles/domain/entities/role.entity';
 
 @Injectable()
 export class CreateBasicUserUseCase {
   constructor(
     private readonly userRepository: UserRepositoryPort,
     private readonly passwordHasher: PasswordHasherPort,
+    private readonly getRolesUseCase: GetRolesUseCase,
   ) {}
 
   async execute(createBasicUserDto: CreateBasicUserDto): Promise<User> {
@@ -52,6 +55,10 @@ export class CreateBasicUserUseCase {
       phone,
     );
 
-    return this.userRepository.save(newUser);
+    const roles = await this.getRolesUseCase.execute();
+    const userRole = roles.find((role: Role) => role.name === 'User');
+    const rolesToAssign = userRole ? [userRole.id] : [];
+
+    return this.userRepository.createWithRoles(newUser, rolesToAssign);
   }
 }

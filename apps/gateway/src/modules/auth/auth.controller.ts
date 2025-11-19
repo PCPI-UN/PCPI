@@ -7,6 +7,7 @@ import {
   UseGuards,
   Req,
   Put,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,6 +15,7 @@ import {
   ApiResponse,
   ApiSecurity,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -57,13 +59,13 @@ export class AuthController {
 
     response.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') !== 'development',
+      secure: this.isSecureContext(),
       sameSite: 'strict',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') !== 'development',
+      secure: this.isSecureContext(),
       sameSite: 'strict',
       maxAge: this.parseJwtExpiration(refreshTokenExpiration),
     });
@@ -100,7 +102,7 @@ export class AuthController {
 
     response.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') !== 'development',
+      secure: this.isSecureContext(),
       sameSite: 'strict',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
@@ -154,7 +156,32 @@ export class AuthController {
     );
   }
 
-    /**
+  @Public()
+  @ApiOperation({ summary: 'Verify if a token is still valid. You can check any type of system token!' })
+  @ApiResponse({ status: 200, description: 'Token is valid' })
+  @ApiResponse({ status: 404, description: 'Token not found, expired or already used' })
+  @ApiQuery({ name: 'token', required: true, description: 'The token to validate' })
+  @Get('validate-token')
+  async validateToken(@Query('token') token: string) {
+    return this.authService.validateToken(token);
+  }
+
+  /**
+   * Determines if cookies should use the 'secure' flag
+   * Returns true only in production AND when insecure cookies are not explicitly allowed
+   * This allows testing production builds locally over HTTP
+   */
+  private isSecureContext(): boolean {
+    const nodeEnv = this.configService.get('NODE_ENV');
+    const isProduction = nodeEnv === 'production';
+
+    // Allow insecure cookies in production if explicitly set (for local testing)
+    const allowInsecure = this.configService.get('ALLOW_INSECURE_COOKIES') === 'true';
+
+    return isProduction && !allowInsecure;
+  }
+
+  /**
    * Converts JWT expiration string (e.g., '15m', '7d', '1h') to milliseconds
    */
   private parseJwtExpiration(expiration: string): number {

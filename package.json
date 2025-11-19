@@ -39,9 +39,11 @@
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
+    "luxon": "^3.7.2",
     "nest": "^0.1.6",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "protobufjs": "^7.5.4",
     "redis": "^5.9.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -61,6 +63,7 @@
     "@types/cookie-parser": "^1.4.9",
     "@types/express": "^5.0.3",
     "@types/jest": "^29.5.14",
+    "@types/luxon": "^3.7.1",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
@@ -84,6 +87,6 @@
     "typescript-eslint": "^8.20.0"
   },
   "prisma": {
-    "seed": "ts-node apps/auth-service/prisma/seed.ts"
+    "seed": "node dist/apps/auth-service/prisma/seed.js 2>/dev/null || ts-node apps/auth-service/prisma/seed.ts"
   }
 }

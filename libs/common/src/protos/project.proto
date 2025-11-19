@@ -5,6 +5,7 @@ package project;
 service ProjectsService {
   rpc CreateProject (CreateProjectRequest)   returns (ProjectResponse);
   rpc GetProject    (GetProjectRequest)      returns (ProjectResponse);
+  rpc GetProjectComplete    (GetProjectRequest)      returns (ProjectCompleteResponse);
   rpc ListProjectsByEvent (ListProjectsByEventRequest) returns (ListProjectsResponse);
 
   rpc CreateProjectWithPendingParticipants(CreateProjectWithParticipantsRequest)
@@ -14,6 +15,7 @@ service ProjectsService {
   // rpc IssueUploadUrl (IssueUploadUrlRequest) returns (IssueUploadUrlResponse);
   rpc AddProjectDocumentFromUrl (AddProjectDocumentFromUrlRequest) returns (ProjectDocumentResponse);
   rpc ListProjectDocuments (ListProjectDocumentsRequest) returns (ListProjectDocumentsResponse);
+  rpc UpdateProjectDocument (UpdateProjectDocumentRequest) returns (ProjectDocumentResponse);
 
   // Participantes
   rpc AddParticipant (AddParticipantRequest) returns (AddParticipantResponse);
@@ -31,6 +33,7 @@ service ProjectsService {
 
   rpc ListProjectsForReview(ListProjectsForReviewRequest) returns (ListProjectsForReviewResponse);
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
+  
 }
 
 enum ProjectState {
@@ -45,6 +48,12 @@ enum TypedDocument {
   LOGO = 1;
   POSTER = 2;
   SUPPORTING_DOCUMENT = 3;
+}
+
+enum DocumentStatus {
+  DOCUMENT_STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
 }
 
 /************** Messages **************/
@@ -90,6 +99,7 @@ message ProjectDocument {
   TypedDocument type = 4;
   string createdAt = 5;
   string updatedAt = 6;
+  DocumentStatus state = 7;
 }
 
 message ProjectParticipant {
@@ -135,6 +145,8 @@ message CreateProjectRequest {
   ProjectState state = 6; // opcional en la práctica; si no se envía, default en UC
 }
 message ProjectResponse { Project project = 1; }
+
+message ProjectCompleteResponse { repeated ProjectComplete items = 1; }
 
 message GetProjectRequest { int32 id = 1; }
 
@@ -280,3 +292,9 @@ message ListProjectsForReviewResponse {
   int32 totalPages = 6;     // total number of pages
   }
   
+message UpdateProjectDocumentRequest {
+  int32 id = 1;           // ID del documento
+  optional string url = 2;         // si viene vacío, no lo cambias
+  optional TypedDocument type = 3;  // si viene DOCUMENT_TYPE_UNSPECIFIED, no lo cambias
+  optional DocumentStatus state = 4; // igual idea
+}

@@ -2,15 +2,18 @@ import { Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { EventRepository } from '@events/domain/repositories/event.repository';
 import { CreateEventDTO } from '@events/application/dto/create-event.dto';
+import { parseBogotaToUTC } from '@events/domain/utils/timezone.util';
 
 @Injectable()
 export class CreateEventUC {
   constructor(private readonly repo: EventRepository) {}
 
   async execute(input: CreateEventDTO) {
-    const inscriptionDeadline = new Date(input.inscriptionDeadline);
-    const startDate = new Date(input.startDate);
-    const endDate = new Date(input.endDate);
+    // Convert input dates from Colombia timezone (UTC-5) to UTC for storage
+    // Assumes input dates are in Colombia local time
+    const inscriptionDeadline = parseBogotaToUTC(input.inscriptionDeadline);
+    const startDate = parseBogotaToUTC(input.startDate);
+    const endDate = parseBogotaToUTC(input.endDate);
 
     if (inscriptionDeadline >= startDate) {
       throw new RpcException({

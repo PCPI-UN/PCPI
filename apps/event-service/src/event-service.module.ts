@@ -6,10 +6,7 @@ import { CoursesModule } from './modules/courses/courses.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/event-service/.env',
-    }),
+    ConfigModule.forRoot({isGlobal: true}),
     PrismaModule,
     EventsModule,
     CoursesModule,
