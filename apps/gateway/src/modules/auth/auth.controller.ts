@@ -7,6 +7,7 @@ import {
   UseGuards,
   Req,
   Put,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,6 +15,7 @@ import {
   ApiResponse,
   ApiSecurity,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
@@ -152,6 +154,16 @@ export class AuthController {
       dto.oldPassword,
       dto.newPassword,
     );
+  }
+
+  @Public()
+  @ApiOperation({ summary: 'Verify if a token is still valid. You can check any type of system token!' })
+  @ApiResponse({ status: 200, description: 'Token is valid' })
+  @ApiResponse({ status: 404, description: 'Token not found, expired or already used' })
+  @ApiQuery({ name: 'token', required: true, description: 'The token to validate' })
+  @Get('validate-token')
+  async validateToken(@Query('token') token: string) {
+    return this.authService.validateToken(token);
   }
 
   /**
