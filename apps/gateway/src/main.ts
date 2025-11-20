@@ -9,13 +9,11 @@ import { CacheInvalidationInterceptor } from './common/cache/cache-invalidation.
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  // Support multiple frontend origins (comma-separated)
-  const frontendUrlsEnv = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const allowedOrigins = frontendUrlsEnv.split(',').map(url => url.trim());
-
+  
+  const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',');
+  
   app.enableCors({
-    origin: allowedOrigins,
+    origin: frontendUrls,
     credentials: true,
   });
   app.use(cookieParser());

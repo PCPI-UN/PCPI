@@ -48,27 +48,9 @@ export class AuthController {
   ) {
     const { accessToken, refreshToken } = await this.authService.login(loginDto);
 
-    const accessTokenExpiration = this.configService.get<string>(
-      'JWT_ACCESS_TOKEN_EXPIRATION',
-      '15m',
-    );
-    const refreshTokenExpiration = this.configService.get<string>(
-      'JWT_REFRESH_TOKEN_EXPIRATION',
-      '7d',
-    );
-
-    response.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: this.isSecureContext(),
-      sameSite: 'strict',
-      maxAge: this.parseJwtExpiration(accessTokenExpiration),
-    });
-    response.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: this.isSecureContext(),
-      sameSite: 'strict',
-      maxAge: this.parseJwtExpiration(refreshTokenExpiration),
-    });
+    response.cookie('access_token', accessToken, this.getCookieOptions('access'));
+    response.cookie('refresh_token', refreshToken, this.getCookieOptions('refresh'));
+    
     return { success: true, message: 'Login successful' };
   }
 
@@ -95,17 +77,7 @@ export class AuthController {
     const { refreshToken } = req.user;
     const { accessToken } = await this.authService.refresh(refreshToken);
 
-    const accessTokenExpiration = this.configService.get<string>(
-      'JWT_ACCESS_TOKEN_EXPIRATION',
-      '15m',
-    );
-
-    response.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: this.isSecureContext(),
-      sameSite: 'strict',
-      maxAge: this.parseJwtExpiration(accessTokenExpiration),
-    });
+    response.cookie('access_token', accessToken, this.getCookieOptions('access'));
 
     return { success: true, message: 'Token refreshed successfully' };
   }
@@ -167,18 +139,26 @@ export class AuthController {
   }
 
   /**
-   * Determines if cookies should use the 'secure' flag
-   * Returns true only in production AND when insecure cookies are not explicitly allowed
-   * This allows testing production builds locally over HTTP
+   * Get cookie configuration based on environment and token type
+   * Handles cross-origin scenarios for local development against production API
    */
-  private isSecureContext(): boolean {
-    const nodeEnv = this.configService.get('NODE_ENV');
-    const isProduction = nodeEnv === 'production';
+  private getCookieOptions(tokenType: 'access' | 'refresh') {
+    const expiration = tokenType === 'access' 
+      ? this.configService.get<string>('JWT_ACCESS_TOKEN_EXPIRATION', '15m')
+      : this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRATION', '7d');
 
-    // Allow insecure cookies in production if explicitly set (for local testing)
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
     const allowInsecure = this.configService.get('ALLOW_INSECURE_COOKIES') === 'true';
+    
+    // For cross-origin scenarios (local dev hitting production API)
+    const isCrossOrigin = this.configService.get('ALLOW_CROSS_ORIGIN_COOKIES') === 'true';
 
-    return isProduction && !allowInsecure;
+    return {
+      httpOnly: true,
+      secure: isCrossOrigin ? true : (isProduction && !allowInsecure),
+      sameSite: (isCrossOrigin ? 'none' : 'strict') as 'none' | 'strict',
+      maxAge: this.parseJwtExpiration(expiration),
+    };
   }
 
   /**
