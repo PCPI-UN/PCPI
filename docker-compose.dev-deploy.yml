@@ -15,8 +15,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
-    networks:
-      - iris-dev-grpc
+
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -39,8 +38,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - iris-dev-grpc
+
     command: >
       sh -c "prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma &&
              node dist/apps/auth-service/prisma/seed.js"
@@ -70,8 +68,7 @@ services:
         condition: service_healthy
       auth-migration:
         condition: service_completed_successfully
-    networks:
-      - iris-dev-grpc
+
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50051}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -95,8 +92,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - iris-dev-grpc
+
     command: prisma migrate deploy --schema=./apps/evaluation-service/prisma/schema.prisma
     restart: "no"
 
@@ -115,8 +111,7 @@ services:
         condition: service_healthy
       evaluation-migration:
         condition: service_completed_successfully
-    networks:
-      - iris-dev-grpc
+
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50052}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -140,8 +135,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - iris-dev-grpc
+
     command: prisma migrate deploy --schema=./apps/event-service/prisma/schema.prisma
     restart: "no"
 
@@ -160,8 +154,7 @@ services:
         condition: service_healthy
       event-migration:
         condition: service_completed_successfully
-    networks:
-      - iris-dev-grpc
+
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50053}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -185,8 +178,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - iris-dev-grpc
+
     command: prisma migrate deploy --schema=./apps/invitation-service/prisma/schema.prisma
     restart: "no"
 
@@ -210,8 +202,7 @@ services:
         condition: service_healthy
       invitation-migration:
         condition: service_completed_successfully
-    networks:
-      - iris-dev-grpc
+
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50054}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -235,8 +226,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - iris-dev-grpc
+
     command: prisma migrate deploy --schema=./apps/project-service/prisma/schema.prisma
     restart: "no"
 
@@ -255,8 +245,7 @@ services:
         condition: service_healthy
       project-migration:
         condition: service_completed_successfully
-    networks:
-      - iris-dev-grpc
+
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50055}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -346,8 +335,7 @@ services:
       - EMAILJS_TEMPLATE_PASSWORD_CHANGED_ID=${EMAILJS_TEMPLATE_PASSWORD_CHANGED_ID}
       - EMAILJS_TEMPLATE_PASSWORD_RESET_ID=${EMAILJS_TEMPLATE_PASSWORD_RESET_ID}
       - EMAILJS_TEMPLATE_PLATFORM_INVITATION_ID=${EMAILJS_TEMPLATE_PLATFORM_INVITATION_ID}
-    networks:
-      - iris-dev-grpc
+
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50056}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -365,19 +353,13 @@ services:
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
-    networks:
-      - iris-dev-grpc
+
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
-
-networks:
-  iris-dev-grpc:
-    driver: bridge
-    name: iris-dev-grpc
 
 volumes:
   postgres_data:
