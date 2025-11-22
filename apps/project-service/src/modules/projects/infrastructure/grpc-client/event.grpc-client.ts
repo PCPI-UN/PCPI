@@ -10,13 +10,15 @@ interface EventServiceGrpc {
   // si luego quieres: listCoursesByEvent ...
 }
 
+import { EVENT_SERVICE_NAME } from '@app/common/generated/event';
+
 @Injectable()
 export class EventGrpcClient implements OnModuleInit {
   private svc: EventServiceGrpc;
 
   constructor(
-    @Inject('EVENT_SERVICE') private readonly client: ClientGrpc,
-  ) {}
+    @Inject(EVENT_SERVICE_NAME) private readonly client: ClientGrpc,
+  ) { }
 
   onModuleInit() {
     // el nombre debe ser EXACTO al del service en tu proto:
