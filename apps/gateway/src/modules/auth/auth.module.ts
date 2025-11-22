@@ -8,10 +8,10 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { InvitationsModule } from '../invitations/invitations.module';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: 'jwt' }),
     ClientsModule.registerAsync([
       {
         name: AUTH_SERVICE_NAME,
@@ -27,9 +27,10 @@ import { PassportModule } from '@nestjs/passport';
         inject: [ConfigService],
       },
     ]),
+    InvitationsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtRefreshStrategy],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

@@ -18,7 +18,7 @@ export class LoginUseCase {
     private readonly tokenRepository: TokenRepositoryPort,
     private readonly tokenService: TokenServicePort,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async execute(loginDto: LoginDto): Promise<AuthTokens> {
     const { email, password } = loginDto;
@@ -35,6 +35,13 @@ export class LoginUseCase {
       throw new RpcException({
         code: status.PERMISSION_DENIED,
         message: 'This user account is inactive',
+      });
+    }
+
+    if (!user.password) {
+      throw new RpcException({
+        code: status.UNAUTHENTICATED,
+        message: 'Invalid credentials provided',
       });
     }
 

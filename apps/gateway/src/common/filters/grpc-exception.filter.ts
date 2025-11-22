@@ -72,7 +72,7 @@ export class GrpcExceptionFilter implements ExceptionFilter {
 
       this.logger.error(`Non-gRPC Error: ${message}`, exception.stack);
     }
-    
+
     const errorResponse = {
       statusCode: httpStatus,
       message,
