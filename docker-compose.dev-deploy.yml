@@ -2,6 +2,7 @@ services:
   # PostgreSQL Database - Single instance with multiple databases
   postgres-dev:
     image: postgres:16-alpine
+    command: postgres -p 5433
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -18,8 +19,10 @@ services:
     networks:
       - dokploy-network
     restart: unless-stopped
+    ports:
+      - "5433:5433"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -p 5433"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -34,7 +37,7 @@ services:
       dockerfile: apps/auth-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres-dev:5432/auth_service
+      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres-dev:5433/auth_service
       - NODE_ENV=production
     depends_on:
       postgres-dev:
@@ -52,7 +55,7 @@ services:
       dockerfile: apps/auth-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres-dev:5432/auth_service
+      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres-dev:5433/auth_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50051}
       - NODE_ENV=${NODE_ENV:-production}
@@ -90,7 +93,7 @@ services:
       dockerfile: apps/evaluation-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres-dev:5432/evaluation_service
+      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres-dev:5433/evaluation_service
       - NODE_ENV=production
     depends_on:
       postgres-dev:
@@ -107,7 +110,7 @@ services:
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres-dev:5432/evaluation_service
+      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres-dev:5433/evaluation_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50052}
     depends_on:
@@ -135,7 +138,7 @@ services:
       dockerfile: apps/event-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres-dev:5432/event_service
+      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres-dev:5433/event_service
       - NODE_ENV=production
     depends_on:
       postgres-dev:
@@ -152,7 +155,7 @@ services:
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres-dev:5432/event_service
+      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres-dev:5433/event_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50053}
     depends_on:
@@ -180,7 +183,7 @@ services:
       dockerfile: apps/invitation-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres-dev:5432/invitation_service
+      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres-dev:5433/invitation_service
       - NODE_ENV=production
     depends_on:
       postgres-dev:
@@ -197,7 +200,7 @@ services:
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres-dev:5432/invitation_service
+      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres-dev:5433/invitation_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50054}
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service-dev:50051}
@@ -230,7 +233,7 @@ services:
       dockerfile: apps/project-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres-dev:5432/project_service
+      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres-dev:5433/project_service
       - NODE_ENV=production
     depends_on:
       postgres-dev:
@@ -247,7 +250,7 @@ services:
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres-dev:5432/project_service
+      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres-dev:5433/project_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50055}
     depends_on:
@@ -293,6 +296,11 @@ services:
   #     - AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}
   #     - AZURE_ACCOUNT_KEY=${AZURE_ACCOUNT_KEY}
   #     - AZURE_CONTAINER=${AZURE_CONTAINER}
+  #     - AZURE_CONTAINER=${AZURE_CONTAINER}
+  #     - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+  #     - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+  #     - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+  #     - REDIRECT_URI=${REDIRECT_URI}
   #     - REDIS_HOST=redis
   #     - REDIS_PORT=6379
   #     - REDIS_PASSWORD=${REDIS_PASSWORD}

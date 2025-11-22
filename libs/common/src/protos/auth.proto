@@ -21,6 +21,9 @@ service AuthService {
   rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse) {}
   // Changes a user's password (requires authentication)
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
+  // Logs in with Microsoft token
+  rpc LoginWithMicrosoft(LoginWithMicrosoftRequest) returns (LoginResponse) {}
+
 
 
   // ---- USERS MODULE ----
@@ -30,6 +33,9 @@ service AuthService {
   rpc CreateBasicUser (CreateBasicUserRequest) returns (User) {}
   // Activates a pending user by setting their password
   rpc ActivateUser(ActivateUserRequest) returns (ActivateUserResponse);
+  // Activates a user by linking their Microsoft account
+  rpc ActivateUserWithMicrosoft(ActivateUserWithMicrosoftRequest) returns (ActivateUserResponse);
+
   // Retrieves a user by their ID
   rpc GetUser (GetUserRequest) returns (User) {}
   // Retrieves a user by their email
@@ -62,6 +68,10 @@ service AuthService {
 message LoginRequest {
   string email = 1;
   string password = 2;
+}
+
+message LoginWithMicrosoftRequest {
+  string token = 1;
 }
 
 // The response message containing the authentication tokens.
@@ -103,6 +113,11 @@ message ValidateTokenResponse {
 message ActivateUserRequest {
   int32 userId = 1;
   string password = 2;
+}
+
+message ActivateUserWithMicrosoftRequest {
+  int32 userId = 1;
+  string token = 2;
 }
 
 message ActivateUserResponse {

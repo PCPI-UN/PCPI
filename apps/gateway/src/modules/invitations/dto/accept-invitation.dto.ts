@@ -43,4 +43,12 @@ export class AcceptInvitationDto {
   @IsString()
   @IsOptional()
   lastName?: string;
+
+  @ApiProperty({
+    description: 'Microsoft access token (for signing in with Microsoft)',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  microsoftToken?: string;
 }
