@@ -23,4 +23,8 @@ export class AcceptInvitationDto {
   @MaxLength(20)
   @IsOptional()
   studentCode?: string;
+
+  @IsString()
+  @IsOptional()
+  microsoftToken?: string;
 }

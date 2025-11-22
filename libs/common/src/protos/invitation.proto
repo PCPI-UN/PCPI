@@ -50,6 +50,7 @@ message AcceptInvitationRequest {
   optional string firstName = 3;
   optional string lastName = 4;
   optional string studentCode = 5; // For project invitations - student code
+  optional string microsoftToken = 6;
 }
 
 // The response message for accepting an invitation

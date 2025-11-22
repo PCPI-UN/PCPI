@@ -9,6 +9,8 @@ import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token
 import { ValidateJwtUseCase } from '@auth/application/use-cases/validate-jwt.use-case';
 import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-password.use-case';
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
+import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
+
 
 // Proto Responses types
 import {
@@ -28,6 +30,8 @@ import { SetPasswordDto } from '@auth/application/dto/set-password.dto';
 import { ValidateTokenDto } from '@auth/application/dto/validate-token.dto';
 import { ForgotPasswordDto } from '@auth/application/dto/forgot-password.dto';
 import { ChangePasswordDto } from '@auth/application/dto/change-password.dto';
+import { LoginWithMicrosoftDto } from '@auth/application/dto/login-with-microsoft.dto';
+
 
 // Mappers
 import { AuthMapper } from '@auth/application/mappers/auth.mapper';
@@ -42,13 +46,22 @@ export class AuthController {
     private readonly validateJwtUseCase: ValidateJwtUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
-  ) {}
+    private readonly loginWithMicrosoftUseCase: LoginWithMicrosoftUseCase,
+  ) { }
+
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Login')
   async login(request: LoginDto): Promise<LoginResponse> {
     const { accessToken, refreshToken } = await this.loginUseCase.execute(request);
     return AuthMapper.toLoginResponse(accessToken, refreshToken);
   }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'LoginWithMicrosoft')
+  async loginWithMicrosoft(request: LoginWithMicrosoftDto): Promise<LoginResponse> {
+    const { accessToken, refreshToken } = await this.loginWithMicrosoftUseCase.execute(request);
+    return AuthMapper.toLoginResponse(accessToken, refreshToken);
+  }
+
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Refresh')
   async refresh(request: RefreshDto): Promise<RefreshResponse> {
