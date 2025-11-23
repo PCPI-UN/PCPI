@@ -1,7 +1,8 @@
 services:
   # PostgreSQL Database - Single instance with multiple databases
-  postgres:
+  postgres-dev:
     image: postgres:16-alpine
+    command: postgres -p 5433
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -19,9 +20,9 @@ services:
       - dokploy-network
     restart: unless-stopped
     ports:
-      - "5433:5432"
+      - "5433:5433"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -p 5433"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -30,16 +31,16 @@ services:
   # AUTH SERVICE - Migration + Application
   # ==================================================================
 
-  auth-migration:
+  auth-migration-dev:
     build:
       context: .
       dockerfile: apps/auth-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres:5432/auth_service
+      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres-dev:5433/auth_service
       - NODE_ENV=production
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
     networks:
       - dokploy-network
@@ -48,13 +49,13 @@ services:
              node dist/apps/auth-service/prisma/seed.js"
     restart: "no"
 
-  auth-service:
+  auth-service-dev:
     build:
       context: .
       dockerfile: apps/auth-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres:5432/auth_service
+      - DATABASE_URL=postgresql://auth_user:${AUTH_DB_PASSWORD}@postgres-dev:5433/auth_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50051}
       - NODE_ENV=${NODE_ENV:-production}
@@ -68,9 +69,9 @@ services:
       - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL}
       - PASSWORD_RESET_TOKEN_EXPIRY_MINUTES=${PASSWORD_RESET_TOKEN_EXPIRY_MINUTES:-15}
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
-      auth-migration:
+      auth-migration-dev:
         condition: service_completed_successfully
     networks:
       - dokploy-network
@@ -86,36 +87,36 @@ services:
   # EVALUATION SERVICE - Migration + Application
   # ==================================================================
 
-  evaluation-migration:
+  evaluation-migration-dev:
     build:
       context: .
       dockerfile: apps/evaluation-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres:5432/evaluation_service
+      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres-dev:5433/evaluation_service
       - NODE_ENV=production
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
     networks:
       - dokploy-network
     command: prisma migrate deploy --schema=./apps/evaluation-service/prisma/schema.prisma
     restart: "no"
 
-  evaluation-service:
+  evaluation-service-dev:
     build:
       context: .
       dockerfile: apps/evaluation-service/Dockerfile
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres:5432/evaluation_service
+      - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres-dev:5433/evaluation_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50052}
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
-      evaluation-migration:
+      evaluation-migration-dev:
         condition: service_completed_successfully
     networks:
       - dokploy-network
@@ -131,36 +132,36 @@ services:
   # EVENT SERVICE - Migration + Application
   # ==================================================================
 
-  event-migration:
+  event-migration-dev:
     build:
       context: .
       dockerfile: apps/event-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres:5432/event_service
+      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres-dev:5433/event_service
       - NODE_ENV=production
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
     networks:
       - dokploy-network
     command: prisma migrate deploy --schema=./apps/event-service/prisma/schema.prisma
     restart: "no"
 
-  event-service:
+  event-service-dev:
     build:
       context: .
       dockerfile: apps/event-service/Dockerfile
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres:5432/event_service
+      - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres-dev:5433/event_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50053}
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
-      event-migration:
+      event-migration-dev:
         condition: service_completed_successfully
     networks:
       - dokploy-network
@@ -176,41 +177,41 @@ services:
   # INVITATION SERVICE - Migration + Application
   # ==================================================================
 
-  invitation-migration:
+  invitation-migration-dev:
     build:
       context: .
       dockerfile: apps/invitation-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres:5432/invitation_service
+      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres-dev:5433/invitation_service
       - NODE_ENV=production
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
     networks:
       - dokploy-network
     command: prisma migrate deploy --schema=./apps/invitation-service/prisma/schema.prisma
     restart: "no"
 
-  invitation-service:
+  invitation-service-dev:
     build:
       context: .
       dockerfile: apps/invitation-service/Dockerfile
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres:5432/invitation_service
+      - DATABASE_URL=postgresql://invitation_user:${INVITATION_DB_PASSWORD}@postgres-dev:5433/invitation_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50054}
-      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
-      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
-      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
-      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service-dev:50051}
+      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service-dev:50053}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service-dev:50055}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service-dev:50056}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
-      invitation-migration:
+      invitation-migration-dev:
         condition: service_completed_successfully
     networks:
       - dokploy-network
@@ -226,36 +227,39 @@ services:
   # PROJECT SERVICE - Migration + Application
   # ==================================================================
 
-  project-migration:
+  project-migration-dev:
     build:
       context: .
       dockerfile: apps/project-service/Dockerfile
       target: production
     environment:
-      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres:5432/project_service
+      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres-dev:5433/project_service
       - NODE_ENV=production
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
     networks:
       - dokploy-network
     command: prisma migrate deploy --schema=./apps/project-service/prisma/schema.prisma
     restart: "no"
 
-  project-service:
+  project-service-dev:
     build:
       context: .
       dockerfile: apps/project-service/Dockerfile
       target: production
     environment:
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres:5432/project_service
+      - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres-dev:5433/project_service
+      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service-dev:50053}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service-dev:50056}
+      - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service-dev:50054}
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50055}
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
-      project-migration:
+      project-migration-dev:
         condition: service_completed_successfully
     networks:
       - dokploy-network
@@ -271,20 +275,19 @@ services:
   # GATEWAY
   # ==================================================================
 
-  # NOTE: Similar to the prod file, we comment the gateway service because we run it as a separate service in Dockploy!
-  
+  # NOTE: Similar to the prod file, we comment the gateway service because we run it as a separate service
   # gateway:
   #   build:
   #     context: .
   #     dockerfile: apps/gateway/Dockerfile
   #     target: production
   #   environment:
-  #     - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
-  #     - EVALUATION_SERVICE_URL=${EVALUATION_SERVICE_URL:-evaluation-service:50052}
-  #     - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
-  #     - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service:50054}
-  #     - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
-  #     - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
+  #     - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service-dev:50051}
+  #     - EVALUATION_SERVICE_URL=${EVALUATION_SERVICE_URL:-evaluation-service-dev:50052}
+  #     - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service-dev:50053}
+  #     - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service-dev:50054}
+  #     - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service-dev:50055}
+  #     - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service-dev:50056}
   #     - NODE_ENV=${NODE_ENV:-production}
   #     - ALLOW_INSECURE_COOKIES=${ALLOW_INSECURE_COOKIES:-false}
   #     - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
@@ -308,19 +311,19 @@ services:
   #     - "80:3000"
   #   restart: always
   #   depends_on:
-  #     auth-service:
+  #     auth-service-dev:
   #       condition: service_healthy
-  #     evaluation-service:
+  #     evaluation-service-dev:
   #       condition: service_healthy
-  #     event-service:
+  #     event-service-dev:
   #       condition: service_healthy
-  #     invitation-service:
+  #     invitation-service-dev:
   #       condition: service_healthy
-  #     project-service:
+  #     project-service-dev:
   #       condition: service_healthy
-  #     notification-service:
+  #     notification-service-dev:
   #       condition: service_healthy
-  #     redis:
+  #     redis-dev:
   #       condition: service_healthy
   #   networks:
   #     - dokploy-network
@@ -335,7 +338,7 @@ services:
   # NOTIFICATION SERVICE
   # ==================================================================
 
-  notification-service:
+  notification-service-dev:
     build:
       context: .
       dockerfile: ./apps/notification-service/Dockerfile
@@ -368,7 +371,7 @@ services:
   # REDIS
   # ==================================================================
 
-  redis:
+  redis-dev:
     image: redis:7-alpine
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:

@@ -234,17 +234,12 @@ export class AuthController {
   }
 
   /**
-   * Determines if cookies should use the 'secure' flag
-   * Returns true only in production AND when insecure cookies are not explicitly allowed
-   * This allows testing production builds locally over HTTP
+   * Get cookie configuration based on environment and token type
+   * Handles cross-origin scenarios for local development against production API
    */
   private isSecureContext(): boolean {
-    const nodeEnv = this.configService.get('NODE_ENV');
-    const isProduction = nodeEnv === 'production';
-
-    // Allow insecure cookies in production if explicitly set (for local testing)
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
     const allowInsecure = this.configService.get('ALLOW_INSECURE_COOKIES') === 'true';
-
     return isProduction && !allowInsecure;
   }
 

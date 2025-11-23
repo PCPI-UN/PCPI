@@ -248,6 +248,9 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres:5432/project_service
+      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
+      - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
+      - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service:50054}
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50055}
     depends_on:

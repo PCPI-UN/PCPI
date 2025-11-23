@@ -16,13 +16,15 @@ interface InvitationGrpcService {
   }): any;
 }
 
+import { INVITATION_SERVICE_NAME } from '@app/common/generated/invitation';
+
 @Injectable()
-export class ApproveProjectUC implements OnModuleInit  {
+export class ApproveProjectUC implements OnModuleInit {
   private invitationService: InvitationGrpcService;
   constructor(
     @Inject('ProjectRepository') private readonly repo: ProjectRepository,
-    @Inject('INVITATION_SERVICE') private readonly client: ClientGrpc,
-  ) {}
+    @Inject(INVITATION_SERVICE_NAME) private readonly client: ClientGrpc,
+  ) { }
 
   onModuleInit() {
     this.invitationService =
@@ -50,10 +52,10 @@ export class ApproveProjectUC implements OnModuleInit  {
 
     const pendings = await this.repo.listPendingParticipants(project.id!);
     const now = new Date();
-    
 
 
-    
+
+
     for (const pending of pendings) {
       const obs$ = this.invitationService.CreateInvitation({
         email: pending.email,            // ajusta al nombre real
