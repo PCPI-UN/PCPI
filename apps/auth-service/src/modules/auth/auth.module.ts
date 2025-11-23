@@ -18,7 +18,6 @@ import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { EmailServicePort } from '@common/ports/email-service.port';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
 import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
-import { ValidateJwtUseCase } from '@auth/application/use-cases/validate-jwt.use-case';
 import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-password.use-case';
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
@@ -65,7 +64,6 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
     RefreshUseCase,
     SetPasswordUseCase,
     ValidateTokenUseCase,
-    ValidateJwtUseCase,
     ForgotPasswordUseCase,
     ChangePasswordUseCase,
     LoginWithMicrosoftUseCase,
