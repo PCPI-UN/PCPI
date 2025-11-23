@@ -7,6 +7,8 @@ import {
   ChangePasswordResponse,
 } from '@app/common/generated/auth';
 
+import { UserTokenType } from '@users/domain/entities/user-token.entity';
+
 export class AuthMapper {
   static toLoginResponse(accessToken: string, refreshToken: string): LoginResponse {
     return {
@@ -27,8 +29,8 @@ export class AuthMapper {
     };
   }
 
-  static toValidateTokenResponse(valid: boolean, userId: number): ValidateTokenResponse {
-    return {valid};
+  static toValidateTokenResponse(valid: boolean, tokenType: UserTokenType): ValidateTokenResponse {
+    return { valid, tokenType };
   }
 
   static toForgotPasswordResponse(success: boolean, message: string): ForgotPasswordResponse {

@@ -60,16 +60,9 @@ export class AuthService implements OnModuleInit {
     );
   }
 
-
   async refresh(refreshToken: string): Promise<RefreshResponse> {
     return firstValueFrom(
       this.authService.refresh({ refreshToken } as RefreshRequest),
-    );
-  }
-
-  async validateJwt(token: string): Promise<ValidateTokenResponse> {
-    return firstValueFrom(
-      this.authService.validateJwt({ token } as ValidateTokenRequest),
     );
   }
 

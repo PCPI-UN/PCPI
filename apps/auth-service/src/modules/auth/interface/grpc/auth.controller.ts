@@ -6,7 +6,6 @@ import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
 import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
-import { ValidateJwtUseCase } from '@auth/application/use-cases/validate-jwt.use-case';
 import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-password.use-case';
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
@@ -43,7 +42,6 @@ export class AuthController {
     private readonly refreshUseCase: RefreshUseCase,
     private readonly setPasswordUseCase: SetPasswordUseCase,
     private readonly validateTokenUseCase: ValidateTokenUseCase,
-    private readonly validateJwtUseCase: ValidateJwtUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly loginWithMicrosoftUseCase: LoginWithMicrosoftUseCase,
@@ -81,18 +79,10 @@ export class AuthController {
   async validateToken(
     request: ValidateTokenDto,
   ): Promise<ValidateTokenResponse> {
-    const { valid, userId } = await this.validateTokenUseCase.execute(
+    const { valid, tokenType } = await this.validateTokenUseCase.execute(
       request.token,
     );
-    return AuthMapper.toValidateTokenResponse(valid, userId);
-  }
-
-  @GrpcMethod(AUTH_SERVICE_NAME, 'ValidateJwt')
-  async validateJwt(request: ValidateTokenDto): Promise<ValidateTokenResponse> {
-    const { valid, userId } = await this.validateJwtUseCase.execute(
-      request.token,
-    );
-    return AuthMapper.toValidateTokenResponse(valid, userId);
+    return AuthMapper.toValidateTokenResponse(valid, tokenType);
   }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'ForgotPassword')
