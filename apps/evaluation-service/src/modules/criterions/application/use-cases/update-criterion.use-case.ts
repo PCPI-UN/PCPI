@@ -12,13 +12,13 @@ export class UpdateCriterionUseCase {
   constructor(
     private readonly criterionRepository: CriterionRepositoryPort,
     private readonly eventServiceClient: EventServiceClient,
-  ) {}
+  ) { }
 
   async execute(updateCriterionDto: UpdateCriterionDto): Promise<{
     criterion: Criterion;
     courseIds: number[];
   }> {
-    const { id, eventId, name, description, weight, active, courseIds } = updateCriterionDto;
+    const { id, eventId, name, description, weight, active, courseIds, category } = updateCriterionDto;
 
     const existingCriterion = await this.criterionRepository.findById(id);
     if (!existingCriterion) {
@@ -108,6 +108,7 @@ export class UpdateCriterionUseCase {
       description !== undefined ? (description?.trim() || null) : existingCriterion.description,
       finalWeight,
       active ?? existingCriterion.active,
+      category !== undefined ? (category || null) : existingCriterion.category,
       existingCriterion.createdAt,
       new Date(),
     );

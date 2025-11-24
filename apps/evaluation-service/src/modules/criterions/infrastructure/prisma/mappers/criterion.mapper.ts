@@ -11,6 +11,7 @@ export class CriterionMapper {
       prismaCriterion.description,
       prismaCriterion.weight,
       prismaCriterion.active,
+      prismaCriterion.category,
       prismaCriterion.createdAt,
       prismaCriterion.updatedAt,
     );
@@ -24,6 +25,7 @@ export class CriterionMapper {
       description: domainCriterion.description,
       weight: domainCriterion.weight,
       active: domainCriterion.active,
+      category: domainCriterion.category,
       createdAt: domainCriterion.createdAt,
       updatedAt: domainCriterion.updatedAt,
     };

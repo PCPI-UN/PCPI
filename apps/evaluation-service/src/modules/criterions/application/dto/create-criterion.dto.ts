@@ -31,4 +31,8 @@ export class CreateCriterionDto {
   @IsArray()
   @IsInt({ each: true })
   courseIds: number[];
+
+  @IsString()
+  @IsOptional()
+  category?: string;
 }
