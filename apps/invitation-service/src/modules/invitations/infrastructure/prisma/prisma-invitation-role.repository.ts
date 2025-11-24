@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../common/prisma/prisma.service'; 
+import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { InvitationRoleRepositoryPort } from '../../domain/repositories/invitation-role.repository.port';
 import { InvitationRole } from '../../domain/entities/invitation-role.entity';
 import { InvitationRoleMapper } from './mappers/invitation-role.mapper';
@@ -7,13 +7,13 @@ import { InvitationRoleMapper } from './mappers/invitation-role.mapper';
 
 @Injectable()
 export class PrismaInvitationRoleRepository implements InvitationRoleRepositoryPort {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async save(invitationRole: InvitationRole): Promise<InvitationRole> {
     const persistenceData = InvitationRoleMapper.toPersistence(invitationRole);
-    
+
     const prismaInvitationRole = await this.prisma.invitationRole.upsert({
-      where: { 
+      where: {
         invitationId_roleId: {
           invitationId: invitationRole.invitationId,
           roleId: invitationRole.roleId,
@@ -29,6 +29,18 @@ export class PrismaInvitationRoleRepository implements InvitationRoleRepositoryP
   async findByInvitationId(invitationId: string): Promise<InvitationRole[]> {
     const prismaInvitationRoles = await this.prisma.invitationRole.findMany({
       where: { invitationId },
+    });
+
+    return prismaInvitationRoles.map(InvitationRoleMapper.toDomain);
+  }
+
+  async findByInvitationIds(invitationIds: string[]): Promise<InvitationRole[]> {
+    const prismaInvitationRoles = await this.prisma.invitationRole.findMany({
+      where: {
+        invitationId: {
+          in: invitationIds,
+        },
+      },
     });
 
     return prismaInvitationRoles.map(InvitationRoleMapper.toDomain);

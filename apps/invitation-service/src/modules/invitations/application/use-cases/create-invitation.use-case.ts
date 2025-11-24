@@ -36,7 +36,7 @@ export class CreateInvitationUseCase implements OnModuleInit {
     private readonly configService: ConfigService,
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
     @Inject(PROJECT_SERVICE_NAME) private readonly projectClient: ClientGrpc,
-  ) {}
+  ) { }
 
   onModuleInit() {
     this.authService =
@@ -191,8 +191,13 @@ export class CreateInvitationUseCase implements OnModuleInit {
       }
     }
 
-    // Step 6: Send invitation email based on target type
-    const invitationLink = `${this.configService.get('FRONTEND_URL', 'http://localhost:4200')}/accept-invitation?token=${token}`;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    let invitationLink = '';
+    if (user.status === 'PENDING')
+      invitationLink = `${frontendUrl}/auth/chg-password?token=${invitation.token}`;
+    else // The user already exist and therefore they can accept invitations in the dashboard
+      invitationLink = `${frontendUrl}/dashboard/invitations`;
+
 
     await this.sendInvitationEmail({
       targetType: rest.targetType,

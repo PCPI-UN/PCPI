@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, ParseIntPipe, Query } from '@nestjs/common';
 import { InvitationsService } from './invitations.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
@@ -6,13 +6,13 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { InviteJurorToEventDto } from './dto/invite-juror-to-event.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AppUser } from '../auth/types/app-user.type';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 
 @ApiTags('Invitations')
 @Controller('invitations')
 export class InvitationsController {
-  constructor(private readonly invitationsService: InvitationsService) {}
+  constructor(private readonly invitationsService: InvitationsService) { }
 
   @Post()
   @ApiBearerAuth()
@@ -135,5 +135,140 @@ export class InvitationsController {
       inviteJurorDto,
       user.id,
     );
+  }
+  @Get('events/:eventId')
+  @RequirePermission('manage:events')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get invitations for an event',
+    description: 'Retrieves a list of invitations for a specific event. Can be filtered by role (e.g., "Juror", "Participant").',
+  })
+  @ApiParam({
+    name: 'eventId',
+    description: 'ID of the event to retrieve invitations for',
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'roleId',
+    description: 'Role ID to filter invitations by',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Page number for pagination',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Number of items per page',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of invitations retrieved successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - JWT token missing or invalid',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User does not have manage:events permission',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Event not found',
+  })
+  getEventInvitations(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query('roleId') roleId?: number,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.invitationsService.getEventInvitations(eventId, roleId, page, limit);
+  }
+
+  @Post(':invitationId/resend')
+  @RequirePermission('manage:events')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Resend an invitation',
+    description: 'Resends an existing invitation. The invitation must be expired or pending.',
+  })
+  @ApiParam({
+    name: 'invitationId',
+    description: 'ID of the invitation to resend',
+    type: String,
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Invitation resent successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - JWT token missing or invalid',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User does not have manage:events permission',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Invitation not found',
+  })
+  resendInvitation(@Param('invitationId') invitationId: string) {
+    return this.invitationsService.resendInvitation(invitationId);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get my invitations',
+    description: 'Retrieves a list of invitations for the currently logged-in user.',
+  })
+  @ApiQuery({
+    name: 'status',
+    description: 'Filter invitations by status (e.g., PENDING, ACCEPTED)',
+    required: false,
+    type: String,
+    example: 'PENDING',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Page number for pagination',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Number of items per page',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of user invitations retrieved successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - JWT token missing or invalid',
+  })
+  getUserInvitations(
+    @GetUser() user: AppUser,
+    @Query('status') status?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.invitationsService.getUserInvitations(user.id, status, page, limit);
   }
 }
