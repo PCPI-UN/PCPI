@@ -41,4 +41,8 @@ export class UpdateCriterionDto {
   @IsInt({ each: true })
   @IsOptional()
   courseIds?: number[];
+
+  @IsString()
+  @IsOptional()
+  category?: string;
 }

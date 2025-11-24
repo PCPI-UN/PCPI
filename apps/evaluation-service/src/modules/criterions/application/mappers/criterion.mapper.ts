@@ -3,7 +3,8 @@ import {
   ListCriterionsResponse,
   DeleteCriterionResponse,
   FindCriterionsByCourseResponse,
-  PaginationMetadata
+  PaginationMetadata,
+  CriterionCategoryProto
 } from '@app/common/generated/evaluation';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
 
@@ -19,6 +20,7 @@ export class CriterionMapper {
       active: result.criterion.active,
       courseIds: result.courseIds,
       ...(result.criterion.description && { description: result.criterion.description }),
+      ...(result.criterion.category && { category: result.criterion.category }),
     };
   }
 
@@ -33,6 +35,7 @@ export class CriterionMapper {
       weight: result.criterion.weight,
       active: result.criterion.active,
       courseIds: result.courseIds,
+      ...(result.criterion.category && { category: result.criterion.category }),
     };
   }
 
@@ -47,6 +50,7 @@ export class CriterionMapper {
       weight: result.criterion.weight,
       active: result.criterion.active,
       courseIds: result.courseIds,
+      ...(result.criterion.category && { category: result.criterion.category }),
     };
   }
 
@@ -76,6 +80,7 @@ export class CriterionMapper {
         weight: criterion.weight,
         active: criterion.active,
         courseIds,
+        ...(criterion.category && { category: criterion.category }),
       })),
       meta,
     };
@@ -91,8 +96,12 @@ export class CriterionMapper {
   static toFindCriterionsByCourseResponse(
     criterions: Criterion[]
   ): FindCriterionsByCourseResponse {
-    return {
-      criterions: criterions.map((criterion) => ({
+    const groupedCriterions = criterions.reduce((acc, criterion) => {
+      const category = criterion.category || 'Uncategorized';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push({
         id: criterion.id,
         eventId: criterion.eventId,
         name: criterion.name,
@@ -100,7 +109,20 @@ export class CriterionMapper {
         active: criterion.active,
         courseIds: [],
         ...(criterion.description && { description: criterion.description }),
-      })),
+        ...(criterion.category && { category: criterion.category }),
+      });
+      return acc;
+    }, {} as Record<string, CriterionProto[]>);
+
+    const categories: CriterionCategoryProto[] = Object.entries(groupedCriterions).map(
+      ([category, groupCriterions]: [string, CriterionProto[]]) => ({
+        category,
+        criterions: groupCriterions,
+      })
+    );
+
+    return {
+      categories,
     };
   }
 }
