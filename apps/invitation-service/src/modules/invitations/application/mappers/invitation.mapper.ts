@@ -2,13 +2,15 @@ import {
   Invitation as InvitationProto,
   InvitationStatus as ProtoInvitationStatus,
   InvitationTargetType as ProtoInvitationTargetType,
+  GetEventInvitationsResponse,
+  GetUserInvitationsResponse,
 } from '@app/common/generated/invitation';
 import {
   Invitation,
   InvitationStatus,
   InvitationTargetType,
-} from '../../domain/entities/invitation.entity';
-import { InvitationRole } from '../../domain/entities/invitation-role.entity';
+} from '@invitations/domain/entities/invitation.entity';
+import { InvitationRole } from '@invitations/domain/entities/invitation-role.entity';
 
 export class InvitationMapper {
   /**
@@ -56,5 +58,48 @@ export class InvitationMapper {
       'PROJECT': ProtoInvitationTargetType.PROJECT,
     };
     return targetTypeMap[targetType];
+  }
+  static toGetEventInvitationsResponse(
+    invitations: Invitation[],
+    total: number,
+    page: number,
+    limit: number,
+    roles: InvitationRole[] = [],
+  ): GetEventInvitationsResponse {
+    return {
+      invitations: invitations.map((inv) => {
+        const invRoles = roles.filter((r) => r.invitationId === inv.id);
+        return this.toProto(inv, invRoles);
+      }),
+      meta: {
+        total,
+        itemsOnCurrentPage: invitations.length,
+        itemsPerPage: limit,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  static toGetUserInvitationsResponse(
+    invitations: Invitation[],
+    total: number,
+    page: number,
+    limit: number,
+    roles: InvitationRole[] = [],
+  ): GetUserInvitationsResponse {
+    return {
+      invitations: invitations.map((inv) => {
+        const invRoles = roles.filter((r) => r.invitationId === inv.id);
+        return this.toProto(inv, invRoles);
+      }),
+      meta: {
+        total,
+        itemsOnCurrentPage: invitations.length,
+        itemsPerPage: limit,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

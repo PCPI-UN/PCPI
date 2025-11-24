@@ -5,15 +5,32 @@
     "outDir": "../../dist/apps/invitation-service",
     "baseUrl": "./",
     "paths": {
-      "@invitations/*": ["src/modules/invitations/*"],
-      "@app/common": ["../../libs/common/src"],
-      "@app/common/*": ["../../libs/common/src/*"],
+      "@invitations/*": [
+        "src/modules/invitations/*"
+      ],
+      "@app/common": [
+        "../../libs/common/src"
+      ],
+      "@app/common/*": [
+        "../../libs/common/src/*"
+      ],
+      "@common/*": [
+        "src/common/*"
+      ]
     }
   },
-  
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"],
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*spec.ts"
+  ],
   "paths": {
-    "@common/*": ["src/common/*"]
+    "@common/*": [
+      "src/common/*"
+    ]
   }
 }

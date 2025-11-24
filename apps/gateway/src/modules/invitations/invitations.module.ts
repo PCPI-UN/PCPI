@@ -10,6 +10,16 @@ import {
   AUTH_SERVICE_NAME,
   protobufPackage as authProtobufPackage,
 } from '@app/common/generated/auth';
+import {
+  EVENT_SERVICE_NAME,
+  protobufPackage as eventProtobufPackage,
+} from '@app/common/generated/event';
+
+import {
+  PROJECTS_SERVICE_NAME,
+  protobufPackage as projectsProtobufPackage,
+} from '@app/common/generated/project';
+
 import { InvitationsController } from './invitations.controller';
 import { InvitationsService } from './invitations.service';
 
@@ -44,6 +54,32 @@ import { InvitationsService } from './invitations.service';
               'libs/common/src/protos/auth.proto',
             ),
             url: configService.get<string>('AUTH_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: EVENT_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: eventProtobufPackage,
+            protoPath: join(process.cwd(), 'libs/common/src/protos/event.proto'),
+            url: configService.get<string>('EVENT_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: PROJECTS_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: projectsProtobufPackage,
+            protoPath: join(process.cwd(), 'libs/common/src/protos/project.proto'),
+            url: configService.get<string>('PROJECT_SERVICE_URL'),
           },
         }),
         inject: [ConfigService],
