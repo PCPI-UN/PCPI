@@ -3,7 +3,7 @@ import { Invitation, InvitationStatus, InvitationTargetType } from '../../../dom
 import { InvitationRole } from '../../../domain/entities/invitation-role.entity';
 
 export class InvitationMapper {
-  static toDomain(prismaInvitation: any): Invitation { 
+  static toDomain(prismaInvitation: any): Invitation {
     return new Invitation(
       prismaInvitation.id,
       prismaInvitation.token,

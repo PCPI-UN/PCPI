@@ -7,7 +7,7 @@ import { EmailTemplate } from '@app/common/generated/notification';
 export class NotificationServiceAdapter implements NotificationServicePort {
   private readonly logger = new Logger(NotificationServiceAdapter.name);
 
-  constructor(private readonly grpc: NotificationGrpcClient) {}
+  constructor(private readonly grpc: NotificationGrpcClient) { }
 
   async sendEmail(params: {
     to: string;
