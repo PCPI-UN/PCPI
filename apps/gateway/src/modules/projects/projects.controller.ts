@@ -1,11 +1,11 @@
-import { 
-  Body, 
-  Controller, 
-  Param, 
-  ParseIntPipe, 
-  Patch, 
+import {
+  Body,
+  Controller,
+  Param,
+  ParseIntPipe,
+  Patch,
   Post,
-  UploadedFile, 
+  UploadedFile,
   UploadedFiles,
   UseInterceptors,
   Get,
@@ -39,7 +39,7 @@ import { TypedDocument } from './dto/project-document-input.dto';
 @ApiSecurity('JWT-auth')
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectsService: ProjectsService) { }
 
   @Public()
   @Post()
@@ -50,7 +50,7 @@ export class ProjectsController {
       ],
       {
         limits: {
-          fileSize: 5 * 1024 * 1024, // 5MB max per file
+          fileSize: 25 * 1024 * 1024, // 25MB max per file
         },
       },
     ),
@@ -61,7 +61,7 @@ export class ProjectsController {
     description:
       'Public endpoint that allows anyone to submit a project with participants and document files. ' +
       'Accepts up to 4 files: 1 logo, 1 poster, and 2 supporting documents. ' +
-      'Maximum file size: 5MB per file. ' +
+      'Maximum file size: 25MB per file. ' +
       'Files are uploaded to Azure Blob Storage. No authentication required.',
   })
   @ApiBody({
