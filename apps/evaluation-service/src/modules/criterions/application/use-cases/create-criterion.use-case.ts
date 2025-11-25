@@ -11,13 +11,13 @@ export class CreateCriterionUseCase {
   constructor(
     private readonly criterionRepository: CriterionRepositoryPort,
     private readonly eventServiceClient: EventServiceClient,
-  ) {}
+  ) { }
 
   async execute(createCriterionDto: CreateCriterionDto): Promise<{
     criterion: Criterion;
     courseIds: number[];
   }> {
-    const { eventId, name, description, weight, courseIds } = createCriterionDto;
+    const { eventId, name, description, weight, courseIds, category } = createCriterionDto;
 
     // Validate weight is within valid range
     if (weight <= 0 || weight > 1) {
@@ -85,6 +85,7 @@ export class CreateCriterionUseCase {
       description?.trim() || null,
       weight,
       true,
+      category || null,
       new Date(),
       new Date(),
     );

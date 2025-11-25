@@ -23,7 +23,9 @@ import { GetUserByEmailUseCase } from '@users/application/use-cases/get-user-by-
 import { GetUserByEmailDto } from '@users/application/dto/get-user-by-email.dto';
 import { ActivateUserUseCase } from '@users/application/use-cases/activate-user.use-case';
 import { ActivateUserDto } from '@users/application/dto/activate-user.dto';
+import { ActivateUserWithMicrosoftDto } from '@users/application/dto/activate-user-with-microsoft.dto';
 import { ActivateUserResponse } from '@app/common/generated/auth';
+import { ActivateUserWithMicrosoftUseCase } from '@users/application/use-cases/activate-user-with-microsoft.use-case';
 
 @Controller()
 export class UsersController {
@@ -36,7 +38,9 @@ export class UsersController {
     private readonly updateUserUseCase: UpdateUserUseCase,
     private readonly deactivateUserUseCase: DeactivateUserUseCase,
     private readonly activateUserUseCase: ActivateUserUseCase,
-  ) {}
+    private readonly activateUserWithMicrosoftUseCase: ActivateUserWithMicrosoftUseCase,
+  ) { }
+
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'CreatePlatformUser')
   async createPlatformUser(request: CreatePlatformUserDto): Promise<UserProto> {
@@ -54,6 +58,12 @@ export class UsersController {
   async activateUser(request: ActivateUserDto): Promise<ActivateUserResponse> {
     return this.activateUserUseCase.execute(request);
   }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'ActivateUserWithMicrosoft')
+  async activateUserWithMicrosoft(request: ActivateUserWithMicrosoftDto): Promise<ActivateUserResponse> {
+    return this.activateUserWithMicrosoftUseCase.execute(request);
+  }
+
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'GetUser')
   async getUser(request: GetUserDto): Promise<UserProto> {

@@ -16,6 +16,7 @@ import { DeactivateUserUseCase } from './application/use-cases/deactivate-user.u
 import { PrismaModule } from '@common/prisma/prisma.module';
 import { GetUserByEmailUseCase } from './application/use-cases/get-user-by-email.use-case';
 import { ActivateUserUseCase } from './application/use-cases/activate-user.use-case';
+import { ActivateUserWithMicrosoftUseCase } from './application/use-cases/activate-user-with-microsoft.use-case';
 
 @Module({
   imports: [RolesModule, PrismaModule],
@@ -24,6 +25,7 @@ import { ActivateUserUseCase } from './application/use-cases/activate-user.use-c
     CreatePlatformUserUseCase,
     CreateBasicUserUseCase,
     ActivateUserUseCase,
+    ActivateUserWithMicrosoftUseCase,
     GetUserUseCase,
     GetUserByEmailUseCase,
     GetUsersUseCase,
@@ -44,4 +46,4 @@ import { ActivateUserUseCase } from './application/use-cases/activate-user.use-c
   ],
   exports: [UserRepositoryPort, UserTokenRepositoryPort, PasswordHasherPort],
 })
-export class UsersModule {}
+export class UsersModule { }

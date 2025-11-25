@@ -27,6 +27,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../../common/decorators/get-user.decorator';
+import { InvitationsService } from '../invitations/invitations.service';
 import { AppUser } from './types/app-user.type';
 
 @ApiTags('auth')
@@ -34,8 +35,9 @@ import { AppUser } from './types/app-user.type';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly invitationsService: InvitationsService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @Public()
   @Post('login')
@@ -60,19 +62,82 @@ export class AuthController {
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
-      sameSite: 'none',
-      domain: '.uninorte.edu.co',
+      sameSite: 'lax',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
-      sameSite: 'none',
-      domain: '.uninorte.edu.co',
+      sameSite: 'lax',
       maxAge: this.parseJwtExpiration(refreshTokenExpiration),
     });
     return { success: true, message: 'Login successful' };
   }
+
+  @Public()
+  @Get('login/microsoft')
+  @ApiOperation({ summary: 'Redirect to Microsoft Login' })
+  @ApiQuery({ name: 'invitation_token', required: false, description: 'Invitation token' })
+  async loginWithMicrosoft(
+    @Res() res: Response,
+    @Query('invitation_token') invitationToken?: string,
+  ) {
+    const url = this.authService.getAuthorizeUrl(invitationToken);
+    return res.redirect(url);
+  }
+
+  @Public()
+  @Get('callback')
+  @ApiOperation({ summary: 'Handle Microsoft Login Callback' })
+  async microsoftCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Res() response: Response,
+  ) {
+    const microsoftTokens = await this.authService.exchangeCodeForToken(code);
+
+    // Check if this is an invitation acceptance flow
+    if (state && state.startsWith('invitation:')) {
+      const invitationToken = state.split(':')[1];
+
+      // Call the invitation service to accept the invitation using the Microsoft token
+      // This will activate the user and link the Microsoft account
+      await this.invitationsService.acceptInvitation({
+        token: invitationToken,
+        microsoftToken: microsoftTokens.access_token,
+      });
+    }
+
+    // Proceed with standard login to get our system's JWTs
+    // Even if we just accepted an invitation, we now log the user in
+    const { accessToken, refreshToken } = await this.authService.loginWithMicrosoft(microsoftTokens.access_token);
+
+    const accessTokenExpiration = this.configService.get<string>(
+      'JWT_ACCESS_TOKEN_EXPIRATION',
+      '15m',
+    );
+    const refreshTokenExpiration = this.configService.get<string>(
+      'JWT_REFRESH_TOKEN_EXPIRATION',
+      '7d',
+    );
+
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: this.isSecureContext(),
+      sameSite: 'lax',
+      maxAge: this.parseJwtExpiration(accessTokenExpiration),
+    });
+    response.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: this.isSecureContext(),
+      sameSite: 'lax',
+      maxAge: this.parseJwtExpiration(refreshTokenExpiration),
+    });
+
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+    response.redirect(frontendUrl);
+  }
+
 
   @Post('logout')
   @ApiSecurity('JWT-auth')
@@ -115,8 +180,7 @@ export class AuthController {
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
-      sameSite: 'none',
-      domain: '.uninorte.edu.co',
+      sameSite: 'lax',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
     });
 
@@ -180,17 +244,12 @@ export class AuthController {
   }
 
   /**
-   * Determines if cookies should use the 'secure' flag
-   * Returns true only in production AND when insecure cookies are not explicitly allowed
-   * This allows testing production builds locally over HTTP
+   * Get cookie configuration based on environment and token type
+   * Handles cross-origin scenarios for local development against production API
    */
   private isSecureContext(): boolean {
-    const nodeEnv = this.configService.get('NODE_ENV');
-    const isProduction = nodeEnv === 'production';
-
-    // Allow insecure cookies in production if explicitly set (for local testing)
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
     const allowInsecure = this.configService.get('ALLOW_INSECURE_COOKIES') === 'true';
-
     return isProduction && !allowInsecure;
   }
 

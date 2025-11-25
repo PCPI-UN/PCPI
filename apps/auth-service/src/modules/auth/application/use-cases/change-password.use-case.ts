@@ -14,7 +14,7 @@ export class ChangePasswordUseCase {
     private readonly passwordHasher: PasswordHasherPort,
     private readonly emailService: EmailServicePort,
     private readonly tokenRepository: TokenRepositoryPort,
-  ) {}
+  ) { }
 
   async execute(
     userId: number,
@@ -27,6 +27,13 @@ export class ChangePasswordUseCase {
       throw new RpcException({
         code: status.NOT_FOUND,
         message: 'User not found or inactive',
+      });
+    }
+
+    if (!user.password) {
+      throw new RpcException({
+        code: status.PERMISSION_DENIED,
+        message: 'User does not have a password set',
       });
     }
 

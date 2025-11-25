@@ -10,26 +10,24 @@ import { CacheInvalidationInterceptor } from './common/cache/cache-invalidation.
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Support multiple frontend origins (comma-separated)
-  const frontendUrlsEnv = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const allowedOrigins = frontendUrlsEnv.split(',').map(url => url.trim());
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',');
 
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
   });
   app.use(cookieParser());
-  
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new GrpcExceptionFilter());
-  
+
   // NOTE: Temporaly commented because it's not completely ready yet!
   // Register cache interceptors globally
   // app.useGlobalInterceptors(
   //   app.get(HttpCacheInterceptor),
   //   app.get(CacheInvalidationInterceptor),
   // );
-  
+
   const config = new DocumentBuilder()
     .setTitle('Iris API')
     .setDescription('The Iris platform API documentation - Event and Project Management System')
@@ -37,7 +35,7 @@ async function bootstrap() {
     .addTag('auth', 'Authentication and authorization endpoints')
     .addTag('users', 'User management endpoints')
     .addTag('events', 'Event management endpoints')
-    
+
     .addBearerAuth(
       {
         type: 'apiKey',
@@ -48,7 +46,7 @@ async function bootstrap() {
       'JWT-auth',
     )
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Iris API Documentation',

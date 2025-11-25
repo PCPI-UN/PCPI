@@ -10,6 +10,16 @@ import {
   AUTH_SERVICE_NAME,
   protobufPackage as authProtobufPackage,
 } from '@app/common/generated/auth';
+import {
+  EVENT_SERVICE_NAME,
+  protobufPackage as eventProtobufPackage,
+} from '@app/common/generated/event';
+
+import {
+  PROJECTS_SERVICE_NAME,
+  protobufPackage as projectsProtobufPackage,
+} from '@app/common/generated/project';
+
 import { InvitationsController } from './invitations.controller';
 import { InvitationsService } from './invitations.service';
 
@@ -48,9 +58,36 @@ import { InvitationsService } from './invitations.service';
         }),
         inject: [ConfigService],
       },
+      {
+        name: EVENT_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: eventProtobufPackage,
+            protoPath: join(process.cwd(), 'libs/common/src/protos/event.proto'),
+            url: configService.get<string>('EVENT_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: PROJECTS_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: projectsProtobufPackage,
+            protoPath: join(process.cwd(), 'libs/common/src/protos/project.proto'),
+            url: configService.get<string>('PROJECT_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
     ]),
   ],
   controllers: [InvitationsController],
   providers: [InvitationsService],
+  exports: [InvitationsService],
 })
-export class InvitationsModule {}
+export class InvitationsModule { }

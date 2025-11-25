@@ -8,10 +8,11 @@ export class UserMapper {
       prismaUser.firstName,
       prismaUser.lastName ?? '',
       prismaUser.email,
-      prismaUser.password,
+      prismaUser.password ?? undefined,
       prismaUser.phone ?? '',
       prismaUser.active,
       prismaUser.status as UserStatus,
+      prismaUser.oid ?? undefined,
     );
   }
 
@@ -21,10 +22,11 @@ export class UserMapper {
       firstName: domainUser.firstName,
       lastName: domainUser.lastName,
       email: domainUser.email,
-      password: domainUser.password,
+      password: domainUser.password ?? null,
       phone: domainUser.phone,
       active: domainUser.active,
       status: domainUser.status as PrismaUserStatus,
+      oid: domainUser.oid ?? null,
     };
   }
 }

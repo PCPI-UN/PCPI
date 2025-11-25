@@ -14,9 +14,23 @@ service InvitationService {
   rpc RejectInvitation (RejectInvitationRequest) returns (RejectInvitationResponse) {}
   // Finds a pending invitation by email and target type
   rpc FindPendingByEmail (FindPendingByEmailRequest) returns (FindPendingByEmailResponse) {}
+  // Lists jurors invited to an event
+  rpc GetEventInvitations (GetEventInvitationsRequest) returns (GetEventInvitationsResponse) {}
+  // Resends an expired invitation
+  rpc ResendInvitation (ResendInvitationRequest) returns (ResendInvitationResponse) {}
+  // Lists invitations for a user
+  rpc GetUserInvitations (GetUserInvitationsRequest) returns (GetUserInvitationsResponse) {}
 }
 
 // ---- INVITATION MODULE REQUEST/RESPONSE ----
+
+message PaginationMetadata {
+  int32 total = 1;
+  int32 itemsOnCurrentPage = 2;
+  int32 itemsPerPage = 3;
+  int32 currentPage = 4;
+  int32 totalPages = 5;
+}
 
 // The request message for creating a new invitation
 message CreateInvitationRequest {
@@ -50,6 +64,7 @@ message AcceptInvitationRequest {
   optional string firstName = 3;
   optional string lastName = 4;
   optional string studentCode = 5; // For project invitations - student code
+  optional string microsoftToken = 6;
 }
 
 // The response message for accepting an invitation
@@ -77,6 +92,38 @@ message FindPendingByEmailRequest {
 // The response message for finding a pending invitation by email
 message FindPendingByEmailResponse {
   optional Invitation invitation = 1; // Returns invitation if found, null if not
+}
+
+message GetEventInvitationsRequest {
+  int32 eventId = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+  optional int32 roleId = 4;
+}
+
+message GetEventInvitationsResponse {
+  repeated Invitation invitations = 1;
+  PaginationMetadata meta = 2;
+}
+
+message ResendInvitationRequest {
+  string invitationId = 1;
+}
+
+message ResendInvitationResponse {
+  bool success = 1;
+}
+
+message GetUserInvitationsRequest {
+  int32 userId = 1;
+  optional string status = 2; // Optional filter by status
+  optional int32 page = 3;
+  optional int32 limit = 4;
+}
+
+message GetUserInvitationsResponse {
+  repeated Invitation invitations = 1;
+  PaginationMetadata meta = 2;
 }
 
 enum InvitationStatus {

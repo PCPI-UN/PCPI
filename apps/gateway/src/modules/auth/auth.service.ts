@@ -1,6 +1,9 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
+import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import axios from 'axios';
+import * as qs from 'qs';
 import {
   AuthServiceClient,
   AUTH_SERVICE_NAME,
@@ -27,26 +30,39 @@ import { LoginDto } from './dto/login.dto';
 export class AuthService implements OnModuleInit {
   private authService: AuthServiceClient;
 
-  constructor(@Inject(AUTH_SERVICE_NAME) private readonly client: ClientGrpc) {}
+  constructor(
+    @Inject(AUTH_SERVICE_NAME) private readonly client: ClientGrpc,
+    private readonly configService: ConfigService,
+  ) { }
+
+  private tenantId: string;
+  private clientId: string;
+  private clientSecret: string;
+  private redirectUri: string;
 
   onModuleInit() {
     this.authService =
       this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
+
+    this.tenantId = this.configService.get<string>('AZURE_TENANT_ID') || '';
+    this.clientId = this.configService.get<string>('AZURE_CLIENT_ID') || '';
+    this.clientSecret = this.configService.get<string>('AZURE_CLIENT_SECRET') || '';
+    this.redirectUri = this.configService.get<string>('REDIRECT_URI') || 'http://localhost:3000/auth/callback/microsoft';
   }
 
   async login(loginDto: LoginDto): Promise<LoginResponse> {
     return firstValueFrom(this.authService.login(loginDto as LoginRequest));
   }
 
-  async refresh(refreshToken: string): Promise<RefreshResponse> {
+  async loginWithMicrosoft(token: string): Promise<LoginResponse> {
     return firstValueFrom(
-      this.authService.refresh({ refreshToken } as RefreshRequest),
+      this.authService.loginWithMicrosoft({ token }),
     );
   }
 
-  async validateJwt(token: string): Promise<ValidateTokenResponse> {
+  async refresh(refreshToken: string): Promise<RefreshResponse> {
     return firstValueFrom(
-      this.authService.validateJwt({ token } as ValidateTokenRequest),
+      this.authService.refresh({ refreshToken } as RefreshRequest),
     );
   }
 
@@ -97,5 +113,41 @@ export class AuthService implements OnModuleInit {
         newPassword,
       } as ChangePasswordRequest),
     );
+  }
+
+  getAuthorizeUrl(invitationToken?: string) {
+    // We use the 'state' parameter to pass the invitation token through the OAuth flow.
+    // This ensures that when the user returns from Microsoft, we know they were trying to accept an invitation.
+    const state = invitationToken ? `invitation:${invitationToken}` : 'login';
+
+    const params = new URLSearchParams({
+      client_id: this.clientId,
+      response_type: 'code',
+      redirect_uri: this.redirectUri,
+      response_mode: 'query',
+      scope: 'openid profile email',
+      state: state,
+      prompt: 'select_account',
+    });
+    return `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/authorize?${params.toString()}`;
+  }
+
+  async exchangeCodeForToken(code: string) {
+    const tokenEndpoint = `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/token`;
+
+    const data = {
+      client_id: this.clientId,
+      scope: 'openid profile email',
+      code,
+      redirect_uri: this.redirectUri,
+      grant_type: 'authorization_code',
+      client_secret: this.clientSecret,
+    };
+
+    const res = await axios.post(tokenEndpoint, qs.stringify(data), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+
+    return res.data;
   }
 }

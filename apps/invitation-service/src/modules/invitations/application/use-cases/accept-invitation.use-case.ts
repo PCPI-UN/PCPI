@@ -27,7 +27,7 @@ export class AcceptInvitationUseCase implements OnModuleInit {
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
     @Inject(PROJECT_SERVICE_NAME) private readonly projectClient: ClientGrpc,
-  ) {}
+  ) { }
 
   onModuleInit() {
     this.authService =
@@ -55,7 +55,15 @@ export class AcceptInvitationUseCase implements OnModuleInit {
           password: dto.password,
         }),
       );
+    } else if (dto.microsoftToken) {
+      await firstValueFrom(
+        this.authService.activateUserWithMicrosoft({
+          userId: invitation.invitedUserId,
+          token: dto.microsoftToken,
+        }),
+      );
     }
+
 
     // After activation, update the user's profile if name is provided
     if (dto.firstName || dto.lastName) {
@@ -120,7 +128,7 @@ export class AcceptInvitationUseCase implements OnModuleInit {
           this.projectService.addParticipant({
             userId: invitation.invitedUserId,
             projectId: invitation.targetId,
-            studentCode: dto.studentCode || '', 
+            studentCode: dto.studentCode || '',
           }),
         );
 

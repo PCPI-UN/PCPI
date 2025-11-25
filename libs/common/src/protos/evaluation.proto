@@ -50,6 +50,7 @@ message CriterionProto {
   double weight = 5;
   bool active = 6;
   repeated int32 courseIds = 7;
+  optional string category = 8;
 }
 
 message EvaluationProto {
@@ -129,9 +130,14 @@ message FindCriterionsByCourseRequest {
   int32 courseId = 1;
 }
 
+message CriterionCategoryProto {
+  string category = 1;
+  repeated CriterionProto criterions = 2;
+}
+
 // The response message for getting criterions of a course
 message FindCriterionsByCourseResponse {
-  repeated CriterionProto criterions = 1; 
+  repeated CriterionCategoryProto categories = 1; 
 }
 
 // The request message for creating a new criterion.
@@ -141,6 +147,7 @@ message CreateCriterionRequest {
   optional string description = 3;
   double weight = 4;
   repeated int32 courseIds = 5;
+  optional string category = 6;
 }
 
 // The request message for updating a criterion.
@@ -152,6 +159,7 @@ message UpdateCriterionRequest {
   optional double weight = 5;
   optional bool active = 6;
   repeated int32 courseIds = 7;
+  optional string category = 8;
 }
 
 // The request message for getting a criterion by ID.
