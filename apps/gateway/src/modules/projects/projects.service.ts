@@ -27,23 +27,36 @@ import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
 import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
 import { UpdateProjectDocumentDto, DocumentStatusFilter } from './dto/update-project-document.dto';
-import { AddProjectFilesMultipartDto } from './dto/add-project-files-multipart.dto';
+import { AddProjectDocumentsMultipartDto } from './dto/add-project-files-multipart.dto';
+import {
+  EVENT_SERVICE_NAME,
+  EventServiceClient,
+} from '@app/common/generated/event';
+
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
   private readonly logger = new Logger(ProjectsService.name);
   private projectsService: ProjectsServiceClient;
-
+  private eventsService: EventServiceClient;
   constructor(
     @Inject(PROJECTS_SERVICE_NAME) private readonly projectsClient: ClientGrpc,
+    @Inject(EVENT_SERVICE_NAME) private readonly eventsClient: ClientGrpc,
     private readonly azureBlobUploadService: AzureBlobUploadService,
-  ) {}
+    
+  ) 
+  
+  {}
 
   onModuleInit() {
-    this.projectsService = this.projectsClient.getService<ProjectsServiceClient>(
-      PROJECTS_SERVICE_NAME,
-    );
-  }
+  this.projectsService = this.projectsClient.getService<ProjectsServiceClient>(
+    PROJECTS_SERVICE_NAME,
+  );
+
+  this.eventsService = this.eventsClient.getService<EventServiceClient>( // ✅
+    EVENT_SERVICE_NAME,
+  );
+}
 
   /**
    * Creates a project with participants and file uploads
@@ -402,7 +415,7 @@ export class ProjectsService implements OnModuleInit {
 
   async addFilesToExistingProject(
   projectId: number,
-  body: AddProjectFilesMultipartDto,
+  body: AddProjectDocumentsMultipartDto,
   files: Express.Multer.File[],
 ) {
   this.logger.log(
@@ -443,7 +456,6 @@ export class ProjectsService implements OnModuleInit {
   }
 
   // 4. Validar máximo de files en ESTA petición
-  // (si quieres hacer máximo total por proyecto, habría que sumar con los docs existentes)
   if (files.length > 4) {
     throw new BadRequestException(
       'Maximum 4 files allowed per request: 1 logo, 1 poster, and 2 supporting documents',
@@ -478,18 +490,89 @@ export class ProjectsService implements OnModuleInit {
     );
   }
 
-  // 7. (Opcional pero recomendado) verificar que el proyecto exista
-  try {
-    await firstValueFrom(
-      this.projectsService.getProjectById({ id: projectId }),
-    );
-  } catch (error) {
-    this.logger.error(
-      `Project ${projectId} not found: ${error.message}`,
-      error.stack,
-    );
-    throw new BadRequestException(`Project with id ${projectId} not found`);
-  }
+  // 7. Validar estado del proyecto (evaluationsOpened = false y fecha actual < endDate)
+ const projectGrpcResponse = await firstValueFrom(
+  this.projectsService.getProject({ id: projectId }),
+);
+
+const project = (projectGrpcResponse as any).project ?? projectGrpcResponse;
+
+if (!project) {
+  throw new NotFoundException(`Project with id ${projectId} not found`);
+}
+
+this.logger.log(
+  `[addFilesToExistingProject] Project from gRPC: ${JSON.stringify(project)}`,
+);
+
+// 7.2. Obtener el evento asociado para revisar evaluaciones y fechas
+if (!project.eventId) {
+  throw new BadRequestException(
+    'Cannot add files: project is not linked to any event',
+  );
+}
+
+const eventGrpcResponse = await firstValueFrom(
+  this.eventsService.getEvent({ id: project.eventId }),  // ✅ propiedad correcta
+);
+
+
+const event = (eventGrpcResponse as any).event ?? eventGrpcResponse;
+
+if (!event) {
+  throw new NotFoundException(
+    `Event with id ${project.eventId} not found for this project`,
+  );
+}
+
+this.logger.log(
+  `[addFilesToExistingProject] Event from gRPC: ${JSON.stringify(event)}`,
+);
+
+// 7.3. Leer evaluationsOpened y endDate (defensivo: camelCase y snake_case)
+const evaluationsOpened =
+  (event as any).evaluationsOpened ??
+  (event as any).evaluations_opened ??
+  undefined;
+
+if (evaluationsOpened === undefined) {
+  this.logger.warn(
+    `[addFilesToExistingProject] evaluationsOpened is undefined in event: ${JSON.stringify(
+      event,
+    )}`,
+  );
+  throw new BadRequestException(
+    'Cannot add files: event evaluations state is not properly configured',
+  );
+}
+
+if (evaluationsOpened === true) {
+  throw new BadRequestException(
+    'Cannot add files: evaluations are already opened for this event/project',
+  );
+}
+
+const rawEndDate =
+  (event as any).endDate ??
+  (event as any).end_date ??
+  undefined;
+
+if (!rawEndDate) {
+  throw new BadRequestException(
+    'Cannot add files: event end date is not defined',
+  );
+}
+
+const eventEndDate =
+  rawEndDate instanceof Date ? rawEndDate : new Date(rawEndDate);
+
+const now = new Date();
+
+if (now >= eventEndDate) {
+  throw new BadRequestException(
+    'Cannot add files: event end date has already passed',
+  );
+}
 
   // 8. Subir archivos a Azure
   this.logger.log(
@@ -545,7 +628,4 @@ export class ProjectsService implements OnModuleInit {
     success: true,
   };
 }
-
-
 }
-
