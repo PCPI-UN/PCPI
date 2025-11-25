@@ -27,6 +27,7 @@ import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
 import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
 import { UpdateProjectDocumentDto, DocumentStatusFilter } from './dto/update-project-document.dto';
+import { AddProjectFilesMultipartDto } from './dto/add-project-files-multipart.dto';
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
@@ -398,6 +399,153 @@ export class ProjectsService implements OnModuleInit {
 
     return res.document;
   }
+
+  async addFilesToExistingProject(
+  projectId: number,
+  body: AddProjectFilesMultipartDto,
+  files: Express.Multer.File[],
+) {
+  this.logger.log(
+    `Adding ${files.length} file(s) to project ${projectId}`,
+  );
+
+  // 1. Validar que haya docs
+  let documentMetadata: ProjectDocumentInputDto[] = [];
+  if (body.documents) {
+    try {
+      documentMetadata = JSON.parse(body.documents);
+    } catch (error) {
+      throw new BadRequestException(
+        'Invalid documents format. Must be a valid JSON array.',
+      );
+    }
+  } else {
+    throw new BadRequestException('documents field is required');
+  }
+
+  // 2. Validar que length de files == length de metadata
+  if (files.length !== documentMetadata.length) {
+    throw new BadRequestException(
+      `Number of files (${files.length}) does not match number of document metadata entries (${documentMetadata.length})`,
+    );
+  }
+
+  // 3. Validar tipos de documento
+  const validTypes = Object.values(TypedDocument);
+  const invalidDocs = documentMetadata.filter(
+    (doc) => !validTypes.includes(doc.type),
+  );
+  if (invalidDocs.length > 0) {
+    const invalidTypes = invalidDocs.map((doc) => doc.type).join(', ');
+    throw new BadRequestException(
+      `Invalid document type(s): ${invalidTypes}. Valid types are: ${validTypes.join(', ')}`,
+    );
+  }
+
+  // 4. Validar máximo de files en ESTA petición
+  // (si quieres hacer máximo total por proyecto, habría que sumar con los docs existentes)
+  if (files.length > 4) {
+    throw new BadRequestException(
+      'Maximum 4 files allowed per request: 1 logo, 1 poster, and 2 supporting documents',
+    );
+  }
+
+  // 5. Validar tamaño de files (5MB)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+  if (oversizedFiles.length > 0) {
+    const fileNames = oversizedFiles.map((f) => f.originalname).join(', ');
+    throw new BadRequestException(
+      `Files exceed 5MB limit: ${fileNames}. Maximum file size is 5MB per file.`,
+    );
+  }
+
+  // 6. Validar distribución de tipos en ESTA petición
+  const typeCounts = documentMetadata.reduce((acc, doc) => {
+    acc[doc.type] = (acc[doc.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  if (typeCounts['LOGO'] > 1) {
+    throw new BadRequestException('Only 1 logo file is allowed per request');
+  }
+  if (typeCounts['POSTER'] > 1) {
+    throw new BadRequestException('Only 1 poster file is allowed per request');
+  }
+  if (typeCounts['SUPPORTING_DOCUMENT'] > 2) {
+    throw new BadRequestException(
+      'Maximum 2 supporting document files are allowed per request',
+    );
+  }
+
+  // 7. (Opcional pero recomendado) verificar que el proyecto exista
+  try {
+    await firstValueFrom(
+      this.projectsService.getProjectById({ id: projectId }),
+    );
+  } catch (error) {
+    this.logger.error(
+      `Project ${projectId} not found: ${error.message}`,
+      error.stack,
+    );
+    throw new BadRequestException(`Project with id ${projectId} not found`);
+  }
+
+  // 8. Subir archivos a Azure
+  this.logger.log(
+    `Uploading ${files.length} file(s) to Azure Blob Storage for project ${projectId}`,
+  );
+  let uploadResults;
+  try {
+    const uploadPromises = files.map((file) =>
+      this.azureBlobUploadService.uploadFile(file),
+    );
+    uploadResults = await Promise.all(uploadPromises);
+    this.logger.log(`Successfully uploaded ${uploadResults.length} files`);
+  } catch (error) {
+    this.logger.error(
+      `Failed to upload files to Azure: ${error.message}`,
+      error.stack,
+    );
+    throw new BadRequestException(
+      `Failed to upload files: ${error.message}`,
+    );
+  }
+
+  // 9. Adjuntar documentos al proyecto
+  this.logger.log(
+    `Attaching ${uploadResults.length} document(s) to project ${projectId}`,
+  );
+  try {
+    const addDocumentPromises = uploadResults.map((uploadResult, index) =>
+      firstValueFrom(
+        this.projectsService.addProjectDocumentFromUrl({
+          projectId,
+          url: uploadResult.url,
+          type: this.mapDocumentTypeToProto(documentMetadata[index].type),
+        }),
+      ),
+    );
+    await Promise.all(addDocumentPromises);
+    this.logger.log(
+      `Successfully attached ${uploadResults.length} documents to project ${projectId}`,
+    );
+  } catch (error) {
+    this.logger.error(
+      `Failed to attach documents to project: ${error.message}`,
+      error.stack,
+    );
+    throw new BadRequestException(
+      `Files uploaded, but failed to attach documents: ${error.message}`,
+    );
+  }
+
+  return {
+    message: 'Files added to project successfully',
+    success: true,
+  };
+}
+
 
 }
 
