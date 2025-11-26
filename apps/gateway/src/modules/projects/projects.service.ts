@@ -15,6 +15,11 @@ import {
   ProjectDocumentResponse,
   ProjectDocument,
   DocumentStatus,
+  ListProjectJurorsRequest,
+  ListProjectJurorsResponse,
+  ListAssignedProjectsRequest,
+  ListAssignedProjectsResponse,  
+  JurorKey,   
 } from '@app/common/generated/project';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
@@ -399,5 +404,44 @@ export class ProjectsService implements OnModuleInit {
     return res.document;
   }
 
-}
+  async listJurorsByProjectId(projectId: number) {
+    const request: ListProjectJurorsRequest = { projectId };
 
+    const res: ListProjectJurorsResponse = await lastValueFrom(
+      this.projectsService.listProjectJurors(request),
+    );
+
+    return res.jurors;
+  }
+
+  async listAssignedProjectsByJuror(
+    jurorUserId: number,
+    eventId: number,
+    page = 1,
+    pageSize = 20,
+  ) {
+    const juror: JurorKey = {
+      memberUserId: jurorUserId,
+      memberEventId: eventId,
+      memberRoleId: 0,
+    };
+
+    const request: ListAssignedProjectsRequest = {
+      juror,
+      page,
+      pageSize,
+    };
+
+    const res: ListAssignedProjectsResponse = await lastValueFrom(
+      this.projectsService.listAssignedProjects(request),
+    );
+
+    return {
+      items: res.items,
+      total: res.total,
+      page: res.page,
+      pageSize: res.pageSize,
+    };
+  }
+
+}
