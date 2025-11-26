@@ -5,12 +5,14 @@ import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
 import { ActivateUserDto } from '../dto/activate-user.dto';
 import { UserStatus } from '@users/domain/entities/user.entity';
+import { UserTokenRepositoryPort } from '@users/domain/repositories/user-token.repository.port';
 
 @Injectable()
 export class ActivateUserUseCase {
   constructor(
     private readonly userRepository: UserRepositoryPort,
     private readonly passwordHasher: PasswordHasherPort,
+    private readonly userTokenRepository: UserTokenRepositoryPort,
   ) {}
 
   async execute(activateUserDto: ActivateUserDto): Promise<{ success: boolean }> {
@@ -36,6 +38,9 @@ export class ActivateUserUseCase {
     user.status = UserStatus.CONFIRMED;
 
     await this.userRepository.save(user);
+
+    // Mark all ACCOUNT_SETUP tokens as used for this user
+    await this.userTokenRepository.markAllAccountSetupTokensAsUsedForUser(userId);
 
     return { success: true };
   }
