@@ -131,12 +131,14 @@ export class ProjectsController {
 
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')
   async assignJurorToProjectsRpc(req: any) {
+    console.log('[ProjectsService] AssignJurorToProjects RPC input:', req);
     const result = await this.assignJurorBulkUC.execute({
       userId: req.userId,
       projectIds: req.projectIds ?? [],
     });
     return { assigned: result.assigned, failures: result.failures };
   }
+
 
   @GrpcMethod('ProjectsService', 'ReassignProjectJuror')
   async reassignProjectJurorRpc(req: any) {

@@ -15,6 +15,11 @@ import {
   ProjectDocumentResponse,
   ProjectDocument,
   DocumentStatus,
+  ListProjectJurorsRequest,
+  ListProjectJurorsResponse,
+  ListAssignedProjectsRequest,
+  ListAssignedProjectsResponse,  
+  JurorKey,   
 } from '@app/common/generated/project';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
@@ -27,22 +32,36 @@ import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
 import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
 import { UpdateProjectDocumentDto, DocumentStatusFilter } from './dto/update-project-document.dto';
+import { AddProjectDocumentsMultipartDto } from './dto/add-project-files-multipart.dto';
+import {
+  EVENT_SERVICE_NAME,
+  EventServiceClient,
+} from '@app/common/generated/event';
+
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
   private readonly logger = new Logger(ProjectsService.name);
   private projectsService: ProjectsServiceClient;
-
+  private eventsService: EventServiceClient;
   constructor(
     @Inject(PROJECTS_SERVICE_NAME) private readonly projectsClient: ClientGrpc,
+    @Inject(EVENT_SERVICE_NAME) private readonly eventsClient: ClientGrpc,
     private readonly azureBlobUploadService: AzureBlobUploadService,
-  ) {}
+    
+  ) 
+  
+  {}
 
   onModuleInit() {
-    this.projectsService = this.projectsClient.getService<ProjectsServiceClient>(
-      PROJECTS_SERVICE_NAME,
-    );
-  }
+  this.projectsService = this.projectsClient.getService<ProjectsServiceClient>(
+    PROJECTS_SERVICE_NAME,
+  );
+
+  this.eventsService = this.eventsClient.getService<EventServiceClient>( // ✅
+    EVENT_SERVICE_NAME,
+  );
+}
 
   /**
    * Creates a project with participants and file uploads
@@ -399,5 +418,259 @@ export class ProjectsService implements OnModuleInit {
     return res.document;
   }
 
+  async listJurorsByProjectId(projectId: number) {
+    const request: ListProjectJurorsRequest = { projectId };
+
+    const res: ListProjectJurorsResponse = await lastValueFrom(
+      this.projectsService.listProjectJurors(request),
+    );
+
+    return res.jurors;
+  }
+
+  async listAssignedProjectsByJuror(
+    jurorUserId: number,
+    eventId: number,
+    page = 1,
+    pageSize = 20,
+  ) {
+    const juror: JurorKey = {
+      memberUserId: jurorUserId,
+      memberEventId: eventId,
+      memberRoleId: 0,
+    };
+
+    const request: ListAssignedProjectsRequest = {
+      juror,
+      page,
+      pageSize,
+    };
+
+    const res: ListAssignedProjectsResponse = await lastValueFrom(
+      this.projectsService.listAssignedProjects(request),
+    );
+
+    return {
+      items: res.items,
+      total: res.total,
+      page: res.page,
+      pageSize: res.pageSize,
+    };
+  }
+
+  async addFilesToExistingProject(
+  projectId: number,
+  body: AddProjectDocumentsMultipartDto,
+  files: Express.Multer.File[],
+) {
+  this.logger.log(
+    `Adding ${files.length} file(s) to project ${projectId}`,
+  );
+
+  // 1. Validar que haya docs
+  let documentMetadata: ProjectDocumentInputDto[] = [];
+  if (body.documents) {
+    try {
+      documentMetadata = JSON.parse(body.documents);
+    } catch (error) {
+      throw new BadRequestException(
+        'Invalid documents format. Must be a valid JSON array.',
+      );
+    }
+  } else {
+    throw new BadRequestException('documents field is required');
+  }
+
+  // 2. Validar que length de files == length de metadata
+  if (files.length !== documentMetadata.length) {
+    throw new BadRequestException(
+      `Number of files (${files.length}) does not match number of document metadata entries (${documentMetadata.length})`,
+    );
+  }
+
+  // 3. Validar tipos de documento
+  const validTypes = Object.values(TypedDocument);
+  const invalidDocs = documentMetadata.filter(
+    (doc) => !validTypes.includes(doc.type),
+  );
+  if (invalidDocs.length > 0) {
+    const invalidTypes = invalidDocs.map((doc) => doc.type).join(', ');
+    throw new BadRequestException(
+      `Invalid document type(s): ${invalidTypes}. Valid types are: ${validTypes.join(', ')}`,
+    );
+  }
+
+  // 4. Validar máximo de files en ESTA petición
+  if (files.length > 4) {
+    throw new BadRequestException(
+      'Maximum 4 files allowed per request: 1 logo, 1 poster, and 2 supporting documents',
+    );
+  }
+
+  // 5. Validar tamaño de files (5MB)
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+  if (oversizedFiles.length > 0) {
+    const fileNames = oversizedFiles.map((f) => f.originalname).join(', ');
+    throw new BadRequestException(
+      `Files exceed 5MB limit: ${fileNames}. Maximum file size is 5MB per file.`,
+    );
+  }
+
+  // 6. Validar distribución de tipos en ESTA petición
+  const typeCounts = documentMetadata.reduce((acc, doc) => {
+    acc[doc.type] = (acc[doc.type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  if (typeCounts['LOGO'] > 1) {
+    throw new BadRequestException('Only 1 logo file is allowed per request');
+  }
+  if (typeCounts['POSTER'] > 1) {
+    throw new BadRequestException('Only 1 poster file is allowed per request');
+  }
+  if (typeCounts['SUPPORTING_DOCUMENT'] > 2) {
+    throw new BadRequestException(
+      'Maximum 2 supporting document files are allowed per request',
+    );
+  }
+
+  // 7. Validar estado del proyecto (evaluationsOpened = false y fecha actual < endDate)
+ const projectGrpcResponse = await firstValueFrom(
+  this.projectsService.getProject({ id: projectId }),
+);
+
+const project = (projectGrpcResponse as any).project ?? projectGrpcResponse;
+
+if (!project) {
+  throw new NotFoundException(`Project with id ${projectId} not found`);
 }
 
+this.logger.log(
+  `[addFilesToExistingProject] Project from gRPC: ${JSON.stringify(project)}`,
+);
+
+// 7.2. Obtener el evento asociado para revisar evaluaciones y fechas
+if (!project.eventId) {
+  throw new BadRequestException(
+    'Cannot add files: project is not linked to any event',
+  );
+}
+
+const eventGrpcResponse = await firstValueFrom(
+  this.eventsService.getEvent({ id: project.eventId }),  // ✅ propiedad correcta
+);
+
+
+const event = (eventGrpcResponse as any).event ?? eventGrpcResponse;
+
+if (!event) {
+  throw new NotFoundException(
+    `Event with id ${project.eventId} not found for this project`,
+  );
+}
+
+this.logger.log(
+  `[addFilesToExistingProject] Event from gRPC: ${JSON.stringify(event)}`,
+);
+
+// 7.3. Leer evaluationsOpened y endDate (defensivo: camelCase y snake_case)
+const evaluationsOpened =
+  (event as any).evaluationsOpened ??
+  (event as any).evaluations_opened ??
+  undefined;
+
+if (evaluationsOpened === undefined) {
+  this.logger.warn(
+    `[addFilesToExistingProject] evaluationsOpened is undefined in event: ${JSON.stringify(
+      event,
+    )}`,
+  );
+  throw new BadRequestException(
+    'Cannot add files: event evaluations state is not properly configured',
+  );
+}
+
+if (evaluationsOpened === true) {
+  throw new BadRequestException(
+    'Cannot add files: evaluations are already opened for this event/project',
+  );
+}
+
+const rawEndDate =
+  (event as any).endDate ??
+  (event as any).end_date ??
+  undefined;
+
+if (!rawEndDate) {
+  throw new BadRequestException(
+    'Cannot add files: event end date is not defined',
+  );
+}
+
+const eventEndDate =
+  rawEndDate instanceof Date ? rawEndDate : new Date(rawEndDate);
+
+const now = new Date();
+
+if (now >= eventEndDate) {
+  throw new BadRequestException(
+    'Cannot add files: event end date has already passed',
+  );
+}
+
+  // 8. Subir archivos a Azure
+  this.logger.log(
+    `Uploading ${files.length} file(s) to Azure Blob Storage for project ${projectId}`,
+  );
+  let uploadResults;
+  try {
+    const uploadPromises = files.map((file) =>
+      this.azureBlobUploadService.uploadFile(file),
+    );
+    uploadResults = await Promise.all(uploadPromises);
+    this.logger.log(`Successfully uploaded ${uploadResults.length} files`);
+  } catch (error) {
+    this.logger.error(
+      `Failed to upload files to Azure: ${error.message}`,
+      error.stack,
+    );
+    throw new BadRequestException(
+      `Failed to upload files: ${error.message}`,
+    );
+  }
+
+  // 9. Adjuntar documentos al proyecto
+  this.logger.log(
+    `Attaching ${uploadResults.length} document(s) to project ${projectId}`,
+  );
+  try {
+    const addDocumentPromises = uploadResults.map((uploadResult, index) =>
+      firstValueFrom(
+        this.projectsService.addProjectDocumentFromUrl({
+          projectId,
+          url: uploadResult.url,
+          type: this.mapDocumentTypeToProto(documentMetadata[index].type),
+        }),
+      ),
+    );
+    await Promise.all(addDocumentPromises);
+    this.logger.log(
+      `Successfully attached ${uploadResults.length} documents to project ${projectId}`,
+    );
+  } catch (error) {
+    this.logger.error(
+      `Failed to attach documents to project: ${error.message}`,
+      error.stack,
+    );
+    throw new BadRequestException(
+      `Files uploaded, but failed to attach documents: ${error.message}`,
+    );
+  }
+
+  return {
+    message: 'Files added to project successfully',
+    success: true,
+  };
+}
+}

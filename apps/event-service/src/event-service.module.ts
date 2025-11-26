@@ -15,3 +15,4 @@ import { CoursesModule } from './modules/courses/courses.module';
   providers: [],
 })
 export class EventServiceModule {}
+ 
