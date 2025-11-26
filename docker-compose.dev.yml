@@ -121,6 +121,8 @@ services:
       - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD:-postgres}@postgres:5432/event_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50053}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
       - NODE_ENV=${NODE_ENV:-development}
       - CI=true
     ports:
