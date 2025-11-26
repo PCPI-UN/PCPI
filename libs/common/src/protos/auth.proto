@@ -23,6 +23,8 @@ service AuthService {
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
   // Logs in with Microsoft token
   rpc LoginWithMicrosoft(LoginWithMicrosoftRequest) returns (LoginResponse) {}
+  // Generates an account setup token for new users (used by invitation-service)
+  rpc GenerateAccountSetupToken(GenerateAccountSetupTokenRequest) returns (GenerateAccountSetupTokenResponse) {}
 
 
 
@@ -147,6 +149,17 @@ message ChangePasswordRequest {
 message ChangePasswordResponse {
   bool success = 1;
   string message = 2;
+}
+
+// The request message for generating an account setup token.
+message GenerateAccountSetupTokenRequest {
+  int32 userId = 1;
+}
+
+// The response message containing the account setup token.
+message GenerateAccountSetupTokenResponse {
+  string token = 1;
+  string expiresAt = 2; // ISO 8601 timestamp
 }
 
 // ---- USER MODULE REQUEST/RESPONSE ----

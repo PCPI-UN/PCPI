@@ -71,6 +71,20 @@ export class PrismaInvitationRepository implements InvitationRepositoryPort {
     return prismaInvitation ? InvitationMapper.toDomain(prismaInvitation) : null;
   }
 
+  async findAcceptedByEmailAndTargetType(email: string, targetType: string, targetId: number): Promise<Invitation | null> {
+    const prismaInvitation = await this.prisma.invitation.findFirst({
+      where: {
+        email,
+        targetType: targetType as any,
+        targetId,
+        status: 'ACCEPTED',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return prismaInvitation ? InvitationMapper.toDomain(prismaInvitation) : null;
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.invitation.delete({
       where: { id },
