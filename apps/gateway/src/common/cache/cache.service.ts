@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+// NOTE: Redis is currently disabled. Uncomment the initialization in constructor to re-enable.
 import { createClient, RedisClientType } from 'redis';
 import { createHash } from 'crypto';
 import { AppUser } from '../../modules/auth/types/app-user.type';
@@ -22,7 +23,8 @@ export class CacheService implements OnModuleDestroy {
   private isConnected = false;
 
   constructor(private readonly configService: ConfigService) {
-    this.initializeRedisClient();
+    // Redis initialization disabled - uncomment to enable
+    // this.initializeRedisClient();
   }
 
   private async initializeRedisClient() {

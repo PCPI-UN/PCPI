@@ -9,6 +9,7 @@ import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token
 import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-password.use-case';
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
+import { GenerateAccountSetupTokenUseCase } from '@auth/application/use-cases/generate-account-setup-token.use-case';
 
 
 // Proto Responses types
@@ -20,6 +21,7 @@ import {
   ValidateTokenResponse,
   ForgotPasswordResponse,
   ChangePasswordResponse,
+  GenerateAccountSetupTokenResponse,
 } from '@app/common/generated/auth';
 
 // DTOs
@@ -30,6 +32,7 @@ import { ValidateTokenDto } from '@auth/application/dto/validate-token.dto';
 import { ForgotPasswordDto } from '@auth/application/dto/forgot-password.dto';
 import { ChangePasswordDto } from '@auth/application/dto/change-password.dto';
 import { LoginWithMicrosoftDto } from '@auth/application/dto/login-with-microsoft.dto';
+import { GenerateAccountSetupTokenDto } from '@auth/application/dto/generate-account-setup-token.dto';
 
 
 // Mappers
@@ -45,6 +48,7 @@ export class AuthController {
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly loginWithMicrosoftUseCase: LoginWithMicrosoftUseCase,
+    private readonly generateAccountSetupTokenUseCase: GenerateAccountSetupTokenUseCase,
   ) { }
 
 
@@ -101,5 +105,15 @@ export class AuthController {
       request.newPassword,
     );
     return AuthMapper.toChangePasswordResponse(success, message);
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'GenerateAccountSetupToken')
+  async generateAccountSetupToken(
+    request: GenerateAccountSetupTokenDto,
+  ): Promise<GenerateAccountSetupTokenResponse> {
+    const { token, expiresAt } = await this.generateAccountSetupTokenUseCase.execute(
+      request.userId,
+    );
+    return AuthMapper.toGenerateAccountSetupTokenResponse(token, expiresAt);
   }
 }

@@ -60,4 +60,15 @@ export class PrismaUserTokenRepository implements UserTokenRepositoryPort {
       data: { usedAt: new Date() },
     });
   }
+
+  async markAllAccountSetupTokensAsUsedForUser(userId: number): Promise<void> {
+    await this.prisma.userToken.updateMany({
+      where: {
+        userId,
+        type: UserTokenType.ACCOUNT_SETUP,
+        usedAt: null,
+      },
+      data: { usedAt: new Date() },
+    });
+  }
 }

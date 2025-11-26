@@ -1,30 +1,19 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
-import { ClientGrpc, RpcException } from '@nestjs/microservices';
+import { Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
-import { firstValueFrom } from 'rxjs';
 import { GetInvitationByTokenDto } from '../dto/get-invitation-by-token.dto';
 import { InvitationRepositoryPort } from '../../domain/repositories/invitation.repository.port';
 import { InvitationRoleRepositoryPort } from '../../domain/repositories/invitation-role.repository.port';
-import {
-  AUTH_SERVICE_NAME,
-  AuthServiceClient,
-} from '@app/common/generated/auth';
+import { AuthServicePort } from '../../infrastructure/ports/auth-service.port';
 import { GetInvitationByTokenResponse } from '@app/common/generated/invitation';
 
 @Injectable()
-export class GetInvitationByTokenUseCase implements OnModuleInit {
-  private authService: AuthServiceClient;
-
+export class GetInvitationByTokenUseCase {
   constructor(
     private readonly invitationRepository: InvitationRepositoryPort,
     private readonly invitationRoleRepository: InvitationRoleRepositoryPort,
-    @Inject(AUTH_SERVICE_NAME) private readonly client: ClientGrpc,
+    private readonly authService: AuthServicePort,
   ) {}
-
-  onModuleInit() {
-    this.authService =
-      this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
-  }
 
   async execute(
     dto: GetInvitationByTokenDto,
@@ -45,9 +34,7 @@ export class GetInvitationByTokenUseCase implements OnModuleInit {
       });
     }
 
-    const user = await firstValueFrom(
-      this.authService.getUser({ id: invitation.invitedUserId }),
-    );
+    const user = await this.authService.getUser(invitation.invitedUserId);
 
     // Fetch invitation roles
     const invitationRoles = await this.invitationRoleRepository.findByInvitationId(invitation.id);

@@ -1,36 +1,28 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ClientGrpc, RpcException } from '@nestjs/microservices';
+import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
-import { firstValueFrom } from 'rxjs';
+import { randomUUID } from 'crypto';
 import { InvitationRepositoryPort } from '../../domain/repositories/invitation.repository.port';
+import { InvitationRoleRepositoryPort } from '../../domain/repositories/invitation-role.repository.port';
 import { NotificationServicePort } from '../../infrastructure/ports/notification-service.port';
-import { InvitationTargetType, InvitationStatus } from '../../domain/entities/invitation.entity';
-import { AUTH_SERVICE_NAME, AuthServiceClient } from '@app/common/generated/auth';
-import { EventServiceClient } from '@app/common/generated/event';
-import { ProjectsServiceClient } from '@app/common/generated/project';
-import { EVENT_SERVICE_NAME, PROJECT_SERVICE_NAME } from '../../invitations.module';
+import { AuthServicePort } from '../../infrastructure/ports/auth-service.port';
+import { EventServicePort } from '../../infrastructure/ports/event-service.port';
+import { ProjectServicePort } from '../../infrastructure/ports/project-service.port';
+import { Invitation, InvitationTargetType, InvitationStatus } from '../../domain/entities/invitation.entity';
+import { InvitationRole } from '../../domain/entities/invitation-role.entity';
 
 @Injectable()
-export class ResendInvitationUseCase implements OnModuleInit {
-    private authService: AuthServiceClient;
-    private eventService: EventServiceClient;
-    private projectService: ProjectsServiceClient;
-
+export class ResendInvitationUseCase {
     constructor(
         private readonly invitationRepository: InvitationRepositoryPort,
-        @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
+        private readonly invitationRoleRepository: InvitationRoleRepositoryPort,
+        private readonly authService: AuthServicePort,
+        private readonly eventService: EventServicePort,
+        private readonly projectService: ProjectServicePort,
         private readonly notificationService: NotificationServicePort,
         private readonly configService: ConfigService,
-        @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
-        @Inject(PROJECT_SERVICE_NAME) private readonly projectClient: ClientGrpc,
     ) { }
-
-    onModuleInit() {
-        this.authService = this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
-        this.eventService = this.eventClient.getService<EventServiceClient>(EVENT_SERVICE_NAME);
-        this.projectService = this.projectClient.getService<ProjectsServiceClient>(PROJECT_SERVICE_NAME);
-    }
 
     async execute(invitationId: string): Promise<boolean> {
         const invitation = await this.invitationRepository.findById(invitationId);
@@ -49,41 +41,30 @@ export class ResendInvitationUseCase implements OnModuleInit {
             });
         }
 
-        // Update expiration
-        const expiresInSeconds = this.configService.get<number>(
-            'INVITATION_EXPIRATION_SECONDS',
-            2 * 24 * 60 * 60 // 2 days
+        // Check if user has already accepted an invitation for this target
+        const acceptedInvitation = await this.invitationRepository.findAcceptedByEmailAndTargetType(
+            invitation.email,
+            invitation.targetType,
+            invitation.targetId,
         );
-        invitation.expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
-        invitation.status = InvitationStatus.PENDING;
 
-        await this.invitationRepository.save(invitation);
+        if (acceptedInvitation) {
+            const targetName = invitation.targetType === InvitationTargetType.EVENT
+                ? 'event'
+                : invitation.targetType === InvitationTargetType.PROJECT
+                    ? 'project'
+                    : 'platform';
 
-        // Fetch data for email
-        let eventData: any = null;
-        let projectData: any = null;
-
-        if (invitation.targetType === InvitationTargetType.EVENT) {
-            const eventResponse = await firstValueFrom(
-                this.eventService.getEvent({ id: invitation.targetId }),
-            );
-            eventData = eventResponse.event;
-        } else if (invitation.targetType === InvitationTargetType.PROJECT) {
-            const projectResponse = await firstValueFrom(
-                this.projectService.getProject({ id: invitation.targetId }),
-            );
-            projectData = projectResponse.project;
-
-            const eventResponse = await firstValueFrom(
-                this.eventService.getEvent({ id: projectData.eventId }),
-            );
-            eventData = eventResponse.event;
+            throw new RpcException({
+                code: status.ALREADY_EXISTS,
+                message: `User has already accepted an invitation for this ${targetName}`,
+            });
         }
 
         // Get user details
         let user;
         try {
-            user = await firstValueFrom(this.authService.getUserByEmail({ email: invitation.email }));
+            user = await this.authService.getUserByEmail(invitation.email);
         } catch (error) {
             throw new RpcException({
                 code: status.NOT_FOUND,
@@ -91,13 +72,83 @@ export class ResendInvitationUseCase implements OnModuleInit {
             });
         }
 
+        // Fetch invitation roles to preserve them
+        const invitationRoles = await this.invitationRoleRepository.findByInvitationId(invitation.id);
+
+        const expiresInSeconds = this.configService.get<number>(
+            'INVITATION_EXPIRATION_SECONDS',
+            2 * 24 * 60 * 60 // 2 days
+        );
+
+        let newInvitation: Invitation;
+        let token: string;
+        let expiresAt: Date;
+        const now = new Date();
+
+        // Check if user is PENDING (hasn't set up their account yet)
+        const isPendingUser = user.status === 'PENDING';
+
+        if (isPendingUser) {
+            // For PENDING users: Create new invitation with new ACCOUNT_SETUP token
+            
+            // 1. Mark old invitation as EXPIRED
+            invitation.status = InvitationStatus.EXPIRED;
+            await this.invitationRepository.save(invitation);
+
+            // 2. Generate new ACCOUNT_SETUP token (old ones automatically invalidated)
+            const accountSetupToken = await this.authService.generateAccountSetupToken(user.id);
+            token = accountSetupToken.token;
+            expiresAt = accountSetupToken.expiresAt;
+
+            // 3. Create new invitation record with new token
+            newInvitation = new Invitation(
+                randomUUID(),
+                token,
+                invitation.email,
+                invitation.targetType,
+                invitation.targetId,
+                InvitationStatus.PENDING,
+                expiresAt,
+                invitation.invitedByUserId,
+                invitation.invitedUserId,
+                now,
+                now,
+            );
+
+            await this.invitationRepository.save(newInvitation);
+
+            // 4. Preserve invitation roles
+            for (const invitationRole of invitationRoles) {
+                const newRole = new InvitationRole(newInvitation.id, invitationRole.roleId);
+                await this.invitationRoleRepository.save(newRole);
+            }
+        } else {
+            // For CONFIRMED users: Just update expiration (they accept via dashboard)
+            invitation.expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+            invitation.status = InvitationStatus.PENDING;
+            await this.invitationRepository.save(invitation);
+            
+            newInvitation = invitation;
+            token = invitation.token;
+        }
+
+        // Fetch data for email
+        let eventData: any = null;
+        let projectData: any = null;
+
+        if (invitation.targetType === InvitationTargetType.EVENT) {
+            eventData = await this.eventService.getEvent(invitation.targetId);
+        } else if (invitation.targetType === InvitationTargetType.PROJECT) {
+            projectData = await this.projectService.getProject(invitation.targetId);
+            eventData = await this.eventService.getEvent(projectData.eventId);
+        }
+
         const frontendUrl = this.configService.get<string>('FRONTEND_URL');
         let invitationLink = '';
         if (user.status === 'PENDING')
-            invitationLink = `${frontendUrl}/auth/chg-password?token=${invitation.token}`;
-        else // The user already exist and therefore they can accept invitations in the dashboard
+            invitationLink = `${frontendUrl}/auth/chg-password?token=${token}`;
+        else // The user already exists and therefore they can accept invitations in the dashboard
             invitationLink = `${frontendUrl}/dashboard/invitations`;
-
 
         await this.sendInvitationEmail({
             targetType: invitation.targetType,
