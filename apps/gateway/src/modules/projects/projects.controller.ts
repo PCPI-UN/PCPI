@@ -250,6 +250,11 @@ export class ProjectsController {
   }
 
   @Get('assigned-projects')
+  @ApiOperation({
+    summary: 'List projects assigned to a juror',
+    description:
+      'Returns paginated projects assigned to a specific juror within an event.',
+  })
   async listAssignedProjects(
     @Query() query: ListProjectsAssignedToJurorDto,
   ) {
@@ -281,6 +286,15 @@ export class ProjectsController {
   }
 
   @Patch('documents/:id')
+  @ApiOperation({
+    summary: 'Update project document',
+    description: 'Update the document file, type, or state of a project document.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project Document ID',
+    example: 1,
+  })
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
