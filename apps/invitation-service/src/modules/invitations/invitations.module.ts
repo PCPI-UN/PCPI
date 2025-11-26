@@ -9,14 +9,14 @@ import {
   protobufPackage as notificationProtobufPackage,
 } from '@app/common/generated/notification';
 import {
+  EVENT_SERVICE_NAME,
   protobufPackage as eventProtobufPackage,
 } from '@app/common/generated/event';
 import {
+  PROJECTS_SERVICE_NAME,
   protobufPackage as projectProtobufPackage,
 } from '@app/common/generated/project';
 
-export const EVENT_SERVICE_NAME = 'EventService';
-export const PROJECT_SERVICE_NAME = 'ProjectsService';
 
 
 // Application
@@ -39,6 +39,12 @@ import { PrismaInvitationRoleRepository } from './infrastructure/prisma/prisma-i
 import { NotificationGrpcClient } from '../../common/grpc-client/notification.grpc-client';
 import { NotificationServiceAdapter } from './infrastructure/adapters/notification-service.adapter';
 import { NotificationServicePort } from './infrastructure/ports/notification-service.port';
+import { AuthServiceAdapter } from './infrastructure/adapters/auth-service.adapter';
+import { AuthServicePort } from './infrastructure/ports/auth-service.port';
+import { EventServiceAdapter } from './infrastructure/adapters/event-service.adapter';
+import { EventServicePort } from './infrastructure/ports/event-service.port';
+import { ProjectServiceAdapter } from './infrastructure/adapters/project-service.adapter';
+import { ProjectServicePort } from './infrastructure/ports/project-service.port';
 
 // Interface
 import { InvitationController } from './interface/grpc/invitation.controller';
@@ -96,7 +102,7 @@ import { InvitationController } from './interface/grpc/invitation.controller';
         inject: [ConfigService],
       },
       {
-        name: PROJECT_SERVICE_NAME,
+        name: PROJECTS_SERVICE_NAME,
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.GRPC,
@@ -140,6 +146,24 @@ import { InvitationController } from './interface/grpc/invitation.controller';
     {
       provide: NotificationServicePort,
       useClass: NotificationServiceAdapter,
+    },
+
+    // Auth Service Integration
+    {
+      provide: AuthServicePort,
+      useClass: AuthServiceAdapter,
+    },
+
+    // Event Service Integration
+    {
+      provide: EventServicePort,
+      useClass: EventServiceAdapter,
+    },
+
+    // Project Service Integration
+    {
+      provide: ProjectServicePort,
+      useClass: ProjectServiceAdapter,
     },
   ],
   exports: [

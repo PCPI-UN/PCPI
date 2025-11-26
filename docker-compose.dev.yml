@@ -50,6 +50,7 @@ services:
       - JWT_REFRESH_TOKEN_EXPIRATION_DAYS=${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:-7}
       - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
       - PASSWORD_RESET_TOKEN_EXPIRY_MINUTES=${PASSWORD_RESET_TOKEN_EXPIRY_MINUTES:-15}
+      - ACCOUNT_SETUP_TOKEN_EXPIRY_SECONDS=${ACCOUNT_SETUP_TOKEN_EXPIRY_SECONDS:-172800}
       - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-admin123}
       - SEED_TEST_USER_PASSWORD=${SEED_TEST_USER_PASSWORD:-test123}
       - CI=true
@@ -84,6 +85,9 @@ services:
       - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD:-postgres}@postgres:5432/evaluation_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50052}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service-dev:50051}
+      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service-dev:50053}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service-dev:50055}
       - NODE_ENV=${NODE_ENV:-development}
       - CI=true
     ports:
@@ -117,6 +121,8 @@ services:
       - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD:-postgres}@postgres:5432/event_service
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50053}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
       - NODE_ENV=${NODE_ENV:-development}
       - CI=true
     ports:
@@ -230,6 +236,7 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - ALLOW_INSECURE_COOKIES=${ALLOW_INSECURE_COOKIES:-true}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN}
       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
       - JWT_REFRESH_PUBLIC_KEY=${JWT_REFRESH_PUBLIC_KEY}
       - JWT_ACCESS_TOKEN_EXPIRATION=${JWT_ACCESS_TOKEN_EXPIRATION:-15m}

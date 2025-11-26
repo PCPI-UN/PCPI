@@ -21,6 +21,7 @@ import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token
 import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-password.use-case';
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
+import { GenerateAccountSetupTokenUseCase } from '@auth/application/use-cases/generate-account-setup-token.use-case';
 
 
 // Infrastructure Layer
@@ -67,6 +68,7 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
     ForgotPasswordUseCase,
     ChangePasswordUseCase,
     LoginWithMicrosoftUseCase,
+    GenerateAccountSetupTokenUseCase,
 
     {
       provide: TokenServicePort,

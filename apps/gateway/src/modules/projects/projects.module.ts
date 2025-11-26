@@ -10,6 +10,11 @@ import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
 
+import {
+  EVENT_SERVICE_NAME,
+  protobufPackage as eventProtobufPackage,
+} from '@app/common/generated/event';
+
 @Module({
   imports: [
     ClientsModule.registerAsync([
@@ -37,6 +42,31 @@ import { AzureBlobUploadService } from './azure-blob-upload.service';
         }),
         inject: [ConfigService],
       },
+      // 👇 NUEVO: client del event-service
+      {
+        name: EVENT_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: eventProtobufPackage,
+            loader: {
+              keepCase: true,
+              longs: String,
+              enums: String,
+              defaults: true,
+              oneofs: true,
+              arrays: true,
+            },
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/event.proto',
+            ),
+            url: configService.get<string>('EVENT_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
     ]),
   ],
   controllers: [ProjectsController],
@@ -44,3 +74,4 @@ import { AzureBlobUploadService } from './azure-blob-upload.service';
   exports: [ProjectsService],
 })
 export class ProjectsModule {}
+
