@@ -104,13 +104,13 @@ export class AuthController {
       // This will activate the user and link the Microsoft account
       await this.invitationsService.acceptInvitation({
         token: invitationToken,
-        microsoftToken: microsoftTokens.access_token,
+        microsoftToken: microsoftTokens.id_token,
       });
     }
 
     // Proceed with standard login to get our system's JWTs
     // Even if we just accepted an invitation, we now log the user in
-    const { accessToken, refreshToken } = await this.authService.loginWithMicrosoft(microsoftTokens.access_token);
+    const { accessToken, refreshToken } = await this.authService.loginWithMicrosoft(microsoftTokens.id_token);
 
     const accessTokenExpiration = this.configService.get<string>(
       'JWT_ACCESS_TOKEN_EXPIRATION',
