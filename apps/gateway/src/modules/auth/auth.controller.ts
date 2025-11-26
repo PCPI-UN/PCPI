@@ -135,7 +135,7 @@ export class AuthController {
     });
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-    response.redirect(frontendUrl);
+    response.redirect(`${frontendUrl}/app`);
   }
 
 
