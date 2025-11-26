@@ -7,10 +7,7 @@ import { EventServiceModule } from './common/clients/event-service.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: './apps/evaluation-service/.env',
-    }),
+    ConfigModule.forRoot({isGlobal: true}),
     ProjectServiceModule,
     EventServiceModule,
     EvaluationsModule,

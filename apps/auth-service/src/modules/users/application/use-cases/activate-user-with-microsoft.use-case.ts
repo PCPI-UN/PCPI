@@ -5,11 +5,13 @@ import { UserRepositoryPort } from '../../domain/repositories/user.repository.po
 import { ActivateUserWithMicrosoftDto } from '../dto/activate-user-with-microsoft.dto';
 import { ActivateUserResponse } from '@app/common/generated/auth';
 import { UserStatus } from '../../domain/entities/user.entity';
+import { UserTokenRepositoryPort } from '../../domain/repositories/user-token.repository.port';
 
 @Injectable()
 export class ActivateUserWithMicrosoftUseCase {
     constructor(
         private readonly userRepository: UserRepositoryPort,
+        private readonly userTokenRepository: UserTokenRepositoryPort,
     ) { }
 
     async execute(dto: ActivateUserWithMicrosoftDto): Promise<ActivateUserResponse> {
@@ -44,6 +46,9 @@ export class ActivateUserWithMicrosoftUseCase {
         user.status = UserStatus.CONFIRMED;
 
         await this.userRepository.save(user);
+
+        // Mark all ACCOUNT_SETUP tokens as used for this user
+        await this.userTokenRepository.markAllAccountSetupTokensAsUsedForUser(dto.userId);
 
         return { success: true };
     }

@@ -108,6 +108,9 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=postgresql://evaluation_user:${EVALUATION_DB_PASSWORD}@postgres:5432/evaluation_service
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
+      - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50052}
     depends_on:
@@ -153,6 +156,8 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=postgresql://event_user:${EVENT_DB_PASSWORD}@postgres:5432/event_service
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
+      - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50053}
     depends_on:
@@ -248,6 +253,7 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=postgresql://project_user:${PROJECT_DB_PASSWORD}@postgres:5432/project_service
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
       - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
       - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
       - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service:50054}
@@ -290,6 +296,8 @@ services:
   #     - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
   #     - NODE_ENV=${NODE_ENV:-production}
   #     - ALLOW_INSECURE_COOKIES=${ALLOW_INSECURE_COOKIES:-false}
+  #     - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
+  #     - COOKIE_DOMAIN=${COOKIE_DOMAIN}
   #     - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
   #     - JWT_REFRESH_PUBLIC_KEY=${JWT_REFRESH_PUBLIC_KEY}
   #     - JWT_ACCESS_TOKEN_EXPIRATION=${JWT_ACCESS_TOKEN_EXPIRATION:-15m}

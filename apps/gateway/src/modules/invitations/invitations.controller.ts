@@ -14,6 +14,50 @@ import { RequirePermission } from '../../common/decorators/require-permission.de
 export class InvitationsController {
   constructor(private readonly invitationsService: InvitationsService) { }
 
+   @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get my invitations',
+    description: 'Retrieves a list of invitations for the currently logged-in user.',
+  })
+  @ApiQuery({
+    name: 'status',
+    description: 'Filter invitations by status (e.g., PENDING, ACCEPTED)',
+    required: false,
+    type: String,
+    example: 'PENDING',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Page number for pagination',
+    required: false,
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    description: 'Number of items per page',
+    required: false,
+    type: Number,
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of user invitations retrieved successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - JWT token missing or invalid',
+  })
+  getUserInvitations(
+    @GetUser() user: AppUser,
+    @Query('status') status?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    return this.invitationsService.getUserInvitations(user.id, status, page, limit);
+  }
+  
   @Post()
   @ApiBearerAuth()
   @ApiOperation({
@@ -228,47 +272,5 @@ export class InvitationsController {
     return this.invitationsService.resendInvitation(invitationId);
   }
 
-  @Get('me')
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get my invitations',
-    description: 'Retrieves a list of invitations for the currently logged-in user.',
-  })
-  @ApiQuery({
-    name: 'status',
-    description: 'Filter invitations by status (e.g., PENDING, ACCEPTED)',
-    required: false,
-    type: String,
-    example: 'PENDING',
-  })
-  @ApiQuery({
-    name: 'page',
-    description: 'Page number for pagination',
-    required: false,
-    type: Number,
-    example: 1,
-  })
-  @ApiQuery({
-    name: 'limit',
-    description: 'Number of items per page',
-    required: false,
-    type: Number,
-    example: 10,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'List of user invitations retrieved successfully',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - JWT token missing or invalid',
-  })
-  getUserInvitations(
-    @GetUser() user: AppUser,
-    @Query('status') status?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.invitationsService.getUserInvitations(user.id, status, page, limit);
-  }
+ 
 }

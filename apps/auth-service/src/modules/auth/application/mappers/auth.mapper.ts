@@ -5,6 +5,7 @@ import {
   ValidateTokenResponse,
   ForgotPasswordResponse,
   ChangePasswordResponse,
+  GenerateAccountSetupTokenResponse,
 } from '@app/common/generated/auth';
 
 import { UserTokenType } from '@users/domain/entities/user-token.entity';
@@ -44,6 +45,16 @@ export class AuthMapper {
     return {
       success,
       message,
+    };
+  }
+
+  static toGenerateAccountSetupTokenResponse(
+    token: string,
+    expiresAt: Date,
+  ): GenerateAccountSetupTokenResponse {
+    return {
+      token,
+      expiresAt: expiresAt.toISOString(),
     };
   }
 }
