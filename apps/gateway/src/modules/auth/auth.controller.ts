@@ -59,17 +59,21 @@ export class AuthController {
       '7d',
     );
 
+    const cookieDomain = this.getCookieDomain();
+
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
       sameSite: 'lax',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
+      ...(cookieDomain && { domain: cookieDomain }),
     });
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
       sameSite: 'lax',
       maxAge: this.parseJwtExpiration(refreshTokenExpiration),
+      ...(cookieDomain && { domain: cookieDomain }),
     });
     return { success: true, message: 'Login successful' };
   }
@@ -121,17 +125,21 @@ export class AuthController {
       '7d',
     );
 
+    const cookieDomain = this.getCookieDomain();
+
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
       sameSite: 'lax',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
+      ...(cookieDomain && { domain: cookieDomain }),
     });
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
       sameSite: 'lax',
       maxAge: this.parseJwtExpiration(refreshTokenExpiration),
+      ...(cookieDomain && { domain: cookieDomain }),
     });
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
@@ -144,8 +152,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout from the system' })
   @ApiResponse({ status: 200, description: 'Logout successful, clears all auth cookies' })
   async logout(@Res({ passthrough: true }) response: Response) {
-    response.clearCookie('access_token');
-    response.clearCookie('refresh_token');
+    const cookieDomain = this.getCookieDomain();
+    const clearOptions = cookieDomain ? { domain: cookieDomain } : {};
+
+    response.clearCookie('access_token', clearOptions);
+    response.clearCookie('refresh_token', clearOptions);
     return { message: 'Logged out successfully' };
   }
 
@@ -167,11 +178,14 @@ export class AuthController {
       '15m',
     );
 
+    const cookieDomain = this.getCookieDomain();
+
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.isSecureContext(),
       sameSite: 'lax',
       maxAge: this.parseJwtExpiration(accessTokenExpiration),
+      ...(cookieDomain && { domain: cookieDomain }),
     });
 
     return { success: true, message: 'Token refreshed successfully' };
@@ -241,6 +255,14 @@ export class AuthController {
     const isProduction = this.configService.get('NODE_ENV') === 'production';
     const allowInsecure = this.configService.get('ALLOW_INSECURE_COOKIES') === 'true';
     return isProduction && !allowInsecure;
+  }
+
+  /**
+   * Get cookie domain for cross-subdomain cookie sharing
+   * Returns domain like '.domain.com' to allow cookies to work across subdomains
+   */
+  private getCookieDomain(): string | undefined {
+    return this.configService.get<string>('COOKIE_DOMAIN');
   }
 
   /**
