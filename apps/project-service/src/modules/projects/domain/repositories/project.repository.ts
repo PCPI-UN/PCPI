@@ -64,7 +64,7 @@ export interface ProjectRepository {
   ): Promise<{ items: Project[]; total: number }>;
 
   findDocumentById(id: number): Promise<ProjectDocument | null>;
-  findProjectWithEvent(projectId: number): Promise<Project & { event: any } | null>;
+  findProjectWithEvent(projectId: number): Promise<Project | null>;
   isUserParticipant(projectId: number, userId: number): Promise<boolean>;
 
 

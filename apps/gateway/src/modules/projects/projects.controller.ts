@@ -34,11 +34,8 @@ import { RejectProjectDto } from './dto/reject-project.dto';
 import { ListProjectsByEventDto } from './dto/list-projects-by-event.dto';
 import { DocumentStatusFilter, UpdateProjectDocumentDto } from './dto/update-project-document.dto';
 import { TypedDocument } from './dto/project-document-input.dto';
-<<<<<<< HEAD
 import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-juror.dto';
-=======
 import { AddProjectDocumentsMultipartDto} from './dto/add-project-files-multipart.dto';
->>>>>>> 8b843ec93c928625dc83d87b4da79dae865db89a
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
