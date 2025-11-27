@@ -250,15 +250,11 @@ export class ProjectsController {
   }
 
   @Get('assigned-projects')
-  @ApiOperation({
-    summary: 'List projects assigned to a juror',
-    description:
-      'Returns paginated projects assigned to a specific juror within an event.',
-  })
   async listAssignedProjects(
     @Query() query: ListProjectsAssignedToJurorDto,
+    @GetUser('id') jurorId: number,
   ) {
-    const { jurorId, eventId, page, pageSize } = query;
+    const { eventId, page, pageSize } = query;
 
     return this.projectsService.listAssignedProjectsByJuror(
       Number(jurorId),

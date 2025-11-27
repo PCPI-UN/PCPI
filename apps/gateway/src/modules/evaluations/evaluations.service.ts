@@ -8,6 +8,10 @@ import {
     CriterionsServiceClient,
     FindEvaluationsByEvaluatorResponse,
     FindCriterionsByCourseResponse,
+    GetProjectStatsRequest,
+    GetProjectStatsResponse,
+    EvaluateProjectRequest,
+    EvaluationProto,
 } from '@app/common/generated/evaluation';
 import {
     PROJECTS_SERVICE_NAME,
@@ -116,6 +120,30 @@ export class EvaluationsService implements OnModuleInit {
     async getCriterionsGrouped(courseId: number): Promise<FindCriterionsByCourseResponse> {
         return await lastValueFrom(
             this.criterionsService.findCriterionsByCourse({ courseId }),
+        );
+    }
+
+    async getProjectStats(projectId: number): Promise<GetProjectStatsResponse> {
+        const request: GetProjectStatsRequest = { projectId };
+        return await lastValueFrom(
+            this.evaluationService.getProjectStats(request),
+        );
+    }
+
+    async evaluateProject(
+        projectId: number,
+        userId: number,
+        scores: Array<{ criterionId: number; score: number }>,
+        comments?: string,
+    ): Promise<EvaluationProto> {
+        const request: EvaluateProjectRequest = {
+            projectId,
+            userId,
+            scores,
+            comments,
+        };
+        return await lastValueFrom(
+            this.evaluationService.evaluateProject(request),
         );
     }
 }
