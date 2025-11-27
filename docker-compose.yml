@@ -12,6 +12,8 @@ services:
       EVENT_DB_PASSWORD: ${EVENT_DB_PASSWORD}
       INVITATION_DB_PASSWORD: ${INVITATION_DB_PASSWORD}
       PROJECT_DB_PASSWORD: ${PROJECT_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
