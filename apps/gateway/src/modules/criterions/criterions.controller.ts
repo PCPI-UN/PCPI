@@ -141,7 +141,6 @@ export class CriterionsController {
   }
 
   @Get('course/:courseId')
-  @RequirePermission('read:events')
   @ApiOperation({
     summary: 'Get criterions by course',
     description:
