@@ -8,6 +8,7 @@ service EvaluationService {
   rpc FindEvaluationById(FindEvaluationByIdRequest) returns (EvaluationProto);
   rpc FindEvaluationsByEvaluator(FindEvaluationsByEvaluatorRequest) returns (FindEvaluationsByEvaluatorResponse);
   rpc GetProjectStats(GetProjectStatsRequest) returns (GetProjectStatsResponse);
+  rpc CheckEvaluationStatus(CheckEvaluationStatusRequest) returns (CheckEvaluationStatusResponse);
 }
 
 // ===== CRITERIONS SERVICE =====
@@ -56,9 +57,8 @@ message CriterionProto {
 message EvaluationProto {
   int32 id = 1;
   int32 projectId = 2;
-  int32 memberUserId = 3;
-  int32 memberEventId = 4;
-  int32 memberRoleId = 5;
+  int32 userId = 3;
+  int32 eventId = 4;
   double grade = 6;
   optional string comments = 7;
   string date = 8;
@@ -69,16 +69,14 @@ message EvaluationProto {
 
 message EvaluationScore {
   int32 criterionId = 1;
-  double score = 2;
+  int32 score = 2;
 }
 
 message EvaluateProjectRequest {
   int32 projectId = 1;
-  int32 memberUserId = 2;
-  int32 memberEventId = 3;
-  int32 memberRoleId = 4;
-  string comments = 5;
-  repeated EvaluationScore scores = 6;
+  int32 userId = 2;
+  optional string comments = 3;
+  repeated EvaluationScore scores = 4;
 }
 
 message FindEvaluationByIdRequest {
@@ -101,19 +99,33 @@ message GetProjectStatsRequest {
   int32 projectId = 1;
 }
 
-message CriterionStatsResponse {
-  int32 id = 1;
-  string name = 2;
+message CategoryStatsResponse {
+  string category = 1;
+  double averageScore = 2;
   double weight = 3;
-  double averageScore = 4;
-  optional string description = 5;
 }
 
 message GetProjectStatsResponse {
   int32 projectId = 1;
   double averageGrade = 2;
   int32 evaluationCount = 3;
-  repeated CriterionStatsResponse criterionStats = 4;
+  repeated CategoryStatsResponse categoryStats = 4;
+}
+
+message CheckEvaluationStatusRequest {
+  int32 userId = 1;
+  int32 eventId = 2;
+  repeated int32 projectIds = 3;
+}
+
+message ProjectEvaluationStatus {
+  int32 projectId = 1;
+  bool evaluated = 2;
+  optional EvaluationProto evaluation = 3;
+}
+
+message CheckEvaluationStatusResponse {
+  repeated ProjectEvaluationStatus projects = 1;
 }
 
 message EvaluationDetailResponse {
@@ -130,9 +142,16 @@ message FindCriterionsByCourseRequest {
   int32 courseId = 1;
 }
 
+// Simplified criterion info for category grouping
+message CriterionSummary {
+  int32 id = 1;
+  string name = 2;
+}
+
 message CriterionCategoryProto {
   string category = 1;
-  repeated CriterionProto criterions = 2;
+  double weight = 2;
+  repeated CriterionSummary criterions = 3;
 }
 
 // The response message for getting criterions of a course

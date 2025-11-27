@@ -1,36 +1,68 @@
-import { Inject, Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { EvaluationRepositoryPort } from '../../domain/repositories/evaluation.repository.port';
-import { ProjectServicePort } from '../../infrastructure/ports/project.service.port';
-import { EventServicePort } from '../../infrastructure/ports/event.service.port';
-import { CriterionRepositoryPort } from '../../../criterions/domain/repositories/criterion.repository.port';
-import { Evaluation } from '../../domain/entities/evaluation.entity';
-import { EvaluationDetail } from '../../domain/entities/evaluation-detail.entity';
-import { EvaluateProjectRequest } from '@app/common/generated/evaluation';
+import { Injectable, Logger } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { status } from '@grpc/grpc-js';
+import { EvaluationRepositoryPort } from '@evaluations/domain/repositories/evaluation.repository.port';
+import { ProjectServicePort } from '@evaluations/infrastructure/ports/project.service.port';
+import { EventServicePort } from '@evaluations/infrastructure/ports/event.service.port';
+import { AuthServicePort } from '@evaluations/infrastructure/ports/auth.service.port';
+import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
+import { Evaluation } from '@evaluations/domain/entities/evaluation.entity';
+import { EvaluationDetail } from '@evaluations/domain/entities/evaluation-detail.entity';
+import { EvaluateProjectDto } from '../dto/evaluate-project.dto';
+import { Role } from '@app/common/generated/auth';
 
 @Injectable()
 export class EvaluateProjectUseCase {
+    private readonly logger = new Logger(EvaluateProjectUseCase.name);
     constructor(
-        @Inject(EvaluationRepositoryPort)
         private readonly evaluationRepository: EvaluationRepositoryPort,
-        @Inject(ProjectServicePort)
         private readonly projectService: ProjectServicePort,
-        @Inject(EventServicePort)
         private readonly eventService: EventServicePort,
-        @Inject(CriterionRepositoryPort)
+        private readonly authService: AuthServicePort,
         private readonly criterionRepository: CriterionRepositoryPort,
     ) { }
 
-    async execute(request: EvaluateProjectRequest): Promise<Evaluation> {
-        const { projectId, memberUserId, memberEventId, memberRoleId, scores, comments } = request;
+    async execute(request: EvaluateProjectDto): Promise<{ evaluation: Evaluation; scores: EvaluationDetail[] }> {
+        const { projectId, userId, scores, comments } = request;
+
+        // 0. Get project to extract eventId
+        const project = await this.projectService.getProject(projectId);
+        if (!project) {
+            throw new RpcException({
+                code: status.NOT_FOUND,
+                message: 'Project not found',
+            });
+        }
+
+        const memberEventId = project.eventId;
+
+        // 0.1 Get Juror role ID from auth service
+        const roles = await this.authService.getRoles();
+        const jurorRole = roles.find((role: Role) => role.name === 'Juror');
+        if (!jurorRole) {
+            this.logger.error('Juror role not found in the system roles');
+            throw new RpcException({
+                code: status.INTERNAL,
+                message: 'An error ocurred while processing the evaluation',
+            });
+        }
+        const memberRoleId = jurorRole.id;
+        const memberUserId = userId;
 
         // 1. Validate Event
         const event = await this.eventService.getEvent(memberEventId);
         if (!event) {
-            throw new NotFoundException('Event not found');
+            throw new RpcException({
+                code: status.NOT_FOUND,
+                message: 'Event not found',
+            });
         }
 
         if (!event.evaluationsOpened) {
-            throw new BadRequestException('Evaluations are not opened for this event');
+            throw new RpcException({
+                code: status.FAILED_PRECONDITION,
+                message: 'Evaluations are not opened for this event',
+            });
         }
 
         const now = new Date();
@@ -38,19 +70,23 @@ export class EvaluateProjectUseCase {
         const endDate = new Date(event.endDate);
 
         if (now < startDate || now > endDate) {
-            throw new BadRequestException('Evaluations are not allowed at this time');
+            throw new RpcException({
+                code: status.FAILED_PRECONDITION,
+                message: 'Evaluations are not allowed at this time',
+            });
         }
 
         // 2. Validate Juror Assignment
         const isAssigned = await this.projectService.isJurorAssigned(
             projectId,
             memberUserId,
-            memberEventId,
-            memberRoleId,
         );
 
         if (!isAssigned) {
-            throw new BadRequestException('Juror is not assigned to this project');
+            throw new RpcException({
+                code: status.FAILED_PRECONDITION,
+                message: 'Juror is not assigned to this project',
+            });
         }
 
         // 3. Check if already evaluated
@@ -61,7 +97,10 @@ export class EvaluateProjectUseCase {
         );
 
         if (alreadyEvaluated) {
-            throw new BadRequestException('Project already evaluated by this juror');
+            throw new RpcException({
+                code: status.FAILED_PRECONDITION,
+                message: 'Project already evaluated by this juror',
+            });
         }
 
         // 4. Calculate Grade
@@ -79,7 +118,10 @@ export class EvaluateProjectUseCase {
         for (const scoreItem of scores) {
             const criterion = await this.criterionRepository.findById(scoreItem.criterionId);
             if (!criterion) {
-                throw new BadRequestException(`Criterion ${scoreItem.criterionId} not found`);
+                throw new RpcException({
+                    code: status.NOT_FOUND,
+                    message: `Criterion ${scoreItem.criterionId} not found`,
+                });
             }
 
             // Validate score value (1-4)
@@ -87,7 +129,10 @@ export class EvaluateProjectUseCase {
             const mappedValue = scoreMap[numericScore];
 
             if (!mappedValue) {
-                throw new BadRequestException(`Invalid score value: ${scoreItem.score}. Must be 1, 2, 3, or 4.`);
+                throw new RpcException({
+                    code: status.INVALID_ARGUMENT,
+                    message: `Invalid score value: ${scoreItem.score}. Must be 1, 2, 3, or 4.`,
+                });
             }
 
             // Calculate weighted score
@@ -111,8 +156,18 @@ export class EvaluateProjectUseCase {
             new Date()
         );
 
-        evaluation.scores = evaluationDetails;
+        const savedEvaluation = await this.evaluationRepository.save(evaluation, evaluationDetails);
 
-        return this.evaluationRepository.save(evaluation, evaluationDetails);
+        // 6. Return evaluation with scores in the expected format
+        const scoresResponse: EvaluationDetail[] = evaluationDetails.map(detail => ({
+            evaluationId: savedEvaluation.id,
+            criterionId: detail.criterionId,
+            score: detail.score,
+        }));
+
+        return {
+            evaluation: savedEvaluation,
+            scores: scoresResponse,
+        };
     }
 }

@@ -4,6 +4,7 @@ import { lastValueFrom } from 'rxjs';
 import {
     PROJECTS_SERVICE_NAME,
     ProjectsServiceClient,
+    Project,
 } from '@app/common/generated/project';
 import { ProjectServicePort } from '../ports/project.service.port';
 
@@ -23,8 +24,6 @@ export class ProjectServiceAdapter implements ProjectServicePort, OnModuleInit {
     async isJurorAssigned(
         projectId: number,
         userId: number,
-        eventId: number,
-        roleId: number,
     ): Promise<boolean> {
         try {
             const response = await lastValueFrom(
@@ -32,15 +31,22 @@ export class ProjectServiceAdapter implements ProjectServicePort, OnModuleInit {
             );
 
             return response.jurors.some(
-                (juror) =>
-                    juror.memberUserId === userId &&
-                    juror.memberEventId === eventId &&
-                    juror.memberRoleId === roleId
+                (juror) => juror.memberUserId === userId
             );
         } catch (error) {
-            // If project doesn't exist or error, return false or throw
-            // For now, let's return false to be safe
             return false;
+        }
+    }
+
+    async getProject(projectId: number): Promise<Project | null> {
+        try {
+            const response = await lastValueFrom(
+                this.projectsService.getProject({ id: projectId })
+            );
+
+            return response.project || null;
+        } catch (error) {
+            return null;
         }
     }
 }

@@ -252,8 +252,9 @@ export class ProjectsController {
   @Get('assigned-projects')
   async listAssignedProjects(
     @Query() query: ListProjectsAssignedToJurorDto,
+    @GetUser('id') jurorId: number,
   ) {
-    const { jurorId, eventId, page, pageSize } = query;
+    const { eventId, page, pageSize } = query;
 
     return this.projectsService.listAssignedProjectsByJuror(
       Number(jurorId),

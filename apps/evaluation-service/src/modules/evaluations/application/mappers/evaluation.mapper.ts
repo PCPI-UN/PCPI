@@ -3,22 +3,24 @@ import {
   FindEvaluationsByEvaluatorResponse,
   EvaluationDetailResponse,
   GetProjectStatsResponse,
-  CriterionStatsResponse,
+  CategoryStatsResponse,
+  CheckEvaluationStatusResponse,
+  ProjectEvaluationStatus,
   PaginationMetadata
 } from '@app/common/generated/evaluation';
 import { Evaluation } from '@evaluations/domain/entities/evaluation.entity';
-import { ProjectStats, CriterionStats } from '@evaluations/domain/repositories/evaluation.repository.port';
+import { EvaluationDetail } from '@evaluations/domain/entities/evaluation-detail.entity';
+import { ProjectStats, CategoryStats, ProjectEvaluationStatus as DomainProjectEvaluationStatus } from '@evaluations/domain/repositories/evaluation.repository.port';
 
 export class EvaluationMapper {
   static toCreateEvaluationResponse(
-    result: { evaluation: Evaluation; scores: EvaluationDetailResponse[] }
+    result: { evaluation: Evaluation; scores: EvaluationDetail[] }
   ): EvaluationProto {
     return {
       id: result.evaluation.id,
       projectId: result.evaluation.projectId,
-      memberUserId: result.evaluation.memberUserId,
-      memberEventId: result.evaluation.memberEventId,
-      memberRoleId: result.evaluation.memberRoleId,
+      userId: result.evaluation.memberUserId,
+      eventId: result.evaluation.memberEventId,
       grade: result.evaluation.grade,
       comments: result.evaluation.comments || '',
       date: result.evaluation.date.toISOString(),
@@ -32,9 +34,8 @@ export class EvaluationMapper {
     return {
       id: result.evaluation.id,
       projectId: result.evaluation.projectId,
-      memberUserId: result.evaluation.memberUserId,
-      memberEventId: result.evaluation.memberEventId,
-      memberRoleId: result.evaluation.memberRoleId,
+      userId: result.evaluation.memberUserId,
+      eventId: result.evaluation.memberEventId,
       grade: result.evaluation.grade,
       date: result.evaluation.date.toISOString(),
       scores: result.scores.map(score => this.toEvaluationDetailResponse(score)),
@@ -48,9 +49,8 @@ export class EvaluationMapper {
     return {
       id: evaluation.id,
       projectId: evaluation.projectId,
-      memberUserId: evaluation.memberUserId,
-      memberEventId: evaluation.memberEventId,
-      memberRoleId: evaluation.memberRoleId,
+      userId: evaluation.memberUserId,
+      eventId: evaluation.memberEventId,
       grade: evaluation.grade,
       date: evaluation.date.toISOString(),
       scores: [], // Empty for list view
@@ -101,19 +101,49 @@ export class EvaluationMapper {
     projectId: number,
   ): GetProjectStatsResponse {
 
-    const criterionStats: CriterionStatsResponse[] = stats.criterionStats.map((criterion: CriterionStats) => ({
-      id: criterion.id,
-      name: criterion.name,
-      weight: criterion.weight,
-      averageScore: criterion.averageScore,
-      ...(criterion.description ? { description: criterion.description } : {}),
+    const categoryStats: CategoryStatsResponse[] = stats.categoryStats.map((category: CategoryStats) => ({
+      category: category.category,
+      averageScore: category.averageScore,
+      weight: category.weight,
     }));
 
     return {
       projectId,
       averageGrade: stats.averageGrade,
       evaluationCount: stats.evaluationCount,
-      criterionStats,
+      categoryStats,
+    };
+  }
+
+  static toCheckEvaluationStatusResponse(
+    projectStatuses: DomainProjectEvaluationStatus[]
+  ): CheckEvaluationStatusResponse {
+    const projects: ProjectEvaluationStatus[] = projectStatuses.map(status => {
+      if (status.evaluated && status.evaluation) {
+        return {
+          projectId: status.projectId,
+          evaluated: status.evaluated,
+          evaluation: {
+            id: status.evaluation.evaluation.id,
+            projectId: status.evaluation.evaluation.projectId,
+            userId: status.evaluation.evaluation.memberUserId,
+            eventId: status.evaluation.evaluation.memberEventId,
+            grade: status.evaluation.evaluation.grade,
+            date: status.evaluation.evaluation.date.toISOString(),
+            scores: status.evaluation.scores.map((score: EvaluationDetail) => this.toEvaluationDetailResponse(score)),
+            ...(status.evaluation.evaluation.comments ? { comments: status.evaluation.evaluation.comments } : {}),
+          },
+        };
+      } else {
+        return {
+          projectId: status.projectId,
+          evaluated: status.evaluated,
+        };
+      }
+    });
+
+    return {
+      projects,
     };
   }
 
