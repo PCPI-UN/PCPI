@@ -11,31 +11,8 @@ import { AppUser } from '../auth/types/app-user.type';
 export class EvaluationsController {
     constructor(private readonly evaluationsService: EvaluationsService) {}
 
-    @Get('projects/:projectId/stats')
-    @ApiOperation({
-        summary: 'Get project evaluation statistics',
-        description:
-            'Returns statistics for a project including average grade, evaluation count, and category-based stats. ' +
-            'Each category shows the average score and weight for that category across all evaluations.',
-    })
-    @ApiParam({
-        name: 'projectId',
-        description: 'Project ID',
-        example: 1,
-    })
-    @ApiResponse({
-        status: 200,
-        description: 'Project statistics retrieved successfully',
-    })
-    @ApiResponse({
-        status: 404,
-        description: 'Project not found',
-    })
-    async getProjectStats(@Param('projectId', ParseIntPipe) projectId: number) {
-        return this.evaluationsService.getProjectStats(projectId);
-    }
 
-    @Post('projects/:projectId/evaluate')
+        @Post('projects/evaluate')
     @ApiOperation({
         summary: 'Evaluate a project',
         description:
@@ -71,4 +48,30 @@ export class EvaluationsController {
             dto.comments,
         );
     }
+
+    @Get('projects/:projectId/stats')
+    @ApiOperation({
+        summary: 'Get project evaluation statistics',
+        description:
+            'Returns statistics for a project including average grade, evaluation count, and category-based stats. ' +
+            'Each category shows the average score and weight for that category across all evaluations.',
+    })
+    @ApiParam({
+        name: 'projectId',
+        description: 'Project ID',
+        example: 1,
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Project statistics retrieved successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Project not found',
+    })
+    async getProjectStats(@Param('projectId', ParseIntPipe) projectId: number) {
+        return this.evaluationsService.getProjectStats(projectId);
+    }
+
+
 }
