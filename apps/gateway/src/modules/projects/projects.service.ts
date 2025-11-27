@@ -437,7 +437,7 @@ export class ProjectsService implements OnModuleInit {
     const juror: JurorKey = {
       memberUserId: jurorUserId,
       memberEventId: eventId,
-      memberRoleId: 0,
+      memberRoleId: 4,
     };
 
     const request: ListAssignedProjectsRequest = {
