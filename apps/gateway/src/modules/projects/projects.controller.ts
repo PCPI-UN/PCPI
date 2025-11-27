@@ -282,6 +282,15 @@ export class ProjectsController {
   }
 
   @Patch('documents/:id')
+  @ApiOperation({
+    summary: 'Update project document',
+    description: 'Update the document file, type, or state of a project document.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project Document ID',
+    example: 1,
+  })
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
