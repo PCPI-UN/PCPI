@@ -4,13 +4,13 @@ import { status } from '@grpc/grpc-js';
 import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
 import { CreateCriterionDto } from '../dto/create-criterion.dto';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
-import { EventServiceClient } from '@common/clients/event-service.client';
+import { EventServicePort } from '../../infrastructure/ports/event.service.port';
 
 @Injectable()
 export class CreateCriterionUseCase {
   constructor(
     private readonly criterionRepository: CriterionRepositoryPort,
-    private readonly eventServiceClient: EventServiceClient,
+    private readonly eventService: EventServicePort,
   ) { }
 
   async execute(createCriterionDto: CreateCriterionDto): Promise<{
@@ -36,7 +36,7 @@ export class CreateCriterionUseCase {
     }
 
     try {
-      await this.eventServiceClient.getEvent(eventId);
+      await this.eventService.getEvent(eventId);
     } catch (error) {
       console.log('Error fetching event:', error);
       throw new RpcException({
@@ -47,7 +47,7 @@ export class CreateCriterionUseCase {
 
     if (courseIds && courseIds.length > 0) {
       // Validate courses belong to the event
-      const { valid, invalidCourses } = await this.eventServiceClient.validateCoursesBelongToEvent(
+      const { valid, invalidCourses } = await this.eventService.validateCoursesBelongToEvent(
         courseIds,
         eventId,
       );
