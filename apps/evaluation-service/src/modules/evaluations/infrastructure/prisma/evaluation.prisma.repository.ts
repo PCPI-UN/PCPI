@@ -333,36 +333,20 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
         }));
     }
 
-    async getTopProjectsByCourse(courseId: number): Promise<TopProject[]> {
-        const LIMIT = 5; // Top 5 projects
-
-        // Step 1: Get criterion IDs for this course
-        const criterionCourses = await this.prisma.criterionCourse.findMany({
-            where: { courseId },
-            select: { criterionId: true },
-        });
-
-        const criterionIds = criterionCourses.map((cc: any) => cc.criterionId);
-
-        if (criterionIds.length === 0) {
+    async getTopProjectsByIds(projectIds: number[]): Promise<TopProject[]> {
+        if (projectIds.length === 0) {
             return [];
         }
 
-        // Step 2: Find evaluations that used these criterions
+        // Find evaluations for the specified projects
         // Group by projectId and calculate average grade
         const projectGrades = await this.prisma.evaluation.groupBy({
             by: ['projectId'],
             where: {
-                scores: {
-                    some: {
-                        criterionId: { in: criterionIds },
-                    },
-                },
+                projectId: { in: projectIds },
             },
             _avg: { grade: true },
             _count: { id: true },
-            orderBy: { _avg: { grade: 'desc' } },
-            take: LIMIT,
         });
 
         return projectGrades.map((pg: any) => ({

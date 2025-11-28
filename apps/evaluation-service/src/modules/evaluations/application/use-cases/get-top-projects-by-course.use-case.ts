@@ -9,6 +9,6 @@ export class GetTopProjectsByCourseUseCase {
     ) {}
 
     async execute(dto: GetTopProjectsByCourseDto): Promise<TopProject[]> {
-        return this.evaluationRepository.getTopProjectsByCourse(dto.courseId);
+        return this.evaluationRepository.getTopProjectsByIds(dto.projectIds);
     }
 }

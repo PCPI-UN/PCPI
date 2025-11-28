@@ -50,5 +50,5 @@ export abstract class EvaluationRepositoryPort {
         userId: number,
         eventId: number
     ): Promise<EvaluationWithDetails[]>;
-    abstract getTopProjectsByCourse(courseId: number): Promise<TopProject[]>;
+    abstract getTopProjectsByIds(projectIds: number[]): Promise<TopProject[]>;
 }

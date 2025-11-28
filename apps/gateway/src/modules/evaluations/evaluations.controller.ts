@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Param, ParseIntPipe, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiSecurity, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Param, ParseIntPipe, Body, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiSecurity, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { EvaluationsService } from './evaluations.service';
 import { EvaluateProjectDto } from './dto/evaluate-project.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
@@ -79,13 +79,19 @@ export class EvaluationsController {
     @ApiOperation({
         summary: 'Get top 5 projects for a course',
         description:
-            'Returns the top 5 projects for a specific course, ranked by average evaluation grade. ' +
+            'Returns the top 5 projects for a specific course within an event, ranked by average evaluation grade. ' +
             'Each project includes complete project details along with average grade and evaluation count.',
     })
     @ApiParam({
         name: 'courseId',
         description: 'Course ID',
         example: 1,
+    })
+    @ApiQuery({
+        name: 'eventId',
+        description: 'Event ID',
+        example: 1,
+        required: true,
     })
     @ApiResponse({
         status: 200,
@@ -95,8 +101,11 @@ export class EvaluationsController {
         status: 404,
         description: 'Course not found',
     })
-    async getTopProjectsByCourse(@Param('courseId', ParseIntPipe) courseId: number) {
-        return this.evaluationsService.getTopProjectsByCourse(courseId);
+    async getTopProjectsByCourse(
+        @Param('courseId', ParseIntPipe) courseId: number,
+        @Query('eventId', ParseIntPipe) eventId: number,
+    ) {
+        return this.evaluationsService.getTopProjectsByCourse(courseId, eventId);
     }
 
 }

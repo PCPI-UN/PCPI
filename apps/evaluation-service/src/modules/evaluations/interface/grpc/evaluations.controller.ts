@@ -77,11 +77,11 @@ export class EvaluationsController {
     @GrpcMethod(EVALUATION_SERVICE_NAME, 'GetTopProjectsByCourse')
     async getTopProjectsByCourse(request: GetTopProjectsByCourseRequest): Promise<GetTopProjectsByCourseResponse> {
         const dto = new GetTopProjectsByCourseDto();
-        dto.courseId = request.courseId;
+        dto.projectIds = request.projectIds;
 
         const topProjects = await this.getTopProjectsByCourseUseCase.execute(dto);
 
-        return EvaluationMapper.toGetTopProjectsByCourseResponse(topProjects, request.courseId);
+        return EvaluationMapper.toGetTopProjectsByCourseResponse(topProjects);
     }
 
 }

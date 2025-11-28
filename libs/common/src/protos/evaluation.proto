@@ -212,10 +212,10 @@ message DeleteCriterionResponse {
   string message = 2;
 }
 
-// ===== TOP PROJECTS BY COURSE =====
+// ===== TOP PROJECTS BY PROJECT IDS =====
 
 message GetTopProjectsByCourseRequest {
-  int32 courseId = 1;
+  repeated int32 projectIds = 1;
 }
 
 message TopProjectProto {
@@ -226,6 +226,5 @@ message TopProjectProto {
 
 message GetTopProjectsByCourseResponse {
   repeated TopProjectProto topProjects = 1;
-  int32 courseId = 2;
 }
 

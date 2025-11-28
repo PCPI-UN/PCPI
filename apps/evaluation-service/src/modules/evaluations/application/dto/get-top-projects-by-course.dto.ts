@@ -1,7 +1,9 @@
-import { IsInt, IsPositive } from 'class-validator';
+import { IsArray, IsInt, IsPositive, ArrayMinSize } from 'class-validator';
 
 export class GetTopProjectsByCourseDto {
-    @IsInt()
-    @IsPositive()
-    courseId: number;
+    @IsArray()
+    @IsInt({ each: true })
+    @IsPositive({ each: true })
+    @ArrayMinSize(1)
+    projectIds: number[];
 }

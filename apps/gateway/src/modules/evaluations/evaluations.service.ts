@@ -148,40 +148,76 @@ export class EvaluationsService implements OnModuleInit {
         );
     }
 
-    async getTopProjectsByCourse(courseId: number) {
-        // 1. Get top 5 projects from evaluation service
-        const response: GetTopProjectsByCourseResponse = await lastValueFrom(
-            this.evaluationService.getTopProjectsByCourse({ courseId }),
+    async getTopProjectsByCourse(courseId: number, eventId: number) {
+        // 1. Fetch all project IDs for the course and event from project service
+        const projectsResponse = await lastValueFrom(
+            this.projectsService.listProjectsByEvent({
+                eventId,
+                courseId,
+                currentPage: 1,
+                itemsPerPage: 1000, // Fetch all projects for the course
+            }),
         );
 
-        console.log(response);
-        const topProjects = response.topProjects;
+        const allProjects = projectsResponse.items;
 
-        if (topProjects === undefined || topProjects.length === 0) {
-            return { items: [], courseId };
+        if (allProjects.length === 0) {
+            return { items: [], courseId, eventId };
         }
 
-        // 2. Fetch project details from project service
-        const projectIds = topProjects.map(tp => tp.projectId);
-        const projectsPromises = projectIds.map(id =>
-            lastValueFrom(this.projectsService.getProject({ id }))
+        const projectIds = allProjects.map(p => p.id);
+
+        // 2. Get evaluation statistics for these projects from evaluation service
+        const response: GetTopProjectsByCourseResponse = await lastValueFrom(
+            this.evaluationService.getTopProjectsByCourse({ projectIds }),
+        );
+
+        const projectStats = response.topProjects;
+
+        if (projectStats === undefined || projectStats.length === 0) {
+            return { items: [], courseId, eventId };
+        }
+
+        // 3. Sort by averageGrade descending and take top 5
+        const topProjects = projectStats
+            .sort((a, b) => b.averageGrade - a.averageGrade)
+            .slice(0, 5);
+
+        // 4. Fetch full project details for the top 5
+        const topProjectIds = topProjects.map(tp => tp.projectId);
+        const projectsPromises = topProjectIds.map(id =>
+            lastValueFrom(this.projectsService.getProjectComplete({ id }))
                 .catch(() => null) // Handle deleted projects gracefully
         );
 
-        const projects = await Promise.all(projectsPromises);
+        const projectsResponses = await Promise.all(projectsPromises);
 
-        // 3. Merge data
+        // 5. Merge data
         const enrichedProjects = topProjects
             .map((tp, idx) => {
-                const project = projects[idx];
+                const projectResponse = projectsResponses[idx];
 
-                // Skip if project is deleted
-                if (!project) {
+                // Skip if project is deleted or response is null
+                if (!projectResponse || !projectResponse.items || projectResponse.items.length === 0) {
                     return null;
                 }
 
+                const project = projectResponse.items[0];
+
                 return {
-                    ...project,
+                    id: project.id,
+                    eventId: project.eventId,
+                    name: project.name,
+                    description: project.description,
+                    eventNumber: project.eventNumber,
+                    createdAt: project.createdAt,
+                    updatedAt: project.updatedAt,
+                    courseId: project.courseId,
+                    state: project.state,
+                    rejectionReason: project.rejectionReason,
+                    participants: project.participants,
+                    documents: project.documents,
+                    pendingParticipants: project.pendingParticipants,
                     averageGrade: tp.averageGrade,
                     evaluationCount: tp.evaluationCount,
                 };
@@ -191,6 +227,7 @@ export class EvaluationsService implements OnModuleInit {
         return {
             items: enrichedProjects,
             courseId,
+            eventId,
         };
     }
 }

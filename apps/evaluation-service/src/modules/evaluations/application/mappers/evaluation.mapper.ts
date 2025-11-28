@@ -151,7 +151,6 @@ export class EvaluationMapper {
 
   static toGetTopProjectsByCourseResponse(
     topProjects: TopProject[],
-    courseId: number,
   ): GetTopProjectsByCourseResponse {
     return {
       topProjects: topProjects.map((tp: TopProject): TopProjectProto => ({
@@ -159,7 +158,6 @@ export class EvaluationMapper {
         averageGrade: tp.averageGrade,
         evaluationCount: tp.evaluationCount,
       })),
-      courseId,
     };
   }
 
