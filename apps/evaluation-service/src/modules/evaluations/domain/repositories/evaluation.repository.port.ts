@@ -29,6 +29,12 @@ export interface ProjectEvaluationStatus {
     evaluation?: EvaluationWithDetails;
 }
 
+export interface TopProject {
+    projectId: number;
+    averageGrade: number;
+    evaluationCount: number;
+}
+
 export abstract class EvaluationRepositoryPort {
     abstract save(evaluation: Evaluation, scores: EvaluationDetail[]): Promise<Evaluation>;
     abstract findById(id: number): Promise<Evaluation | null>;
@@ -44,4 +50,5 @@ export abstract class EvaluationRepositoryPort {
         userId: number,
         eventId: number
     ): Promise<EvaluationWithDetails[]>;
+    abstract getTopProjectsByCourse(courseId: number): Promise<TopProject[]>;
 }

@@ -4,6 +4,7 @@ import { EvaluationsService } from './evaluations.service';
 import { EvaluateProjectDto } from './dto/evaluate-project.dto';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AppUser } from '../auth/types/app-user.type';
+import { RequirePermission } from '../../common/decorators/require-permission.decorator';
 
 @ApiTags('evaluations')
 @ApiSecurity('JWT-auth')
@@ -12,7 +13,7 @@ export class EvaluationsController {
     constructor(private readonly evaluationsService: EvaluationsService) {}
 
 
-        @Post('projects/evaluate')
+    @Post('projects/evaluate')
     @ApiOperation({
         summary: 'Evaluate a project',
         description:
@@ -73,5 +74,29 @@ export class EvaluationsController {
         return this.evaluationsService.getProjectStats(projectId);
     }
 
+    @RequirePermission('manage:events')
+    @Get('courses/:courseId/top-projects')
+    @ApiOperation({
+        summary: 'Get top 5 projects for a course',
+        description:
+            'Returns the top 5 projects for a specific course, ranked by average evaluation grade. ' +
+            'Each project includes complete project details along with average grade and evaluation count.',
+    })
+    @ApiParam({
+        name: 'courseId',
+        description: 'Course ID',
+        example: 1,
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Top projects retrieved successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'Course not found',
+    })
+    async getTopProjectsByCourse(@Param('courseId', ParseIntPipe) courseId: number) {
+        return this.evaluationsService.getTopProjectsByCourse(courseId);
+    }
 
 }

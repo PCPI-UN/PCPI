@@ -8,6 +8,7 @@ import { FindByIdUseCase } from './application/use-cases/find-evaluation.use-cas
 import { FindEvaluationsByEvaluatorUseCase } from './application/use-cases/find-evaluations-by-evaluator.use-case';
 import { GetProjectStatsUseCase } from './application/use-cases/get-project-stats.use-case';
 import { CheckEvaluationStatusUseCase } from './application/use-cases/check-evaluation-status.use-case';
+import { GetTopProjectsByCourseUseCase } from './application/use-cases/get-top-projects-by-course.use-case';
 import { EvaluationRepositoryPort } from './domain/repositories/evaluation.repository.port';
 import { ProjectServicePort } from './infrastructure/ports/project.service.port';
 import { ProjectServiceAdapter } from './infrastructure/adapters/project.service.adapter';
@@ -41,6 +42,7 @@ import { AuthServiceAdapter } from './infrastructure/adapters/auth.service.adapt
         FindEvaluationsByEvaluatorUseCase,
         GetProjectStatsUseCase,
         CheckEvaluationStatusUseCase,
+        GetTopProjectsByCourseUseCase,
     ],
     exports: [
         EvaluateProjectUseCase,
@@ -48,6 +50,7 @@ import { AuthServiceAdapter } from './infrastructure/adapters/auth.service.adapt
         FindEvaluationsByEvaluatorUseCase,
         GetProjectStatsUseCase,
         CheckEvaluationStatusUseCase,
+        GetTopProjectsByCourseUseCase,
     ],
 })
 export class EvaluationsModule {}

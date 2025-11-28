@@ -9,6 +9,7 @@ service EvaluationService {
   rpc FindEvaluationsByEvaluator(FindEvaluationsByEvaluatorRequest) returns (FindEvaluationsByEvaluatorResponse);
   rpc GetProjectStats(GetProjectStatsRequest) returns (GetProjectStatsResponse);
   rpc CheckEvaluationStatus(CheckEvaluationStatusRequest) returns (CheckEvaluationStatusResponse);
+  rpc GetTopProjectsByCourse(GetTopProjectsByCourseRequest) returns (GetTopProjectsByCourseResponse);
 }
 
 // ===== CRITERIONS SERVICE =====
@@ -209,5 +210,22 @@ message DeleteCriterionRequest {
 message DeleteCriterionResponse {
   bool success = 1;
   string message = 2;
+}
+
+// ===== TOP PROJECTS BY COURSE =====
+
+message GetTopProjectsByCourseRequest {
+  int32 courseId = 1;
+}
+
+message TopProjectProto {
+  int32 projectId = 1;
+  double averageGrade = 2;
+  int32 evaluationCount = 3;
+}
+
+message GetTopProjectsByCourseResponse {
+  repeated TopProjectProto topProjects = 1;
+  int32 courseId = 2;
 }
 

@@ -6,11 +6,13 @@ import {
   CategoryStatsResponse,
   CheckEvaluationStatusResponse,
   ProjectEvaluationStatus,
-  PaginationMetadata
+  PaginationMetadata,
+  GetTopProjectsByCourseResponse,
+  TopProjectProto
 } from '@app/common/generated/evaluation';
 import { Evaluation } from '@evaluations/domain/entities/evaluation.entity';
 import { EvaluationDetail } from '@evaluations/domain/entities/evaluation-detail.entity';
-import { ProjectStats, CategoryStats, ProjectEvaluationStatus as DomainProjectEvaluationStatus } from '@evaluations/domain/repositories/evaluation.repository.port';
+import { ProjectStats, CategoryStats, ProjectEvaluationStatus as DomainProjectEvaluationStatus, TopProject } from '@evaluations/domain/repositories/evaluation.repository.port';
 
 export class EvaluationMapper {
   static toCreateEvaluationResponse(
@@ -147,5 +149,18 @@ export class EvaluationMapper {
     };
   }
 
+  static toGetTopProjectsByCourseResponse(
+    topProjects: TopProject[],
+    courseId: number,
+  ): GetTopProjectsByCourseResponse {
+    return {
+      topProjects: topProjects.map((tp: TopProject): TopProjectProto => ({
+        projectId: tp.projectId,
+        averageGrade: tp.averageGrade,
+        evaluationCount: tp.evaluationCount,
+      })),
+      courseId,
+    };
+  }
 
 }

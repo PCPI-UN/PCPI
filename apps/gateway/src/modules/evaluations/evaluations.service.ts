@@ -12,6 +12,7 @@ import {
     GetProjectStatsResponse,
     EvaluateProjectRequest,
     EvaluationProto,
+    GetTopProjectsByCourseResponse,
 } from '@app/common/generated/evaluation';
 import {
     PROJECTS_SERVICE_NAME,
@@ -145,5 +146,51 @@ export class EvaluationsService implements OnModuleInit {
         return await lastValueFrom(
             this.evaluationService.evaluateProject(request),
         );
+    }
+
+    async getTopProjectsByCourse(courseId: number) {
+        // 1. Get top 5 projects from evaluation service
+        const response: GetTopProjectsByCourseResponse = await lastValueFrom(
+            this.evaluationService.getTopProjectsByCourse({ courseId }),
+        );
+
+        console.log(response);
+        const topProjects = response.topProjects;
+
+        if (topProjects === undefined || topProjects.length === 0) {
+            return { items: [], courseId };
+        }
+
+        // 2. Fetch project details from project service
+        const projectIds = topProjects.map(tp => tp.projectId);
+        const projectsPromises = projectIds.map(id =>
+            lastValueFrom(this.projectsService.getProject({ id }))
+                .catch(() => null) // Handle deleted projects gracefully
+        );
+
+        const projects = await Promise.all(projectsPromises);
+
+        // 3. Merge data
+        const enrichedProjects = topProjects
+            .map((tp, idx) => {
+                const project = projects[idx];
+
+                // Skip if project is deleted
+                if (!project) {
+                    return null;
+                }
+
+                return {
+                    ...project,
+                    averageGrade: tp.averageGrade,
+                    evaluationCount: tp.evaluationCount,
+                };
+            })
+            .filter(p => p !== null);
+
+        return {
+            items: enrichedProjects,
+            courseId,
+        };
     }
 }

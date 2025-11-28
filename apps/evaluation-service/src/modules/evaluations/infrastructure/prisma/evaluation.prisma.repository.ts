@@ -1,11 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { 
-    EvaluationRepositoryPort, 
-    PaginatedEvaluations, 
+import {
+    EvaluationRepositoryPort,
+    PaginatedEvaluations,
     ProjectStats,
     CategoryStats,
-    EvaluationWithDetails 
+    EvaluationWithDetails,
+    TopProject
 } from '@evaluations/domain/repositories/evaluation.repository.port';
 import { Evaluation } from '@evaluations/domain/entities/evaluation.entity';
 import { EvaluationDetail } from '@evaluations/domain/entities/evaluation-detail.entity';
@@ -322,13 +323,52 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
                 evaluation.comments,
                 evaluation.date
             ),
-            scores: evaluation.scores.map((score: any) => 
+            scores: evaluation.scores.map((score: any) =>
                 new EvaluationDetail(
                     evaluation.id,
                     score.criterionId,
                     score.score
                 )
             ),
+        }));
+    }
+
+    async getTopProjectsByCourse(courseId: number): Promise<TopProject[]> {
+        const LIMIT = 5; // Top 5 projects
+
+        // Step 1: Get criterion IDs for this course
+        const criterionCourses = await this.prisma.criterionCourse.findMany({
+            where: { courseId },
+            select: { criterionId: true },
+        });
+
+        const criterionIds = criterionCourses.map((cc: any) => cc.criterionId);
+
+        if (criterionIds.length === 0) {
+            return [];
+        }
+
+        // Step 2: Find evaluations that used these criterions
+        // Group by projectId and calculate average grade
+        const projectGrades = await this.prisma.evaluation.groupBy({
+            by: ['projectId'],
+            where: {
+                scores: {
+                    some: {
+                        criterionId: { in: criterionIds },
+                    },
+                },
+            },
+            _avg: { grade: true },
+            _count: { id: true },
+            orderBy: { _avg: { grade: 'desc' } },
+            take: LIMIT,
+        });
+
+        return projectGrades.map((pg: any) => ({
+            projectId: pg.projectId,
+            averageGrade: pg._avg.grade || 0,
+            evaluationCount: pg._count.id,
         }));
     }
 }
