@@ -22,6 +22,12 @@ import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
 import { ListProjectsForReviewUC } from '../../application/use-cases/list-projects-for-review.uc';
 import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto';
 import { UpdateProjectDocumentUC } from '../../application/use-cases/update-document.uc';
+import {
+  ListUserProjectsRequest,
+  ListUserProjectsResponse,
+} from '@app/common/generated/project';
+import { ListUserProjectsUC } from '../../application/use-cases/list-user-projects.uc';
+
 
 @Controller()
 export class ProjectsController {
@@ -46,6 +52,7 @@ export class ProjectsController {
     private readonly notificateStudentUC: NotificateStudentUC,  
     private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
     private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
+    private readonly listUserProjectsUC: ListUserProjectsUC,
 
   ) {}
 
@@ -100,7 +107,7 @@ export class ProjectsController {
   }
 
 
-@GrpcMethod('ProjectsService', 'UpdateProject')
+  @GrpcMethod('ProjectsService', 'UpdateProject')
   async updateProjectRpc(req: any) {
     const updated = await this.updateProjectUC.execute({
       id: req.id,
@@ -150,159 +157,179 @@ export class ProjectsController {
     return { ok: result.ok, changed: result.changed };
   }
 
-@GrpcMethod('ProjectsService', 'ListProjectJurors')
-  async listProjectJurorsRpc(req: { projectId: number }) {
-    const jurors = await this.listProjectJurorsUC.execute(req);
-    return { jurors: jurors.map(protoToJurorKey) };
+  @GrpcMethod('ProjectsService', 'ListProjectJurors')
+    async listProjectJurorsRpc(req: { projectId: number }) {
+      const jurors = await this.listProjectJurorsUC.execute(req);
+      return { jurors: jurors.map(protoToJurorKey) };
+    }
+
+    @GrpcMethod('ProjectsService', 'AddParticipant')
+  async addParticipantRpc(req: any) {
+    const participant = await this.addParticipantUC.execute({
+      projectId: req.projectId,
+      userId: req.userId,
+      studentCode: req.studentCode ?? undefined,
+    });
+    return { participant };
   }
 
-  @GrpcMethod('ProjectsService', 'AddParticipant')
-async addParticipantRpc(req: any) {
-  const participant = await this.addParticipantUC.execute({
-    projectId: req.projectId,
-    userId: req.userId,
-    studentCode: req.studentCode ?? undefined,
-  });
-  return { participant };
-}
+  @GrpcMethod('ProjectsService', 'ListParticipants')
+  async listParticipantsRpc(req: { projectId: number }) {
+    const participants = await this.listParticipantsUC.execute({ projectId: req.projectId }); 
+    return { items: participants.map(toProtoParticipant) };
+  }
 
-@GrpcMethod('ProjectsService', 'ListParticipants')
-async listParticipantsRpc(req: { projectId: number }) {
-  const participants = await this.listParticipantsUC.execute({ projectId: req.projectId }); 
-  return { items: participants.map(toProtoParticipant) };
-}
-
-@GrpcMethod('ProjectsService', 'AddPendingParticipant')
-async addPendingParticipantRpc(req: any) {
-  const pendingParticipant = await this.addPendingParticipantUC.execute({
-    projectId: req.projectId,
-    firstName: req.firstName,
-    lastName: req.lastName ?? undefined,
-    email: req.email,
-    studentCode: req.studentCode ?? undefined,
-    status: protoToStatus(req.status),
-  });
-  return { participant: toProtoPendingParticipant(pendingParticipant) };
-}
-
-@GrpcMethod('ProjectsService', 'ListPendingParticipants')
-async listPendingParticipantsRpc(req: { projectId: number }) {
-    const pendingParticipants = await this.listPendingParticipantsUC.execute({ projectId: req.projectId }); 
-    return { items: pendingParticipants.map(toProtoPendingParticipant) };
-  
-}
-
-@GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
-async createProjectWithPendingParticipantsRpc(req: any) {
-  try {
-    const project = await this.createProject.execute({
-      eventId: req.eventId,
-      courseId: req.courseId,                
-      name: req.name,
-      description: req.description,
-      eventNumber: req.eventNumber, // Optional - set during confirmation
-      state: 'UNDER_REVIEW'       
+  @GrpcMethod('ProjectsService', 'AddPendingParticipant')
+  async addPendingParticipantRpc(req: any) {
+    const pendingParticipant = await this.addPendingParticipantUC.execute({
+      projectId: req.projectId,
+      firstName: req.firstName,
+      lastName: req.lastName ?? undefined,
+      email: req.email,
+      studentCode: req.studentCode ?? undefined,
+      status: protoToStatus(req.status),
     });
-    console.log('Project created with ID:', project.id);
-    const pendingParticipants = [];
+    return { participant: toProtoPendingParticipant(pendingParticipant) };
+  }
+
+  @GrpcMethod('ProjectsService', 'ListPendingParticipants')
+  async listPendingParticipantsRpc(req: { projectId: number }) {
+      const pendingParticipants = await this.listPendingParticipantsUC.execute({ projectId: req.projectId }); 
+      return { items: pendingParticipants.map(toProtoPendingParticipant) };
     
-      
+  }
 
-     
-    if (req.participants && req.participants.length > 0) {
-      try {
-      for (const p of req.participants) {
-        const pendingParticipant = await this.addPendingParticipantUC.execute({
-          projectId: project.id,
-          firstName: p.firstName,
-          lastName: p.lastName ?? undefined,
-          email: p.email,
-          studentCode: p.studentCode,
-          status: 'PENDING',
-        });
-        pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
-      }
-      } catch (error) {
-        // Si hay un error al agregar participantes, eliminamos el proyecto creado
-        console.error('❌ Error adding pending participants, deleting project:', error);
-        await this.deleteProjectUC.execute({ id: project.id! });
-      throw error;
-    }
-      //notificamos al primer participante
-      const firstParticipant = req.participants[0];
-      await this.notificateStudentUC.execute({
-        firstName: firstParticipant.firstName,
-        lastName: firstParticipant.lastName ?? '',
-        email: firstParticipant.email,
-        projectName: project.name,
+  @GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
+  async createProjectWithPendingParticipantsRpc(req: any) {
+    try {
+      const project = await this.createProject.execute({
+        eventId: req.eventId,
+        courseId: req.courseId,                
+        name: req.name,
+        description: req.description,
+        eventNumber: req.eventNumber, // Optional - set during confirmation
+        state: 'UNDER_REVIEW'       
       });
-    }
+      console.log('Project created with ID:', project.id);
+      const pendingParticipants = [];
+      
+        
 
-    // Manejo de documentos del proyecto
-    const projectDocuments = [];
-    if (req.documents && req.documents.length > 0) {
-      for (const d of req.documents) {
-        const document = await this.addDoc.execute({ projectId: project.id, url: d.url, type: protoToTypedDocument(d.type) });
-        projectDocuments.push(toProtoDocument(document));
+      
+      if (req.participants && req.participants.length > 0) {
+        try {
+        for (const p of req.participants) {
+          const pendingParticipant = await this.addPendingParticipantUC.execute({
+            projectId: project.id,
+            firstName: p.firstName,
+            lastName: p.lastName ?? undefined,
+            email: p.email,
+            studentCode: p.studentCode,
+            status: 'PENDING',
+          });
+          pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
+        }
+        } catch (error) {
+          // Si hay un error al agregar participantes, eliminamos el proyecto creado
+          console.error('❌ Error adding pending participants, deleting project:', error);
+          await this.deleteProjectUC.execute({ id: project.id! });
+        throw error;
       }
-    }
-    return { project: toProtoProject(project), participants: pendingParticipants, documents: projectDocuments };
-  } catch (err) {
-  console.error('❌ Error creating project with pending participants and documents:', err);
-  throw err; // vuelve a lanzar el error original (para que NestJS lo registre bien)
-}
+        //notificamos al primer participante
+        const firstParticipant = req.participants[0];
+        await this.notificateStudentUC.execute({
+          firstName: firstParticipant.firstName,
+          lastName: firstParticipant.lastName ?? '',
+          email: firstParticipant.email,
+          projectName: project.name,
+        });
+      }
 
-}
+      // Manejo de documentos del proyecto
+      const projectDocuments = [];
+      if (req.documents && req.documents.length > 0) {
+        for (const d of req.documents) {
+          const document = await this.addDoc.execute({ projectId: project.id, url: d.url, type: protoToTypedDocument(d.type) });
+          projectDocuments.push(toProtoDocument(document));
+        }
+      }
+      return { project: toProtoProject(project), participants: pendingParticipants, documents: projectDocuments };
+    } catch (err) {
+    console.error('❌ Error creating project with pending participants and documents:', err);
+    throw err; // vuelve a lanzar el error original (para que NestJS lo registre bien)
+  }
 
-@GrpcMethod('ProjectsService', 'ListAssignedProjects')
-async listAssignedProjectsRpc(req: any) {
-  const res = await this.listAssignedToJurorUC.execute({
-    juror: protoToJurorKey(req.juror),
-    page: req.page,
-    pageSize: req.pageSize,
-  });
-  return { items: res.items.map(toProtoProject), total: res.total };
-}
+  }
 
-@GrpcMethod('ProjectsService', 'ListProjectsForReview')
-async listProjectsForReviewRpc(req: ListProjectsByFilterDTO) {
-  const res = await this.listProjectsForReviewUC.execute(req);
-  return { items: res.items.map(toProtoProject), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage , itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
-  
-}
+  @GrpcMethod('ProjectsService', 'ListAssignedProjects')
+  async listAssignedProjectsRpc(req: any) {
+    const res = await this.listAssignedToJurorUC.execute({
+      juror: protoToJurorKey(req.juror),
+      page: req.page,
+      pageSize: req.pageSize,
+    });
+    return { items: res.items.map(toProtoProject), total: res.total };
+  }
 
-@GrpcMethod('ProjectsService', 'GetProjectComplete')
-async getProjectCompleteRpc(req: { id: number }) {
+  @GrpcMethod('ProjectsService', 'ListProjectsForReview')
+  async listProjectsForReviewRpc(req: ListProjectsByFilterDTO) {
+    const res = await this.listProjectsForReviewUC.execute(req);
+    return { items: res.items.map(toProtoProject), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage , itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
+    
+  }
 
-  const project = await this.getProject.execute({ id: req.id });
+  @GrpcMethod('ProjectsService', 'GetProjectComplete')
+  async getProjectCompleteRpc(req: { id: number }) {
 
-  const [participants, documents, pending] = await Promise.all([
-    this.listParticipantsUC.execute({ projectId: project.id }),
-    this.listDocs.execute({ projectId: project.id }),
-    this.listPendingParticipantsUC.execute({ projectId: project.id }),
-  ]);
+    const project = await this.getProject.execute({ id: req.id });
 
-  const projectComplete = {
-    ...project,
-    participants,
-    documents,
-    pendingParticipants: pending,
-  };
+    const [participants, documents, pending] = await Promise.all([
+      this.listParticipantsUC.execute({ projectId: project.id }),
+      this.listDocs.execute({ projectId: project.id }),
+      this.listPendingParticipantsUC.execute({ projectId: project.id }),
+    ]);
 
-  return {
-    items: [toProtoProjectComplete(projectComplete)],
-  };
-}
+    const projectComplete = {
+      ...project,
+      participants,
+      documents,
+      pendingParticipants: pending,
+    };
 
-@GrpcMethod('ProjectsService', 'UpdateProjectDocument')
-async updateProjectDocumentRpc(req: any) {
-  const updatedDoc = await this.updateProjectDocumentUC.execute({
-    id: req.id,
-    url: req.url,
-    type: req.type ? protoToTypedDocument(req.type) : undefined,
-    state: req.state ? protoToDocumentStatus(req.state) : undefined,
-  });
-  return { document: toProtoDocument(updatedDoc) };
+    return {
+      items: [toProtoProjectComplete(projectComplete)],
+    };
+  }
 
-}
+  @GrpcMethod('ProjectsService', 'UpdateProjectDocument')
+  async updateProjectDocumentRpc(req: any) {
+    const updatedDoc = await this.updateProjectDocumentUC.execute({
+      id: req.id,
+      url: req.url,
+      type: req.type ? protoToTypedDocument(req.type) : undefined,
+      state: req.state ? protoToDocumentStatus(req.state) : undefined,
+    });
+    return { document: toProtoDocument(updatedDoc) };
+  }
+
+  @GrpcMethod('ProjectsService', 'ListUserProjects')
+  async listUserProjects(
+    data: ListUserProjectsRequest,
+  ): Promise<ListUserProjectsResponse> {
+    const { userId, page, pageSize } = data;
+
+    const result = await this.listUserProjectsUC.execute({
+      userId,
+      page,
+      pageSize,
+    });
+
+    return {
+      items: result.items as any,
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+    };
+  }
+
 }

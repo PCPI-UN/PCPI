@@ -29,6 +29,7 @@ import { NotificationServiceAdapter } from './infrastructure/grpc-client/notific
 import { NotificateStudentUC } from './application/use-cases/notificate-student.uc';
 import { ListProjectsForReviewUC } from './application/use-cases/list-projects-for-review.uc';
 import { UpdateProjectDocumentUC } from './application/use-cases/update-document.uc';
+import { ListUserProjectsUC } from './application/use-cases/list-user-projects.uc';
 
 @Module({
   controllers: [ProjectsController],
@@ -48,7 +49,7 @@ import { UpdateProjectDocumentUC } from './application/use-cases/update-document
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
     ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,
     ListProjectsAssignedToJurorUC,ListProjectsForReviewUC,
-    NotificateStudentUC,UpdateProjectDocumentUC,
+    NotificateStudentUC,UpdateProjectDocumentUC, ListUserProjectsUC,
     {
       provide: NOTIFICATION_SERVICE_PORT,
       useExisting: NotificationServiceAdapter,

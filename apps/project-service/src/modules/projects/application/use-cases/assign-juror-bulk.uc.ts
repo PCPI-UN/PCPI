@@ -60,7 +60,7 @@ export class AssignJurorBulkUC {
     const jurorMembership = {
       memberUserId: userId,
       memberEventId: eventId,
-      memberRoleId: 0,
+      memberRoleId: 4,
     };
 
     // 5. Intentamos bulk, si falla hacemos upsert uno a uno

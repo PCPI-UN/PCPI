@@ -372,4 +372,40 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
     })) as unknown as ProjectDocument;
   }
 
+  async listByParticipant(
+    userId: number,
+    opts: { page: number; pageSize: number },
+  ): Promise<{ items: Project[]; total: number }> {
+    const { page, pageSize } = opts;
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.project.findMany({
+        where: {
+          participants: {
+            some: { userId },
+          },
+        },
+        include: {
+          participants: true,
+          documents: true,
+          pendingParticipants: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      })      ,
+      this.prisma.project.count({
+        where: {
+          participants: {
+            some: { userId },
+          },
+        },
+      }),
+    ]);
+
+    return { items: items as unknown as Project[], total };
+  }
+
 }

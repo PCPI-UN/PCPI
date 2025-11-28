@@ -67,11 +67,16 @@ export interface ProjectRepository {
   findProjectWithEvent(projectId: number): Promise<Project | null>;
   isUserParticipant(projectId: number, userId: number): Promise<boolean>;
 
-
   updateDocument(input: {
     id: number;
     url?: string;
     type?: TypedDocument;
     state?: Status;
   }): Promise<ProjectDocument>;
+
+  listByParticipant(
+    userId: number,
+    opts: { page: number; pageSize: number },
+  ): Promise<{ items: Project[]; total: number }>;
+    
 }

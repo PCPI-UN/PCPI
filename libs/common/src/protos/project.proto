@@ -34,6 +34,7 @@ service ProjectsService {
   rpc ListProjectsForReview(ListProjectsForReviewRequest) returns (ListProjectsForReviewResponse);
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
   
+  rpc ListUserProjects (ListUserProjectsRequest) returns (ListUserProjectsResponse);
 }
 
 enum ProjectState {
@@ -297,4 +298,17 @@ message UpdateProjectDocumentRequest {
   optional string url = 2;         // si viene vacío, no lo cambias
   optional TypedDocument type = 3;  // si viene DOCUMENT_TYPE_UNSPECIFIED, no lo cambias
   optional DocumentStatus state = 4; // igual idea
+}
+
+message ListUserProjectsRequest {
+  int32 userId   = 1;
+  int32 page     = 2;  // opcional, default 1
+  int32 pageSize = 3;  // opcional, default 20
+}
+
+message ListUserProjectsResponse {
+  repeated Project items = 1;
+  int32 total   = 2;
+  int32 page    = 3;
+  int32 pageSize = 4;
 }

@@ -20,6 +20,7 @@ import {
   ApiParam,
   ApiConsumes,
   ApiBody,
+  ApiQuery
 } from '@nestjs/swagger';
 import { ProjectsService } from './projects.service';
 import { Public } from '../../common/decorators/public.decorator';
@@ -36,6 +37,7 @@ import { DocumentStatusFilter, UpdateProjectDocumentDto } from './dto/update-pro
 import { TypedDocument } from './dto/project-document-input.dto';
 import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-juror.dto';
 import { AddProjectDocumentsMultipartDto} from './dto/add-project-files-multipart.dto';
+import { ListUserProjectsRequest, ListUserProjectsResponse } from '@app/common/generated/project';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -268,6 +270,27 @@ export class ProjectsController {
     );
   }
 
+  @Get('my-projects')
+  @ApiOperation({
+    summary: 'List projects where the current user participates',
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })  
+  async listUserProjectsForCurrentUser(
+    @GetUser() user: AppUser,
+    @Query('page') page = 1,
+    @Query('pageSize') pageSize = 20,
+  ) {
+    console.log(`Listing projects for user ID: ${user.id}`);
+    return this.projectsService.listUserProjects(
+      user.id,
+      // return the project with all its information (including participants and documents)
+      
+      Number(page ?? 1),
+      Number(pageSize ?? 20),
+    );
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get project by id',
@@ -413,6 +436,7 @@ export class ProjectsController {
       uploadedFiles.files || [],
     );
   }
+
 
 
 }

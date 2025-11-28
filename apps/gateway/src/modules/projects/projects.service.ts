@@ -18,7 +18,9 @@ import {
   ListProjectJurorsRequest,
   ListProjectJurorsResponse,
   ListAssignedProjectsRequest,
-  ListAssignedProjectsResponse,  
+  ListAssignedProjectsResponse,
+  ListUserProjectsRequest,
+  ListUserProjectsResponse,  
   JurorKey,   
 } from '@app/common/generated/project';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
@@ -437,7 +439,7 @@ export class ProjectsService implements OnModuleInit {
     const juror: JurorKey = {
       memberUserId: jurorUserId,
       memberEventId: eventId,
-      memberRoleId: 0,
+      memberRoleId: 4,
     };
 
     const request: ListAssignedProjectsRequest = {
@@ -673,4 +675,28 @@ if (now >= eventEndDate) {
     success: true,
   };
 }
+
+async listUserProjects(
+  userId: number,
+  page = 1,
+  pageSize = 20,
+) {
+  const request: ListUserProjectsRequest = {
+    userId,
+    page,
+    pageSize,
+  };
+
+  const res: ListUserProjectsResponse = await lastValueFrom(
+    this.projectsService.listUserProjects(request),
+  );
+
+  return {
+    items: res.items,
+    total: res.total,
+    page: res.page ?? page,
+    pageSize: res.pageSize ?? pageSize,
+  };
+}
+
 }
