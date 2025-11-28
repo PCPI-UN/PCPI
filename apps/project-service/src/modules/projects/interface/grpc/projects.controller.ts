@@ -261,7 +261,7 @@ async listAssignedProjectsRpc(req: any) {
     page: req.page,
     pageSize: req.pageSize,
   });
-  return { items: res.items.map(toProtoProject), total: res.total };
+  return { items: res.items.map(toProtoProjectComplete), total: res.total };
 }
 
 @GrpcMethod('ProjectsService', 'ListProjectsForReview')

@@ -267,7 +267,7 @@ message ListAssignedProjectsRequest {
 }
 
 message ListAssignedProjectsResponse {
-  repeated Project items = 1; // proyectos asignados al jurado
+  repeated ProjectComplete items = 1; // proyectos asignados al jurado
   int32 total = 2;            // total de proyectos
   int32 page = 3;
   int32 page_size = 4;
