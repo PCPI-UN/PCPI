@@ -493,10 +493,25 @@ export class ProjectsService implements OnModuleInit {
     );
 
     // Enrich projects with evaluation status
-    const enrichedItems = res.items.map(project => {
+    // Cast items to ProjectComplete[] since the proto defines them as such
+    const projectCompleteItems = res.items as ProjectComplete[];
+    
+    const enrichedItems = projectCompleteItems.map(project => {
       const status = evaluationStatusMap.get(project.id);
       return {
-        ...project,
+        id: project.id,
+        eventId: project.eventId,
+        name: project.name,
+        description: project.description,
+        eventNumber: project.eventNumber,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+        courseId: project.courseId,
+        state: project.state,
+        rejectionReason: project.rejectionReason,
+        participants: project.participants,
+        documents: project.documents,
+        pendingParticipants: project.pendingParticipants,
         evaluated: status?.evaluated || false,
         evaluation: status?.evaluation || null,
       };

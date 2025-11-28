@@ -270,7 +270,7 @@ message ListAssignedProjectsResponse {
   repeated ProjectComplete items = 1; // proyectos asignados al jurado
   int32 total = 2;            // total de proyectos
   int32 page = 3;
-  int32 page_size = 4;
+  int32 pageSize = 4;
 }
 
 message DeleteProjectRequest { int32 id = 1; }
