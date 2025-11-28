@@ -17,17 +17,17 @@ async function bootstrap() {
           'libs/common/src/protos/auth.proto',
         ),
         url: `${process.env.GRPC_HOST || '0.0.0.0'}:${
-          process.env.GRPC_PORT || 50051
+          process.env.GRPC_PORT || 50051 
         }`,
       },
-    },
-  );
-  app.useGlobalPipes(new ValidationPipe({
+    }, 
+  ); 
+  app.useGlobalPipes(new ValidationPipe({ 
     transform: true,
     whitelist: true,
     forbidNonWhitelisted: true,
     exceptionFactory: (errors: ValidationError[]) => {
-      const messages = errors.map((error) => {
+      const messages = errors.map((error) => { 
         const constraints = error.constraints;
         if (constraints) {
           return `${error.property}: ${Object.values(constraints).join(', ')}`;

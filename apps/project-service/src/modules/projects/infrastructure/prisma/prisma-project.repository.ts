@@ -57,6 +57,12 @@ export class PrismaProjectRepository implements ProjectRepository {
     })) as unknown as Project | null;
   }
 
+  async findProjectWithEvent(projectId: number): Promise<Project | null> {
+    return this.prisma.project.findUnique({
+      where: { id: projectId },
+    });
+  }
+
   async listByFilter(eventId: number, opts?: ListOpts): Promise<{ items: Project[]; total: number, currentPage: number; itemsPerPage: number }> {
     const currentPage = opts?.currentPage && opts.currentPage > 0 ? opts.currentPage : 1;
     const itemsPerPage = opts?.itemsPerPage && opts.itemsPerPage > 0 ? opts.itemsPerPage : 10;
@@ -198,6 +204,12 @@ export class PrismaProjectRepository implements ProjectRepository {
       memberEventId: r.memberEventId,
       memberRoleId: r.memberRoleId,
     }));
+  }
+
+  isUserParticipant(projectId: number, userId: number): Promise<boolean> {
+    return this.prisma.projectParticipant.count({
+      where: { projectId, userId },
+    }).then(count => count > 0);
   }
 
   async addParticipant(input: { projectId: number; userId: number; studentCode: string }): Promise<ProjectParticipant> {

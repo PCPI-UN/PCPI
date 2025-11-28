@@ -2,14 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EvaluationsModule } from './modules/evaluations/evaluations.module';
 import { CriterionsModule } from './modules/criterions/criterions.module';
-import { ProjectServiceModule } from './common/clients/project-service.module';
-import { EventServiceModule } from './common/clients/event-service.module';
+import { GrpcClientsModule } from './common/grpc-clients/grpc-clients.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({isGlobal: true}),
-    ProjectServiceModule,
-    EventServiceModule,
+    GrpcClientsModule,
     EvaluationsModule,
     CriterionsModule
   ],

@@ -34,6 +34,13 @@ export class AcceptInvitationUseCase {
     // We only update the microsftToken or password here if the user is PENDING
     const invitedUser = await this.authService.getUser(invitation.invitedUserId);
     if (invitedUser.status === 'PENDING') {
+      // Validate that PENDING users provide authentication credentials
+      if (!dto.password && !dto.microsoftToken) {
+        throw new RpcException({
+          code: status.INVALID_ARGUMENT,
+          message: 'Password or Microsoft authentication token is required for new user activation',
+        });
+      }
 
       if (dto.password) {
         await this.authService.activateUser({

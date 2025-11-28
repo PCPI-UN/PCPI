@@ -9,10 +9,11 @@ import { FindByCourseUseCase } from './application/use-cases/find-by-course.use-
 import { PrismaCriterionRepository } from './infrastructure/prisma/prisma-criterion.repository';
 import { CriterionRepositoryPort } from './domain/repositories/criterion.repository.port';
 import { PrismaModule } from '@common/prisma/prisma.module';
-import { EventServiceModule } from '@common/clients/event-service.module';
+import { EventServicePort } from './infrastructure/ports/event.service.port';
+import { EventServiceAdapter } from './infrastructure/adapters/event.service.adapter';
 
 @Module({
-  imports: [PrismaModule, EventServiceModule],
+  imports: [PrismaModule],
   controllers: [CriterionsController],
   providers: [
     CreateCriterionUseCase,
@@ -25,6 +26,11 @@ import { EventServiceModule } from '@common/clients/event-service.module';
       provide: CriterionRepositoryPort,
       useClass: PrismaCriterionRepository,
     },
+    {
+      provide: EventServicePort,
+      useClass: EventServiceAdapter,
+    },
   ],
+  exports: [CriterionRepositoryPort],
 })
 export class CriterionsModule {}

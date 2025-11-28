@@ -6,18 +6,33 @@ export interface PaginatedEvaluations {
     total: number;
 }
 
-export interface CriterionStats {
-    id: number;
-    name: string;
-    weight: number;
+export interface CategoryStats {
+    category: string;
     averageScore: number;
-    description?: string | null;
+    weight: number;
 }
 
 export interface ProjectStats {
     averageGrade: number;
     evaluationCount: number;
-    criterionStats: CriterionStats[];
+    categoryStats: CategoryStats[];
+}
+
+export interface EvaluationWithDetails {
+    evaluation: Evaluation;
+    scores: EvaluationDetail[];
+}
+
+export interface ProjectEvaluationStatus {
+    projectId: number;
+    evaluated: boolean;
+    evaluation?: EvaluationWithDetails;
+}
+
+export interface TopProject {
+    projectId: number;
+    averageGrade: number;
+    evaluationCount: number;
 }
 
 export abstract class EvaluationRepositoryPort {
@@ -30,4 +45,10 @@ export abstract class EvaluationRepositoryPort {
     abstract existsByProjectAndEvaluator(projectId: number, memberUserId: number, memberEventId: number): Promise<boolean>;
     abstract findEvaluationDetails(evaluationId: number): Promise<EvaluationDetail[]>;
     abstract getProjectStats(projectId: number): Promise<ProjectStats>;
+    abstract findByProjectIdsAndEvaluator(
+        projectIds: number[],
+        userId: number,
+        eventId: number
+    ): Promise<EvaluationWithDetails[]>;
+    abstract getTopProjectsByIds(projectIds: number[]): Promise<TopProject[]>;
 }

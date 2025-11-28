@@ -4,7 +4,8 @@ import {
   DeleteCriterionResponse,
   FindCriterionsByCourseResponse,
   PaginationMetadata,
-  CriterionCategoryProto
+  CriterionCategoryProto,
+  CriterionSummary
 } from '@app/common/generated/evaluation';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
 
@@ -96,6 +97,13 @@ export class CriterionMapper {
   static toFindCriterionsByCourseResponse(
     criterions: Criterion[]
   ): FindCriterionsByCourseResponse {
+    // Hardcoded category weights based on rubric requirements
+    const categoryWeights: Record<string, number> = {
+      'Comunicación Escrita': 0.3,
+      'Descripción del Diseño': 0.4,
+      'Comunicación Oral': 0.3,
+    };
+
     const groupedCriterions = criterions.reduce((acc, criterion) => {
       const category = criterion.category || 'Uncategorized';
       if (!acc[category]) {
@@ -103,20 +111,15 @@ export class CriterionMapper {
       }
       acc[category].push({
         id: criterion.id,
-        eventId: criterion.eventId,
         name: criterion.name,
-        weight: criterion.weight,
-        active: criterion.active,
-        courseIds: [],
-        ...(criterion.description && { description: criterion.description }),
-        ...(criterion.category && { category: criterion.category }),
       });
       return acc;
-    }, {} as Record<string, CriterionProto[]>);
+    }, {} as Record<string, CriterionSummary[]>);
 
     const categories: CriterionCategoryProto[] = Object.entries(groupedCriterions).map(
-      ([category, groupCriterions]: [string, CriterionProto[]]) => ({
+      ([category, groupCriterions]: [string, CriterionSummary[]]) => ({
         category,
+        weight: categoryWeights[category] || 0,
         criterions: groupCriterions,
       })
     );

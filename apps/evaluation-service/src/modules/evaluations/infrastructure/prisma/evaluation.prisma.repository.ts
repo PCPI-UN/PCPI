@@ -1,6 +1,13 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
-import { EvaluationRepositoryPort, PaginatedEvaluations, ProjectStats } from '@evaluations/domain/repositories/evaluation.repository.port';
+import {
+    EvaluationRepositoryPort,
+    PaginatedEvaluations,
+    ProjectStats,
+    CategoryStats,
+    EvaluationWithDetails,
+    TopProject
+} from '@evaluations/domain/repositories/evaluation.repository.port';
 import { Evaluation } from '@evaluations/domain/entities/evaluation.entity';
 import { EvaluationDetail } from '@evaluations/domain/entities/evaluation-detail.entity';
 
@@ -223,52 +230,129 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
             _count: true,
         });
 
-        // Get criterion averages with evaluation details
-        const criterionStats = await this.prisma.evaluationDetail.groupBy({
-            by: ['criterionId'],
+        // Get all evaluation details with criterion info (including category and weight)
+        const evaluationDetails = await this.prisma.evaluationDetail.findMany({
             where: {
                 evaluation: {
                     projectId,
                 },
             },
-            _avg: {
-                score: true,
+            include: {
+                criterion: {
+                    select: {
+                        id: true,
+                        category: true,
+                        weight: true,
+                    },
+                },
             },
         });
 
-        // Fetch criterion metadata (name, weight, description)
-        const criterionIds = criterionStats.map((stat: any) => stat.criterionId);
-        const criterions = await this.prisma.criterion.findMany({
-            where: {
-                id: { in: criterionIds },
-            },
-            select: {
-                id: true,
-                name: true,
-                weight: true,
-                description: true,
-            },
-        });
+        // Group scores by category, tracking unique criterions
+        const categoryScoresMap = new Map<string, { scores: number[]; weight: number; criterionIds: Set<number> }>();
 
-        // Create a map for quick lookup
-        const criterionMap = new Map(
-            criterions.map((c: any) => [c.id, c])
-        );
+        for (const detail of evaluationDetails) {
+            const category = detail.criterion.category || 'Uncategorized';
+            
+            if (!categoryScoresMap.has(category)) {
+                categoryScoresMap.set(category, {
+                    scores: [],
+                    weight: 0,
+                    criterionIds: new Set(),
+                });
+            }
 
-        // Combine the data
-        const criterionStatsWithMetadata = criterionStats.map((stat: any) => ({
-            id: stat.criterionId,
-            name: (criterionMap.get(stat.criterionId) as any)?.name || '',
-            weight: (criterionMap.get(stat.criterionId) as any)?.weight || 0,
-            averageScore: stat._avg.score || 0,
-            ...(criterionMap.get(stat.criterionId) as any)?.description ? 
-            { description: (criterionMap.get(stat.criterionId) as any).description } : {},
-        }));
+            const categoryData = categoryScoresMap.get(category)!;
+            categoryData.scores.push(detail.score);
+            categoryData.criterionIds.add(detail.criterion.id);
+            // Store the weight from the first criterion in this category
+            if (categoryData.weight === 0) {
+                categoryData.weight = detail.criterion.weight;
+            }
+        }
+
+        // Calculate average per category and reverse the weight calculation
+        // Since each criterion has distributed weight (e.g., 0.06 for category with 30% / 5 criterions)
+        // We need to multiply back by the number of UNIQUE criterions to get the category weight
+        const categoryStats: CategoryStats[] = [];
+
+        for (const [category, data] of categoryScoresMap.entries()) {
+            const averageScore = data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length;
+            
+            // Calculate the category weight by multiplying the distributed weight by number of UNIQUE criterions
+            const categoryWeight = data.weight * data.criterionIds.size;
+            
+            categoryStats.push({
+                category,
+                averageScore,
+                weight: categoryWeight,
+            });
+        }
 
         return {
             averageGrade: gradeStats._avg.grade || 0,
             evaluationCount: gradeStats._count,
-            criterionStats: criterionStatsWithMetadata,
+            categoryStats,
         };
+    }
+
+    async findByProjectIdsAndEvaluator(
+        projectIds: number[],
+        userId: number,
+        eventId: number
+    ): Promise<EvaluationWithDetails[]> {
+        const evaluations = await this.prisma.evaluation.findMany({
+            where: {
+                projectId: { in: projectIds },
+                memberUserId: userId,
+                memberEventId: eventId,
+            },
+            include: {
+                scores: true,
+            },
+        });
+
+        return evaluations.map((evaluation: any) => ({
+            evaluation: new Evaluation(
+                evaluation.id,
+                evaluation.projectId,
+                evaluation.memberUserId,
+                evaluation.memberEventId,
+                evaluation.memberRoleId,
+                evaluation.grade,
+                evaluation.comments,
+                evaluation.date
+            ),
+            scores: evaluation.scores.map((score: any) =>
+                new EvaluationDetail(
+                    evaluation.id,
+                    score.criterionId,
+                    score.score
+                )
+            ),
+        }));
+    }
+
+    async getTopProjectsByIds(projectIds: number[]): Promise<TopProject[]> {
+        if (projectIds.length === 0) {
+            return [];
+        }
+
+        // Find evaluations for the specified projects
+        // Group by projectId and calculate average grade
+        const projectGrades = await this.prisma.evaluation.groupBy({
+            by: ['projectId'],
+            where: {
+                projectId: { in: projectIds },
+            },
+            _avg: { grade: true },
+            _count: { id: true },
+        });
+
+        return projectGrades.map((pg: any) => ({
+            projectId: pg.projectId,
+            averageGrade: pg._avg.grade || 0,
+            evaluationCount: pg._count.id,
+        }));
     }
 }

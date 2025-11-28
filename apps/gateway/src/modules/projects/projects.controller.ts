@@ -34,6 +34,8 @@ import { RejectProjectDto } from './dto/reject-project.dto';
 import { ListProjectsByEventDto } from './dto/list-projects-by-event.dto';
 import { DocumentStatusFilter, UpdateProjectDocumentDto } from './dto/update-project-document.dto';
 import { TypedDocument } from './dto/project-document-input.dto';
+import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-juror.dto';
+import { AddProjectDocumentsMultipartDto} from './dto/add-project-files-multipart.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -247,6 +249,26 @@ export class ProjectsController {
     };
   }
 
+  @Get('assigned-projects')
+  @ApiOperation({
+    summary: 'List projects assigned to a juror',
+    description:
+      'Returns paginated projects assigned to a specific juror within an event.',
+  })
+  async listAssignedProjects(
+    @Query() query: ListProjectsAssignedToJurorDto,
+    @GetUser('id') jurorId: number,
+  ) {
+    const { eventId, page, pageSize } = query;
+
+    return this.projectsService.listAssignedProjectsByJuror(
+      Number(jurorId),
+      Number(eventId),
+      Number(page ?? 1),
+      Number(pageSize ?? 20),
+    );
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get project by id',
@@ -265,6 +287,15 @@ export class ProjectsController {
   }
 
   @Patch('documents/:id')
+  @ApiOperation({
+    summary: 'Update project document',
+    description: 'Update the document file, type, or state of a project document.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project Document ID',
+    example: 1,
+  })
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -301,5 +332,88 @@ export class ProjectsController {
     );
     return updated;
   }
+
+  @Get(':id/jurors')
+  @ApiOperation({
+    summary: 'List jurors assigned to a project',
+    description:
+      'Returns the list of jurors (JurorKey) currently assigned to the given project.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of jurors assigned to the project',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async listProjectJurors(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const jurors = await this.projectsService.listJurorsByProjectId(id);
+    return { jurors };
+  }
+
+  @Public()
+  @Post(':projectId/documents')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'files', maxCount: 4 }, // mismo límite que el otro endpoint
+      ],
+      {
+        limits: {
+          fileSize: 5 * 1024 * 1024, // 5MB por file
+        },
+      },
+    ),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Add documents/files to an existing project',
+    description:
+      'Public endpoint to add document files to an existing project. ' +
+      'Accepts up to 4 files per request: 1 logo, 1 poster, and 2 supporting documents. ' +
+      'Maximum file size: 5MB per file. Files are uploaded to Azure Blob Storage.',
+  })
+  @ApiBody({
+    description:
+      'Document metadata with file uploads (max 4 files, 5MB each). ' +
+      'The "documents" field must be a JSON array matching the number of files.',
+    type: AddProjectDocumentsMultipartDto,
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Files added to project successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data, file too large, or too many files',
+  })
+  @ApiResponse({
+    status: 413,
+    description: 'File size exceeds 5MB limit',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async addProjectDocuments(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Body() body: AddProjectDocumentsMultipartDto,
+    @UploadedFiles() uploadedFiles: { files?: Express.Multer.File[] },
+  ) {
+    return this.projectsService.addFilesToExistingProject(
+      projectId,
+      body,
+      uploadedFiles.files || [],
+    );
+  }
+
 
 }

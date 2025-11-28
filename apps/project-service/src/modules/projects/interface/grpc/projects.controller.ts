@@ -131,12 +131,14 @@ export class ProjectsController {
 
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')
   async assignJurorToProjectsRpc(req: any) {
+    console.log('[ProjectsService] AssignJurorToProjects RPC input:', req);
     const result = await this.assignJurorBulkUC.execute({
       userId: req.userId,
       projectIds: req.projectIds ?? [],
     });
     return { assigned: result.assigned, failures: result.failures };
   }
+
 
   @GrpcMethod('ProjectsService', 'ReassignProjectJuror')
   async reassignProjectJurorRpc(req: any) {
@@ -254,12 +256,21 @@ async createProjectWithPendingParticipantsRpc(req: any) {
 
 @GrpcMethod('ProjectsService', 'ListAssignedProjects')
 async listAssignedProjectsRpc(req: any) {
+  const page = req.page && req.page > 0 ? req.page : 1;
+  const pageSize = req.pageSize && req.pageSize > 0 ? req.pageSize : 20;
+  
   const res = await this.listAssignedToJurorUC.execute({
     juror: protoToJurorKey(req.juror),
-    page: req.page,
-    pageSize: req.pageSize,
+    page: page,
+    pageSize: pageSize,
   });
-  return { items: res.items.map(toProtoProject), total: res.total };
+  
+  return { 
+    items: res.items.map(toProtoProjectComplete), 
+    total: res.total,
+    page,
+    pageSize
+  };
 }
 
 @GrpcMethod('ProjectsService', 'ListProjectsForReview')
