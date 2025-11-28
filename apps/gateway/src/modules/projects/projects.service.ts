@@ -134,13 +134,13 @@ export class ProjectsService implements OnModuleInit {
       );
     }
 
-    // Validate file sizes (5MB max per file)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+    // Validate file sizes (25MB max per file)
+    const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB in bytes
     const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
     if (oversizedFiles.length > 0) {
       const fileNames = oversizedFiles.map((f) => f.originalname).join(', ');
       throw new BadRequestException(
-        `Files exceed 5MB limit: ${fileNames}. Maximum file size is 5MB per file.`,
+        `Files exceed 25MB limit: ${fileNames}. Maximum file size is 25MB per file.`,
       );
     }
 
@@ -254,7 +254,7 @@ export class ProjectsService implements OnModuleInit {
     }
 
     // Return the created project
-    return { message: 'Project submitted successfully', success: true  };
+    return { message: 'Project submitted successfully', success: true };
   }
 
   async createProjectWithParticipants(dto: CreateProjectWithParticipantsDto) {
@@ -337,7 +337,7 @@ export class ProjectsService implements OnModuleInit {
     };
     return mapping[type];
   }
-  
+
   private mapStateToProto(
     state?: ProjectStateFilter,
   ): ProjectState | undefined {
@@ -385,7 +385,7 @@ export class ProjectsService implements OnModuleInit {
     }
 
     return project;
-  }  
+  }
 
   private mapDocumentStatusToProto(
     state: DocumentStatusFilter,
