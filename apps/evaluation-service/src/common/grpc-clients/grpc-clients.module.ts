@@ -1,50 +1,36 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import {
-  EVALUATION_SERVICE_NAME,
-  CRITERIONS_SERVICE_NAME,
-  protobufPackage as evaluationProtobufPackage,
-} from '@app/common/generated/evaluation';
+  AUTH_SERVICE_NAME,
+  protobufPackage as authProtobufPackage,
+} from '@app/common/generated/auth';
 import {
   PROJECTS_SERVICE_NAME,
   protobufPackage as projectProtobufPackage,
 } from '@app/common/generated/project';
-import { EvaluationsController } from './evaluations.controller';
-import { EvaluationsService } from './evaluations.service';
+import {
+  EVENT_SERVICE_NAME,
+  protobufPackage as eventProtobufPackage,
+} from '@app/common/generated/event';
 
+@Global()
 @Module({
   imports: [
     ClientsModule.registerAsync([
       {
-        name: EVALUATION_SERVICE_NAME,
+        name: AUTH_SERVICE_NAME,
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.GRPC,
           options: {
-            package: evaluationProtobufPackage,
+            package: authProtobufPackage,
             protoPath: join(
               process.cwd(),
-              'libs/common/src/protos/evaluation.proto',
+              'libs/common/src/protos/auth.proto',
             ),
-            url: configService.get<string>('EVALUATION_SERVICE_URL'),
-          },
-        }),
-        inject: [ConfigService],
-      },
-      {
-        name: CRITERIONS_SERVICE_NAME,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.GRPC,
-          options: {
-            package: evaluationProtobufPackage,
-            protoPath: join(
-              process.cwd(),
-              'libs/common/src/protos/evaluation.proto',
-            ),
-            url: configService.get<string>('EVALUATION_SERVICE_URL'),
+            url: configService.get<string>('AUTH_SERVICE_URL') || 'localhost:50051',
           },
         }),
         inject: [ConfigService],
@@ -60,15 +46,29 @@ import { EvaluationsService } from './evaluations.service';
               process.cwd(),
               'libs/common/src/protos/project.proto',
             ),
-            url: configService.get<string>('PROJECT_SERVICE_URL'),
+            url: configService.get<string>('PROJECT_SERVICE_URL') || 'localhost:50054',
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: EVENT_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: eventProtobufPackage,
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/event.proto',
+            ),
+            url: configService.get<string>('EVENT_SERVICE_URL') || 'localhost:50053',
           },
         }),
         inject: [ConfigService],
       },
     ]),
   ],
-  controllers: [EvaluationsController],
-  providers: [EvaluationsService],
-  exports: [EvaluationsService],
+  exports: [ClientsModule],
 })
-export class EvaluationsModule {}
+export class GrpcClientsModule {}

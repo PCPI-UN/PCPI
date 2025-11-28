@@ -40,15 +40,24 @@ import {
   EventServiceClient,
 } from '@app/common/generated/event';
 
+import {
+  EVALUATION_SERVICE_NAME,
+  EvaluationServiceClient,
+  CheckEvaluationStatusRequest,
+  CheckEvaluationStatusResponse,
+} from '@app/common/generated/evaluation';
+
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
   private readonly logger = new Logger(ProjectsService.name);
   private projectsService: ProjectsServiceClient;
   private eventsService: EventServiceClient;
+  private evaluationService: EvaluationServiceClient;
   constructor(
     @Inject(PROJECTS_SERVICE_NAME) private readonly projectsClient: ClientGrpc,
     @Inject(EVENT_SERVICE_NAME) private readonly eventsClient: ClientGrpc,
+    @Inject(EVALUATION_SERVICE_NAME) private readonly evaluationClient: ClientGrpc,
     private readonly azureBlobUploadService: AzureBlobUploadService,
     
   ) 
@@ -60,8 +69,12 @@ export class ProjectsService implements OnModuleInit {
     PROJECTS_SERVICE_NAME,
   );
 
-  this.eventsService = this.eventsClient.getService<EventServiceClient>( // ✅
+  this.eventsService = this.eventsClient.getService<EventServiceClient>(
     EVENT_SERVICE_NAME,
+  );
+
+  this.evaluationService = this.evaluationClient.getService<EvaluationServiceClient>(
+    EVALUATION_SERVICE_NAME,
   );
 }
 
@@ -452,8 +465,47 @@ export class ProjectsService implements OnModuleInit {
       this.projectsService.listAssignedProjects(request),
     );
 
+    // If there are no projects, return early
+    if (!res.items || res.items.length === 0) {
+      return {
+        items: [],
+        total: res.total,
+        page: res.page,
+        pageSize: res.pageSize,
+      };
+    }
+
+    // Get project IDs from the response
+    const projectIds = res.items.map(project => project.id);
+
+    // Check evaluation status for these projects
+    const evaluationStatusRequest: CheckEvaluationStatusRequest = {
+      userId: jurorUserId,
+      eventId: eventId,
+      projectIds: projectIds,
+    };
+
+    const evaluationStatusResponse: CheckEvaluationStatusResponse = await lastValueFrom(
+      this.evaluationService.checkEvaluationStatus(evaluationStatusRequest),
+    );
+
+    // Create a map for quick lookup
+    const evaluationStatusMap = new Map(
+      evaluationStatusResponse.projects.map(status => [status.projectId, status])
+    );
+
+    // Enrich projects with evaluation status
+    const enrichedItems = res.items.map(project => {
+      const status = evaluationStatusMap.get(project.id);
+      return {
+        ...project,
+        evaluated: status?.evaluated || false,
+        evaluation: status?.evaluation || null,
+      };
+    });
+
     return {
-      items: res.items,
+      items: enrichedItems,
       total: res.total,
       page: res.page,
       pageSize: res.pageSize,

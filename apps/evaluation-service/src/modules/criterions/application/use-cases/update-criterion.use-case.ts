@@ -5,13 +5,13 @@ import { CriterionRepositoryPort } from '@criterions/domain/repositories/criteri
 import { UpdateCriterionDto } from '../dto/update-criterion.dto';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
 import { CriterionCourse } from '@criterions/domain/entities/criterion-courses.entity';
-import { EventServiceClient } from '@common/clients/event-service.client';
+import { EventServicePort } from '../../infrastructure/ports/event.service.port';
 
 @Injectable()
 export class UpdateCriterionUseCase {
   constructor(
     private readonly criterionRepository: CriterionRepositoryPort,
-    private readonly eventServiceClient: EventServiceClient,
+    private readonly eventService: EventServicePort,
   ) { }
 
   async execute(updateCriterionDto: UpdateCriterionDto): Promise<{
@@ -48,7 +48,7 @@ export class UpdateCriterionUseCase {
     // If eventId is being updated, validate new event exists
     if (eventId !== undefined && eventId !== existingCriterion.eventId) {
       try {
-        await this.eventServiceClient.getEvent(eventId);
+        await this.eventService.getEvent(eventId);
       } catch (error) {
         throw new RpcException({
           code: status.NOT_FOUND,
@@ -61,7 +61,7 @@ export class UpdateCriterionUseCase {
 
     // If courses are being updated, validate them
     if (courseIds !== undefined && courseIds.length > 0) {
-      const { valid, invalidCourses } = await this.eventServiceClient.validateCoursesBelongToEvent(
+      const { valid, invalidCourses } = await this.eventService.validateCoursesBelongToEvent(
         courseIds,
         finalEventId,
       );
