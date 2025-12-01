@@ -9,8 +9,10 @@ import {
   UploadedFiles,
   UseInterceptors,
   Get,
-  Query
+  Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -415,5 +417,59 @@ export class ProjectsController {
     );
   }
 
+  @Get('export/excel/:eventId')
+  @ApiOperation({
+    summary: 'Export all projects from an event to Excel',
+    description:
+      'Generates an Excel workbook with projects grouped by course. ' +
+      'Each sheet contains project details, participants, evaluations, ' +
+      'grades by category, and comments. Requires authentication.',
+  })
+  @ApiParam({
+    name: 'eventId',
+    type: Number,
+    description: 'ID of the event to export',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Excel file generated successfully',
+    content: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid event ID',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No projects found for the event',
+  })
+  async exportProjectsToExcel(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Res() res: Response,
+  ): Promise<void> {
+    const buffer = await this.projectsService.exportProjectsToExcel(eventId);
+
+    // Set response headers for file download
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="projects_event_${eventId}_${Date.now()}.xlsx"`,
+    );
+    res.setHeader('Content-Length', buffer.length);
+
+    // Send buffer
+    res.send(buffer);
+  }
 
 }

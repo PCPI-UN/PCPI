@@ -40,6 +40,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "luxon": "^3.7.2",
     "nest": "^0.1.6",

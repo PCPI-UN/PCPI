@@ -29,6 +29,7 @@ import { ApproveProjectDto } from './dto/approve-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
 import { TypedDocument, ProjectDocumentInputDto } from './dto/project-document-input.dto';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
+import { ExcelExportService } from './excel-export.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
 import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
 import { UpdateProjectDocumentDto, DocumentStatusFilter } from './dto/update-project-document.dto';
@@ -57,10 +58,8 @@ export class ProjectsService implements OnModuleInit {
     @Inject(EVENT_SERVICE_NAME) private readonly eventsClient: ClientGrpc,
     @Inject(EVALUATION_SERVICE_NAME) private readonly evaluationClient: ClientGrpc,
     private readonly azureBlobUploadService: AzureBlobUploadService,
-    
-  ) 
-  
-  {}
+    private readonly excelExportService: ExcelExportService,
+  ) {}
 
   onModuleInit() {
   this.projectsService = this.projectsClient.getService<ProjectsServiceClient>(
@@ -740,4 +739,115 @@ if (now >= eventEndDate) {
     success: true,
   };
 }
+
+  /**
+   * Exports all projects from an event to Excel format
+   */
+  async exportProjectsToExcel(eventId: number): Promise<Buffer> {
+    this.logger.log(`Exporting projects for event ${eventId} to Excel`);
+
+    // Step 1: Fetch all projects for the event (no pagination)
+    const projectsResponse = await lastValueFrom(
+      this.projectsService.listProjectsByEvent({
+        eventId,
+        itemsPerPage: 10000, // Large number to get all projects
+        currentPage: 1,
+      }),
+    );
+
+    if (!projectsResponse.items || projectsResponse.items.length === 0) {
+      throw new NotFoundException(`No projects found for event ${eventId}`);
+    }
+
+    this.logger.log(`Found ${projectsResponse.items.length} projects`);
+
+    // Step 2: Fetch all unique course IDs
+    const courseIds = [
+      ...new Set(projectsResponse.items.map((p) => p.courseId)),
+    ];
+
+    // Step 3: Fetch course details for all courses
+    const coursesMap = new Map<number, any>();
+    const coursePromises = courseIds.map((courseId) =>
+      lastValueFrom(this.eventsService.getCourse({ id: courseId }))
+        .then((response) => ({ courseId, course: response.course }))
+        .catch((error) => {
+          this.logger.warn(
+            `Failed to fetch course ${courseId}: ${error.message}`,
+          );
+          return { courseId, course: null };
+        }),
+    );
+
+    const courseResults = await Promise.all(coursePromises);
+    courseResults.forEach((result) => {
+      if (result.course) {
+        coursesMap.set(result.courseId, result.course);
+      }
+    });
+
+    // Step 4: Fetch evaluation stats for all projects (including comments)
+    const statsPromises = projectsResponse.items.map((project) =>
+      lastValueFrom(
+        this.evaluationService.getProjectStats({ projectId: project.id }),
+      )
+        .then((stats) => ({ projectId: project.id, stats }))
+        .catch((error) => {
+          this.logger.warn(
+            `Failed to fetch stats for project ${project.id}: ${error.message}`,
+          );
+          // Return default stats if evaluation fails
+          return {
+            projectId: project.id,
+            stats: {
+              projectId: project.id,
+              averageGrade: 0,
+              evaluationCount: 0,
+              categoryStats: [],
+              comments: [],
+            },
+          };
+        }),
+    );
+
+    const statsResults = await Promise.all(statsPromises);
+    const statsMap = new Map(
+      statsResults.map((result) => [result.projectId, result.stats]),
+    );
+
+    // Step 5: Combine all data
+    const projectsWithStats = projectsResponse.items.map((project) => {
+      const stats = statsMap.get(project.id);
+      const course = coursesMap.get(project.courseId);
+
+      return {
+        project,
+        stats: stats || {
+          projectId: project.id,
+          averageGrade: 0,
+          evaluationCount: 0,
+          categoryStats: [],
+          comments: [],
+        },
+        course: course || {
+          id: project.courseId,
+          code: `Unknown Course ${project.courseId}`,
+          description: '',
+          active: true,
+          eventId,
+          createdAt: '',
+          updatedAt: '',
+        },
+      };
+    });
+
+    // Step 6: Generate Excel workbook
+    this.logger.log('Generating Excel workbook');
+    const buffer = await this.excelExportService.createProjectsExcelWorkbook(
+      projectsWithStats,
+    );
+
+    this.logger.log('Excel export completed successfully');
+    return buffer as Buffer;
+  }
 }

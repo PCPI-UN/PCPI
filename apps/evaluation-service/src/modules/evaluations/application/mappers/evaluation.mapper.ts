@@ -114,6 +114,7 @@ export class EvaluationMapper {
       averageGrade: stats.averageGrade,
       evaluationCount: stats.evaluationCount,
       categoryStats,
+      comments: stats.comments,
     };
   }
 
