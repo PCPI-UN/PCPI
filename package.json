@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prepare": "husky",
     "proto:generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true --ts_proto_opt=useDate=true --ts_proto_opt=esModuleInterop=true ./libs/common/src/protos/*.proto",
     "proto:generate:win": "for %f in (libs/common/src/protos/*.proto) do protoc -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true,esModuleInterop=true %f",
     "build": "nest build",
@@ -53,6 +54,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/types": "^19.8.1",
     "@eslint/eslintrc": "^3.2.0",
@@ -75,6 +77,7 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "mkdirp": "^3.0.1",
     "prettier": "^3.4.2",
