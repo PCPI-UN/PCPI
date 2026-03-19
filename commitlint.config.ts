@@ -1,9 +1,9 @@
-import type { UserConfig } from "@commitlint/types";
+import type { UserConfig, Rule } from "@commitlint/types";
 
 const config: UserConfig = {
   parserPreset: {
     parserOpts: {
-      headerPattern: /^\[(\d+)\]:\s(.+)$/,
+      headerPattern: /^\[([^\]]+)\]:\s(.+)$/,
       headerCorrespondence: ["taskId", "subject"],
     },
   },
@@ -15,9 +15,10 @@ const config: UserConfig = {
   plugins: [
     {
       rules: {
-        "task-id-empty": ({ taskId }: { taskId?: string }) => {
+        "task-id-empty": ((parsed) => {
+          const { taskId } = parsed as { taskId?: string };
           return [!!taskId, "Task ID may not be empty — expected format: [taskId]: message (e.g. [42]: add endpoint)"];
-        },
+        }) as Rule,
       },
     },
   ],
