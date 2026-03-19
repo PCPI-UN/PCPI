@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 # This script initializes multiple databases and users in a single PostgreSQL instance
@@ -8,9 +8,9 @@ echo "Starting PostgreSQL initialization script..."
 
 # Function to create database and user if they don't exist
 create_database_and_user() {
-    local db_name=$1
-    local db_user=$2
-    local db_password=$3
+    db_name="$1"
+    db_user="$2"
+    db_password="$3"
 
     echo "Processing database: $db_name with user: $db_user"
 
