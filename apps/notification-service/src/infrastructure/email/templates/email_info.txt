@@ -1,0 +1,20 @@
+iris_change_password:
+Iris | Solicitud de cambio de contraseña
+
+iris_juror_invitation:
+Iris | Invitación a evento {{eventName}}
+
+iris_password_changed:
+Iris | Cambio de contraseña
+
+iris_platform_invitation:
+Iris | Invitación a la plataforma
+
+iris_project_approved:
+Iris | Proyecto Aprobado
+
+iris_project_rejected:
+Iris | Proyecto Rechazado
+
+iris_project_submitted:
+Iris | ¡Inscripción del Proyecto Exitosa!

@@ -7,7 +7,8 @@
     "webpack": true,
     "tsConfigPath": "apps/gateway/tsconfig.app.json",
     "assets": [
-      "**/*.proto"
+      "**/*.proto",
+      "**/*.html"
     ],
     "watchAssets": true
   },
