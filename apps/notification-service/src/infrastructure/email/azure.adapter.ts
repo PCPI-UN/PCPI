@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as path from 'path';
 import * as fs from 'fs/promises';
 const matter = require('gray-matter');
 import * as handlebars from 'handlebars';
@@ -78,8 +79,8 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
     let compiledSubject: string;
 
     // Replace params in the HTML body and subject
-    compiledHtml = handlebars.compile(htmlBody)(templateParams.params);
-    compiledSubject = handlebars.compile(subject)(templateParams.params);
+    compiledHtml = handlebars.compile(htmlBody)(params);
+    compiledSubject = handlebars.compile(subject)(params);
 
     const message: EmailMessage = {
       senderAddress: this.azureSenderAddress!,
@@ -88,8 +89,8 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
       },
       content: {
         subject: compiledSubject,
-        plainText: compiledHtml,
-        ...(compiledHtml && { html: compiledHtml }),
+        plainText: "This email requires a plaintext message.", // Ignore this. This doesn't show
+        html: compiledHtml,
       },
     };
 
