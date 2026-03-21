@@ -43,7 +43,8 @@ RUN apk add --no-cache dumb-init openssl && \
   npm install -g pnpm prisma@6.16.2
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile
+RUN npm pkg delete scripts.prepare && \
+    pnpm install --prod --frozen-lockfile
 
 COPY --from=builder /app/apps/auth-service/prisma/schema.prisma ./apps/auth-service/prisma/schema.prisma
 COPY --from=builder /app/apps/auth-service/prisma/migrations ./apps/auth-service/prisma/migrations
