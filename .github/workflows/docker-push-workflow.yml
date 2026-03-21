@@ -10,7 +10,7 @@ jobs:
   login-dockerhub:
     runs-on: ubuntu-24.04
     outputs:
-      username: ${{ steps.get-username.outputs.username_tag}}
+      username: ${{ steps.get-username.outputs.username_tag }}
     steps:
     - name: Login to Docker Hub
       uses: docker/login-action@v3
