@@ -46,7 +46,7 @@ jobs:
       uses: docker/metadata-action@v5
       id: sha-tag
       with:
-          images: ${{ needs.login-dockerhub.outputs.username }}/${{ secrets.DOCKERHUB_REPOSITORY }}
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}
           tags: type=sha,prefix=sha-,suffix=-${{ matrix.services }}
         
     - name: Build and push base image
