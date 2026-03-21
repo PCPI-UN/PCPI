@@ -9,18 +9,12 @@ on:
 jobs:
   login-dockerhub:
     runs-on: ubuntu-24.04
-    outputs:
-      username: ${{ steps.get-username.outputs.username_tag }}
     steps:
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
-    - name: Set username output
-      id: get-username
-      run: echo "username_tag=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_OUTPUT
     
 
   
@@ -53,6 +47,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
+        file: ../apps/${{ matrix.services }}-service 
         tags: ${{ steps.sha-tag.outputs.tags }}
         push: true
 
