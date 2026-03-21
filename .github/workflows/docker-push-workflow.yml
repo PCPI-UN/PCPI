@@ -18,7 +18,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: echo "username_tag=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_OUTPUT
+        run: echo "username_tag=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_OUTPUT && echo $username_tag
 
   
   migrations-service-build:
@@ -38,14 +38,14 @@ jobs:
       uses: docker/metadata-action@v5
       id: sha-tag
       with:
-          images: ${{ secrets.DOCKERHUB_REPOSITORY }}/${{ matrix.services }}
+          images: ${{ needs.login-dockerhub.outputs.username }}/${{ secrets.DOCKERHUB_REPOSITORY }}-${{ matrix.services }}
           tags: type=sha,prefix=sha-
         
     - name: Build and push base image
       uses: docker/build-push-action@v6
       with:
         context: .
-        tags: ${{ needs.login-dockerhub.outputs.username }}/${{ steps.sha-tag.outputs.tags }}
+        tags: ${{ steps.sha-tag.outputs.tags }}
         push: true
 
     
