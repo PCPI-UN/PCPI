@@ -36,6 +36,11 @@ jobs:
 
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: test username and repository
+      run: |
+            echo ${{ secrets.DOCKERHUB_USERNAME }}
+            echo ${{ secrets.DOCKERHUB_REPOSITORY }}
         
     - name: Creation of the SHA tag 
       uses: docker/metadata-action@v5
