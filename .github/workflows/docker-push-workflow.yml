@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        services: [auth,evaluation,event,invitation,project,notification,gateway]
+        services: [auth-service,evaluation-service,event-service,invitation-service,project-service,notification-service,gateway]
         
     steps:
 
@@ -36,7 +36,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ./apps/${{ matrix.services }}-service/Dockerfile 
+        file: ./apps/${{ matrix.services }}/Dockerfile 
         tags: ${{ steps.sha-tag.outputs.tags }}
         push: true
         no-cache: true

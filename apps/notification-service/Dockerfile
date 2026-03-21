@@ -35,7 +35,8 @@ RUN apk add --no-cache dumb-init && \
   npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile
+RUN npm pkg delete scripts.prepare && \
+  pnpm install --prod --frozen-lockfile
 
 RUN npm uninstall -g pnpm && \
   addgroup -g 1001 -S nodejs && \
