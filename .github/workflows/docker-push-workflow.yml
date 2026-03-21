@@ -47,7 +47,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        file: ../apps/${{ matrix.services }}-service 
+        file: ./apps/${{ matrix.services }}-service 
         tags: ${{ steps.sha-tag.outputs.tags }}
         push: true
 
