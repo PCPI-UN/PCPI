@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "refactor/CU-86e0d71ar/Dev-Tooling-Investigate-and-document-Dockerfile-optimization-opportunitiesIndent" ]
+    branches: [ "refactor/CU-86e0d71ar/Dev-Tooling-Investigate-and-document-Dockerfile-optimization-opportunities" ]
   pull_request:
     branches: [ "prod" , "dev" ]
 
