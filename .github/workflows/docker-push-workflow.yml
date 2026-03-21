@@ -14,11 +14,14 @@ jobs:
     steps:
     - name: Login to Docker Hub
       uses: docker/login-action@v3
-      id: get-username
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: echo "username_tag=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_OUTPUT && echo $username_tag
+        
+    - name: Set username output
+      id: get-username
+      run: echo "username_tag=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_OUTPUT
+    
 
   
   migrations-service-build:
