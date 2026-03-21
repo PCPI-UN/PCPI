@@ -32,6 +32,8 @@ EXPOSE 50052
 FROM node:lts-alpine AS production
 WORKDIR /app
 
+ENV HUSKY=0
+
 RUN apk add --no-cache dumb-init openssl && \
   npm install -g pnpm prisma@6.16.2
 
