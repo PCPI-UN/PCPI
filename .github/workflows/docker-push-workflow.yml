@@ -45,7 +45,7 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: .
-        tags: ${{ needs.login-dockerhub.outputs.username }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{matrix.services}}-${{ steps.sha-tag.outputs.tags }}
+        tags: ${{ needs.login-dockerhub.outputs.username }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{ steps.sha-tag.outputs.tags }}
         push: true
 
     
