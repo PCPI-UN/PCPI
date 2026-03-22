@@ -23,8 +23,8 @@
     "test:e2e": "jest --config ./apps/gateway/test/jest-e2e.json"
   },
   "dependencies": {
+    "@azure/communication-email": "^1.1.0",
     "@azure/storage-blob": "^12.29.1",
-    "@emailjs/nodejs": "^5.0.2",
     "@grpc/grpc-js": "^1.14.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -42,6 +42,8 @@
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
     "luxon": "^3.7.2",
     "nest": "^0.1.6",
     "passport": "^0.7.0",

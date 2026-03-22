@@ -3,7 +3,7 @@ import { NotificationController } from './interface/grpc/notification.controller
 import { SendEmailUseCase } from './application/use-cases/send-email.use-case';
 import { ConfigModule } from '@nestjs/config';
 import { EmailServicePort } from './application/ports/email.service.port';
-import { EmailJsAdapter } from './infrastructure/email/emailjs.adapter';
+import { AzureAdapter } from './infrastructure/email/azure.adapter';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -12,7 +12,7 @@ import { EmailJsAdapter } from './infrastructure/email/emailjs.adapter';
     SendEmailUseCase,
     {
       provide: EmailServicePort,
-      useClass: EmailJsAdapter,
+      useClass: AzureAdapter,
     },
   ],
 })
