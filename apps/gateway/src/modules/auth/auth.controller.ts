@@ -157,34 +157,7 @@ export class AuthController {
     @Body() signupDto: SignupDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { accessToken, refreshToken } = await this.authService.signup(signupDto);
-
-    const accessTokenExpiration = this.configService.get<string>(
-      'JWT_ACCESS_TOKEN_EXPIRATION',
-      '15m',
-    );
-    const refreshTokenExpiration = this.configService.get<string>(
-      'JWT_REFRESH_TOKEN_EXPIRATION',
-      '7d',
-    );
-
-    const cookieDomain = this.getCookieDomain();
-
-    response.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: this.isSecureContext(),
-      sameSite: 'lax',
-      maxAge: this.parseJwtExpiration(accessTokenExpiration),
-      ...(cookieDomain && { domain: cookieDomain }),
-    });
-
-    response.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: this.isSecureContext(),
-      sameSite: 'lax',
-      maxAge: this.parseJwtExpiration(refreshTokenExpiration),
-      ...(cookieDomain && { domain: cookieDomain }),
-    });
+    const user = await this.authService.signup(signupDto);    
 
     return { success: true, message: 'Signup successful' };
   }

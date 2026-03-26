@@ -17,6 +17,7 @@ import {
   SetPasswordRequest,
   ChangePasswordRequest,
   LoginResponse,
+  SignupResponse,
   RefreshResponse,
   ValidateTokenResponse,
   GetUserPermissionsResponse,
@@ -61,7 +62,7 @@ export class AuthService implements OnModuleInit {
     );
   }
 
-  async signup(signupDto: SignupRequest): Promise<LoginResponse> {
+  async signup(signupDto: SignupRequest): Promise<SignupResponse> {
     return firstValueFrom(
       this.authService.signup(signupDto as SignupRequest),
     );
