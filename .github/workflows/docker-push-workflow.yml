@@ -5,6 +5,7 @@ on:
     branches: [ "refactor/CU-86e0d71ar/Dev-Tooling-Investigate-and-document-Dockerfile-optimization-opportunities" ]
   pull_request:
     branches: [ "prod" , "dev" ]
+  workflow_dispatch:
 
 jobs:
   migrations-service-build:
