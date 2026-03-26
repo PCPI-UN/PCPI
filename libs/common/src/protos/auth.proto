@@ -9,6 +9,8 @@ service AuthService {
   // ---- AUTH MODULE ----
   // Sends a login request
   rpc Login (LoginRequest) returns (LoginResponse) {}
+  // Sends a signup request
+  rpc Signup (SignupRequest) returns (LoginResponse) {}
   // Refreshes the session of a user
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
   // Sets the password for a user account
@@ -80,6 +82,14 @@ message LoginWithMicrosoftRequest {
 message LoginResponse {
   string accessToken = 1;
   string refreshToken = 2;
+}
+
+// The request message containing the user's information.
+message SignupRequest {
+  string email = 1;
+  string password = 2;
+  string firstName = 3;
+  string lastName = 4;
 }
 
 // The request message for refreshing a token.

@@ -12,6 +12,7 @@ import {
 
 // Application Layer
 import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
+import { SignupUseCase } from '@auth/application/use-cases/signup.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { TokenServicePort } from '@auth/application/ports/token.service.port';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
@@ -62,6 +63,7 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
   controllers: [AuthController],
   providers: [
     LoginUseCase,
+    SignupUseCase,
     RefreshUseCase,
     SetPasswordUseCase,
     ValidateTokenUseCase,

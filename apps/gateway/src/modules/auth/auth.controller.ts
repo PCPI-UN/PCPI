@@ -21,6 +21,7 @@ import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { SignupDto } from './dto/signup.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -146,6 +147,47 @@ export class AuthController {
     response.redirect(`${frontendUrl}/app`);
   }
 
+  @Public()
+  @Post('signup')
+  @ApiOperation({ summary: 'Sign up for a new account' })
+  @ApiBody({ type: SignupDto })
+  @ApiResponse({ status: 201, description: 'Signup successful. Sets access_token and refresh_token as HTTP-only cookies.' })
+  @ApiResponse({ status: 400, description: 'Validation failed or user already exists' })
+  async signUp(
+    @Body() signupDto: SignupDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.authService.signup(signupDto);
+
+    const accessTokenExpiration = this.configService.get<string>(
+      'JWT_ACCESS_TOKEN_EXPIRATION',
+      '15m',
+    );
+    const refreshTokenExpiration = this.configService.get<string>(
+      'JWT_REFRESH_TOKEN_EXPIRATION',
+      '7d',
+    );
+
+    const cookieDomain = this.getCookieDomain();
+
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: this.isSecureContext(),
+      sameSite: 'lax',
+      maxAge: this.parseJwtExpiration(accessTokenExpiration),
+      ...(cookieDomain && { domain: cookieDomain }),
+    });
+
+    response.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: this.isSecureContext(),
+      sameSite: 'lax',
+      maxAge: this.parseJwtExpiration(refreshTokenExpiration),
+      ...(cookieDomain && { domain: cookieDomain }),
+    });
+
+    return { success: true, message: 'Signup successful' };
+  }
 
   @Post('logout')
   @ApiSecurity('JWT-auth')

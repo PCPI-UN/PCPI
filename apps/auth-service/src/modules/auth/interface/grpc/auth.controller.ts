@@ -3,6 +3,7 @@ import { GrpcMethod } from '@nestjs/microservices';
 
 // Use cases
 import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
+import { SignupUseCase } from '@auth/application/use-cases/signup.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
 import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
@@ -26,6 +27,7 @@ import {
 
 // DTOs
 import { LoginDto } from '@auth/application/dto/login.dto';
+import { SignupDto } from '@auth/application/dto/signup.dto';
 import { RefreshDto } from '@auth/application/dto/refresh.dto';
 import { SetPasswordDto } from '@auth/application/dto/set-password.dto';
 import { ValidateTokenDto } from '@auth/application/dto/validate-token.dto';
@@ -42,6 +44,7 @@ import { AuthMapper } from '@auth/application/mappers/auth.mapper';
 export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
+    private readonly signupUseCase: SignupUseCase,
     private readonly refreshUseCase: RefreshUseCase,
     private readonly setPasswordUseCase: SetPasswordUseCase,
     private readonly validateTokenUseCase: ValidateTokenUseCase,
@@ -64,6 +67,11 @@ export class AuthController {
     return AuthMapper.toLoginResponse(accessToken, refreshToken);
   }
 
+  @GrpcMethod(AUTH_SERVICE_NAME, 'Signup')
+  async signup(request: SignupDto): Promise<LoginResponse> {
+    const { accessToken, refreshToken } = await this.signupUseCase.execute(request);
+    return AuthMapper.toLoginResponse(accessToken, refreshToken);
+  }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Refresh')
   async refresh(request: RefreshDto): Promise<RefreshResponse> {

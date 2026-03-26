@@ -8,6 +8,7 @@ import {
   AuthServiceClient,
   AUTH_SERVICE_NAME,
   LoginRequest,
+  SignupRequest,
   RefreshRequest,
   GetUserRequest,
   ValidateTokenRequest,
@@ -57,6 +58,12 @@ export class AuthService implements OnModuleInit {
   async loginWithMicrosoft(token: string): Promise<LoginResponse> {
     return firstValueFrom(
       this.authService.loginWithMicrosoft({ token }),
+    );
+  }
+
+  async signup(signupDto: SignupRequest): Promise<LoginResponse> {
+    return firstValueFrom(
+      this.authService.signup(signupDto as SignupRequest),
     );
   }
 
