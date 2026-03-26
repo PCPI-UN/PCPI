@@ -42,10 +42,13 @@ export class LoginWithMicrosoftUseCase {
                 });
             }
         } else {
-            throw new RpcException({
-                code: status.NOT_FOUND,
-                message: 'User not found. Please accept invitation first.',
-            });
+            const newUser = {
+                email,
+                name: payload.name || email.split('@')[0],
+                oid,
+                active: true,
+            };
+            await this.userRepository.save(newUser);
         }
 
         if (!user.active) {

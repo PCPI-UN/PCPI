@@ -17,6 +17,7 @@ import { GenerateAccountSetupTokenUseCase } from '@auth/application/use-cases/ge
 import {
   AUTH_SERVICE_NAME,
   LoginResponse,
+  SignupResponse,
   RefreshResponse,
   SetPasswordResponse,
   ValidateTokenResponse,
@@ -68,9 +69,17 @@ export class AuthController {
   }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Signup')
-  async signup(request: SignupDto): Promise<LoginResponse> {
-    const { accessToken, refreshToken } = await this.signupUseCase.execute(request);
-    return AuthMapper.toLoginResponse(accessToken, refreshToken);
+  async signup(request: SignupDto): Promise<SignupResponse> {
+    const user = await this.signupUseCase.execute(request);
+    return AuthMapper.toSignupResponse(
+      user.id,
+      user.email,
+      user.firstName,
+      user.lastName,
+      user.phone,
+      user.active,
+      user.status,
+    );
   }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Refresh')

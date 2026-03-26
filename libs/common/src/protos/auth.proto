@@ -10,7 +10,7 @@ service AuthService {
   // Sends a login request
   rpc Login (LoginRequest) returns (LoginResponse) {}
   // Sends a signup request
-  rpc Signup (SignupRequest) returns (LoginResponse) {}
+  rpc Signup (SignupRequest) returns (SignupResponse) {}
   // Refreshes the session of a user
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
   // Sets the password for a user account
@@ -90,6 +90,16 @@ message SignupRequest {
   string password = 2;
   string firstName = 3;
   string lastName = 4;
+}
+
+message SignupResponse {
+  int32 id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string phone = 5;
+  bool active = 6;
+  string status = 7;
 }
 
 // The request message for refreshing a token.

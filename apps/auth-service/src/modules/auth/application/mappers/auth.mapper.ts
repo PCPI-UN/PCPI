@@ -1,5 +1,6 @@
 import {
   LoginResponse,
+  SignupResponse,
   RefreshResponse,
   SetPasswordResponse,
   ValidateTokenResponse,
@@ -15,6 +16,18 @@ export class AuthMapper {
     return {
       accessToken,
       refreshToken,
+    };
+  }
+
+  static toSignupResponse(id: number, email: string, firstName: string, lastName: string, phone: string, active: boolean, status: string): SignupResponse {
+    return {
+      id,
+      email,
+      firstName,
+      lastName,
+      phone,
+      active,
+      status,
     };
   }
 
