@@ -107,7 +107,7 @@ jobs:
       run: |
             curl 'https://app.coolify.io/api/v1/applications/${{ steps.dinamic-env.outputs.app_uuid }}' \
             --request PATCH \
-            --header 'Authorization: Token' \
+            --header 'Authorization: ${{ secrets.COOLIFY_TOKEN }}' \
             --header 'Content-Type: application/json' \
             --data '{
             "project_uuid": ${{ secrets.PROJECT_UUID }},
