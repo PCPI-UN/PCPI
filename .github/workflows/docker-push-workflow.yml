@@ -2,18 +2,40 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "refactor/CU-86e0d71ar/Dev-Tooling-Investigate-and-document-Dockerfile-optimization-opportunities" ]
+    branches: [ "feature/CU-86e0kh5gg/CICD-Add-automatic-service-redeployment-to-GitHub-Actions-workflow" ]
   pull_request:
     branches: [ "prod" , "dev" ]
   workflow_dispatch:
 
 jobs:
+
+  search-individual-service-changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+
+    steps:
+      - name: Obtain boolean about changed file
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+                  auth-service:'apps/auth-service/**'
+                  evaluation-service:'apps/evaluation-service/**'
+                  event-service:'apps/event-service/**'
+                  invitation-service:'apps/invitation-service/**'
+                  project-service:'apps/project-service/**'
+                  notification-service:'apps/notification-service/**'
+                  gateway:'apps/gateway/**'
+
   migrations-service-build:
     runs-on: ubuntu-24.04
+    needs: search-individual-service-changes
+    if: ${{ needs.search-individual-service-changes.outputs.services != '[]' }}
     strategy:
       fail-fast: false
       matrix:
-        services: [auth-service,evaluation-service,event-service,invitation-service,project-service,notification-service,gateway]
+        services: ${{ fromJSON(needs.search-individual-service-changes.outputs.services) }}
         
     steps:
 
@@ -32,7 +54,28 @@ jobs:
       with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}
           tags: type=sha,prefix=sha-,suffix=-${{ matrix.services }}
+    
+    - name: Separation of image and tag
+      id: image_tag
+      run: |
+            IMAGE_&_TAG=${{ steps.sha-tag.outputs.tags }}
+            IMAGE=$(echo ${IMAGE_&_TAG%%:*})
+            TAG=$(echo ${IMAGE_$_TAG##*:})
+            
+            echo "image=$IMAGE" >> $GITHUB_OUTPUT
+            echo "tag=$TAG" >> GITHUB_OUTPUT
+    
+    - name: post dinamic env value
+      id: dinamic-env
+      run: |
+            URL=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '.${{ matrix.services }}.url')
+            APP_UUID=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '.${{ matrix.services }}.app_uuid')
+            echo "url=$URL" >> $GITHUB_OUTPUT
+            echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
 
+      env:
+        COOLIFY_WEBHOOKS_JSON: ${{ secrets.COOLIFY_WEBHOOKS_JSON }}
+        
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
@@ -48,6 +91,25 @@ jobs:
         platforms: linux/arm64
         push: true
         no-cache: true
+    
+    
+    - name: set coolify tag
+      run: |
+            curl 'https://app.coolify.io/api/v1/applications/${{ steps.dinamic-env.outputs.app_uuid }}' \
+            --request PATCH \
+            --header 'Authorization: Token' \
+            --header 'Content-Type: application/json' \
+            --data '{
+            "project_uuid": ${{ secrets.PROJECT_UUID }},
+            "environment_name": ${{ secrets.ENVIROMENT_NAME }},
+            "docker_registry_image_name": ${{ steps.image_tag.outputs.image }},
+            "docker_registry_image_tag": ${{ steps.image_tag.outputs.tag }},
+            }'
+
+    - name: Redeploy Coolify Image
+      run: |
+          curl --request GET '${{ steps.dinamic-env.outputs.url }}' --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
+    
         
 
     
