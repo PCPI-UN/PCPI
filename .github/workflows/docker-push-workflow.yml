@@ -78,8 +78,8 @@ jobs:
     - name: post dinamic env value
       id: dinamic-env
       run: |
-            URL=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '.${{ matrix.services }}.url')
-            APP_UUID=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '.${{ matrix.services }}.app_uuid')
+            URL=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ matrix.services }}".url')
+            APP_UUID=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ matrix.services }}".app_uuid')
             echo "url=$URL" >> $GITHUB_OUTPUT
             echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
 
