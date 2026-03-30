@@ -69,8 +69,8 @@ jobs:
       id: image_tag
       run: |
             IMAGE_AND_TAG=${{ steps.sha-tag.outputs.tags }}
-            IMAGE=$(echo ${IMAGE_&_TAG%%:*})
-            TAG=$(echo ${IMAGE_$_TAG##*:})
+            IMAGE=$(echo ${IMAGE_AND_TAG%%:*})
+            TAG=$(echo ${IMAGE_AND_TAG##*:})
             
             echo "image=$IMAGE" >> $GITHUB_OUTPUT
             echo "tag=$TAG" >> GITHUB_OUTPUT
