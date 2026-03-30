@@ -1,4 +1,4 @@
-import { EventType } from '@app/common/generated/event';
+import { EvaluationType, EventType } from '@app/common/generated/event';
 
 export interface Event {
   id: number;
@@ -17,6 +17,10 @@ export interface Event {
   createdByUserId: number;
   location: string;
   locationDetails?: string | null;
+  evaluationType?: EvaluationType | null;
+  inscriptionRequirements?: string | null;
+  minimumTeamSize?: number | null;
+  aboutOurAllies?: string | null;
   eventType: EventType;
   collaborators: string[];
   organizers: string[];

@@ -2,29 +2,54 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { EventRepository } from '../../domain/repositories/event.repository';
 import { Event as DomainEvent } from '../../domain/entities/event.entity';
-import { EventStatus, EventType } from '@app/common/generated/event';
+import { EvaluationType, EventStatus, EventType } from '@app/common/generated/event';
 
 type PrismaEvent = any;
 
 function toProtoEventType(value: string | null | undefined): EventType {
   switch (value) {
-    case 'Expo':
+    case 'Exposition':
       return EventType.EXPO;
-    case 'Competencia':
+    case 'Competition':
       return EventType.COMPETENCIA;
     default:
       return EventType.EVENT_TYPE_UNSPECIFIED;
   }
 }
 
-function toPrismaEventType(value: EventType | undefined): 'Expo' | 'Competencia' {
+function toPrismaEventType(value: EventType | undefined): 'Exposition' | 'Competition' {
   switch (value) {
     case EventType.COMPETENCIA:
-      return 'Competencia';
+      return 'Competition';
     case EventType.EXPO:
     case EventType.EVENT_TYPE_UNSPECIFIED:
     default:
-      return 'Expo';
+      return 'Exposition';
+  }
+}
+
+function toProtoEvaluationType(value: string | null | undefined): EvaluationType {
+  switch (value) {
+    case 'ZERO_TO_FIVE':
+      return EvaluationType.ZERO_TO_FIVE;
+    case 'ZERO_TO_HUNDRED':
+      return EvaluationType.ZERO_TO_HUNDRED;
+    default:
+      return EvaluationType.EVALUATION_TYPE_UNSPECIFIED;
+  }
+}
+
+function toPrismaEvaluationType(
+  value: EvaluationType | undefined,
+): 'ZERO_TO_FIVE' | 'ZERO_TO_HUNDRED' | undefined {
+  switch (value) {
+    case EvaluationType.ZERO_TO_FIVE:
+      return 'ZERO_TO_FIVE';
+    case EvaluationType.ZERO_TO_HUNDRED:
+      return 'ZERO_TO_HUNDRED';
+    case EvaluationType.EVALUATION_TYPE_UNSPECIFIED:
+    default:
+      return undefined;
   }
 }
 
@@ -49,6 +74,10 @@ function toDomainEvent(p: any): DomainEvent {
     createdByUserId: p.createdByUserId,
     location: p.location,
     locationDetails: p.locationDetails ?? null,
+    evaluationType: p.evaluationType ? toProtoEvaluationType(p.evaluationType) : null,
+    inscriptionRequirements: p.inscriptionRequirements ?? null,
+    minimumTeamSize: p.minimumTeamSize ?? null,
+    aboutOurAllies: p.aboutOurAllies ?? null,
     eventType: toProtoEventType(p.eventType),
     collaborators: p.collaborators ?? [],
     organizers: p.organizers ?? [],
@@ -133,6 +162,10 @@ export class PrismaEventRepository extends EventRepository {
       endDate: input.endDate,
       location: input.location,
       locationDetails: input.locationDetails ?? null,
+      evaluationType: toPrismaEvaluationType(input.evaluationType),
+      inscriptionRequirements: input.inscriptionRequirements ?? null,
+      minimumTeamSize: input.minimumTeamSize ?? null,
+      aboutOurAllies: input.aboutOurAllies ?? null,
       eventType: toPrismaEventType(input.eventType),
       collaborators: input.collaborators ?? [],
       organizers: input.organizers ?? [],
@@ -184,6 +217,18 @@ export class PrismaEventRepository extends EventRepository {
       endDate: input.endDate,
       location: input.location,
       locationDetails: input.locationDetails,
+      evaluationType:
+        input.evaluationType !== undefined
+          ? toPrismaEvaluationType(input.evaluationType)
+          : undefined,
+      inscriptionRequirements:
+        input.inscriptionRequirements !== undefined
+          ? input.inscriptionRequirements
+          : undefined,
+      minimumTeamSize:
+        input.minimumTeamSize !== undefined ? input.minimumTeamSize : undefined,
+      aboutOurAllies:
+        input.aboutOurAllies !== undefined ? input.aboutOurAllies : undefined,
       eventType: input.eventType !== undefined ? toPrismaEventType(input.eventType) : undefined,
       collaborators: input.collaborators,
       organizers: input.organizers,

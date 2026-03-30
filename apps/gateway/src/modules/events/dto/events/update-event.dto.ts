@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EventType } from '@app/common/generated/event';
+import { EvaluationType, EventType } from '@app/common/generated/event';
 import {
   IsArray,
   IsInt,
@@ -154,6 +154,41 @@ export class UpdateEventDTO {
   @IsOptional()
   @IsString()
   locationDetails?: string;
+
+  @ApiProperty({
+    description: 'Updated evaluation scale configured for the event',
+    enum: EvaluationType,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(EvaluationType)
+  evaluationType?: EvaluationType;
+
+  @ApiProperty({
+    description: 'Updated inscription requirements',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  inscriptionRequirements?: string;
+
+  @ApiProperty({
+    description: 'Updated minimum team size',
+    required: false,
+    example: 2,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  minimumTeamSize?: number;
+
+  @ApiProperty({
+    description: 'Updated information about allies or partners',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  aboutOurAllies?: string;
 
   @ApiProperty({
     description: 'Updated collaborators',

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EventType } from '@app/common/generated/event';
+import { EvaluationType, EventType } from '@app/common/generated/event';
 import {
   IsArray,
   IsBoolean,
@@ -117,6 +117,41 @@ export class CreateEventDTO {
   @IsOptional()
   @IsString()
   locationDetails?: string;
+
+  @ApiProperty({
+    description: 'Evaluation scale configured for the event',
+    enum: EvaluationType,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(EvaluationType)
+  evaluationType?: EvaluationType;
+
+  @ApiProperty({
+    description: 'Additional inscription requirements for participants',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  inscriptionRequirements?: string;
+
+  @ApiProperty({
+    description: 'Minimum number of members required per team',
+    required: false,
+    example: 2,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  minimumTeamSize?: number;
+
+  @ApiProperty({
+    description: 'Information about the event allies or partners',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  aboutOurAllies?: string;
 
   @ApiProperty({
     description: 'Collaborators associated with the event',

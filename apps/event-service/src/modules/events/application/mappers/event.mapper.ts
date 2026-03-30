@@ -9,6 +9,7 @@ import {
   EventWithRole,
   PaginationMetadata,
   EventStatus as PbEventStatus,
+  EvaluationType,
   EventType,
 } from '@app/common/generated/event';
 import { Event } from '@events/domain/entities/event.entity';
@@ -45,6 +46,10 @@ export class EventMapper {
       collaborators: e.collaborators ?? [],
       organizers: e.organizers ?? [],
       createdByUserId: e.createdByUserId ?? 0,
+      evaluationType: e.evaluationType ?? EvaluationType.EVALUATION_TYPE_UNSPECIFIED,
+      inscriptionRequirements: e.inscriptionRequirements ?? '',
+      minimumTeamSize: e.minimumTeamSize ?? 0,
+      aboutOurAllies: e.aboutOurAllies ?? '',
     };
   }
 
@@ -120,6 +125,10 @@ export class EventMapper {
       collaborators: event.collaborators ?? [],
       organizers: event.organizers ?? [],
       createdByUserId: event.createdByUserId ?? 0,
+      evaluationType: event.evaluationType ?? EvaluationType.EVALUATION_TYPE_UNSPECIFIED,
+      inscriptionRequirements: event.inscriptionRequirements ?? '',
+      minimumTeamSize: event.minimumTeamSize ?? 0,
+      aboutOurAllies: event.aboutOurAllies ?? '',
     }));
 
     // Create pagination metadata

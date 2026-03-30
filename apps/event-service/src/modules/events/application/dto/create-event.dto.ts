@@ -13,7 +13,7 @@ import {
   IsNumber,
   IsOptional,
 } from 'class-validator';
-import { EventType } from '@app/common/generated/event';
+import { EvaluationType, EventType } from '@app/common/generated/event';
 
 export class CreateEventDTO {
   @IsString()
@@ -66,6 +66,23 @@ export class CreateEventDTO {
   @IsOptional()
   @IsString()
   locationDetails?: string;
+
+  @IsOptional()
+  @IsEnum(EvaluationType)
+  evaluationType?: EvaluationType;
+
+  @IsOptional()
+  @IsString()
+  inscriptionRequirements?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  minimumTeamSize?: number;
+
+  @IsOptional()
+  @IsString()
+  aboutOurAllies?: string;
 
   @IsArray()
   @IsString({ each: true })

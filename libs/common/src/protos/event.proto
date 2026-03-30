@@ -75,6 +75,12 @@ enum EventType {
   COMPETENCIA = 2;
 }
 
+enum EvaluationType {
+  EVALUATION_TYPE_UNSPECIFIED = 0;
+  ZERO_TO_FIVE = 1;
+  ZERO_TO_HUNDRED = 2;
+}
+
 // =====================
 //        SHARED
 // =====================
@@ -112,6 +118,10 @@ message EventProto {
   repeated string collaborators = 18;
   repeated string organizers = 19;
   int32 createdByUserId = 20;
+  EvaluationType evaluationType = 21;
+  string inscriptionRequirements = 22;
+  int32 minimumTeamSize = 23;
+  string aboutOurAllies = 24;
 }
 
 message CreateEventRequest {
@@ -130,6 +140,10 @@ message CreateEventRequest {
   optional string locationDetails = 13;
   repeated string collaborators = 14;
   repeated string organizers = 15;
+  optional EvaluationType evaluationType = 16;
+  optional string inscriptionRequirements = 17;
+  optional int32 minimumTeamSize = 18;
+  optional string aboutOurAllies = 19;
 }
 
 message CreateEventResponse {
@@ -153,6 +167,10 @@ message UpdateEventRequest {
   optional string locationDetails = 14;
   repeated string collaborators = 15;
   repeated string organizers = 16;
+  optional EvaluationType evaluationType = 17;
+  optional string inscriptionRequirements = 18;
+  optional int32 minimumTeamSize = 19;
+  optional string aboutOurAllies = 20;
 }
 
 message UpdateEventResponse {
@@ -203,6 +221,10 @@ message EventWithRole {
   repeated string collaborators = 19;
   repeated string organizers = 20;
   int32 createdByUserId = 21;
+  EvaluationType evaluationType = 22;
+  string inscriptionRequirements = 23;
+  int32 minimumTeamSize = 24;
+  string aboutOurAllies = 25;
 }
 
 message ListMyEventsResponse {

@@ -6,7 +6,10 @@
 
 */
 -- CreateEnum
-CREATE TYPE "public"."eventType" AS ENUM ('Expo', 'Competencia');
+CREATE TYPE "public"."eventType" AS ENUM ('Exposition', 'Competition');
+
+-- CreateEnum
+CREATE TYPE "public"."EvaluationType" AS ENUM ('ZERO_TO_FIVE', 'ZERO_TO_HUNDRED');
 
 -- DropForeignKey
 ALTER TABLE "public"."courses" DROP CONSTRAINT "courses_event_id_fkey";
@@ -36,6 +39,10 @@ CREATE TABLE "public"."event" (
     "created_by_user_id" INTEGER NOT NULL,
     "location" VARCHAR(255) NOT NULL,
     "locationDetails" TEXT,
+    "evaluation_type" "public"."EvaluationType",
+    "inscriptionRequirements" TEXT,
+    "minimum_team_size" INTEGER,
+    "aboutOurAllies" TEXT,
     "event_type" "public"."eventType" NOT NULL,
     "collaborators" VARCHAR(255)[],
     "organizers" VARCHAR(255)[],
