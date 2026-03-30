@@ -20,13 +20,20 @@ jobs:
         id: filter
         with:
           filters: |
-                  auth-service:'apps/auth-service/**'
-                  evaluation-service:'apps/evaluation-service/**'
-                  event-service:'apps/event-service/**'
-                  invitation-service:'apps/invitation-service/**'
-                  project-service:'apps/project-service/**'
-                  notification-service:'apps/notification-service/**'
-                  gateway:'apps/gateway/**'
+                  auth-service:
+                    - 'apps/auth-service/**'
+                  evaluation-service:
+                    - 'apps/evaluation-service/**'
+                  event-service:
+                    - 'apps/event-service/**'
+                  invitation-service:
+                    - 'apps/invitation-service/**'
+                  project-service:
+                    - 'apps/project-service/**'
+                  notification-service:
+                    - 'apps/notification-service/**'
+                  gateway:
+                    - 'apps/gateway/**'
 
   migrations-service-build:
     runs-on: ubuntu-24.04
