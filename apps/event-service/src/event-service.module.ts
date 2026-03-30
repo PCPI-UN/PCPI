@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EventsModule } from './modules/events/events.module';
+import { CoursesModule } from './modules/courses/courses.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 
 @Module({
@@ -8,6 +9,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
     ConfigModule.forRoot({isGlobal: true}),
     PrismaModule,
     EventsModule,
+    CoursesModule,
   ],
   controllers: [],
   providers: [],

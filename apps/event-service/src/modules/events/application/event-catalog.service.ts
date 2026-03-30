@@ -154,7 +154,7 @@ export class EventCatalogService {
     ]);
 
     return {
-      categories: categories.map((category) => this.toCategoryProto(category)),
+      categories: categories.map((category: any) => this.toCategoryProto(category)),
       meta: this.buildMeta(total, categories.length, page, limit),
     };
   }
@@ -217,7 +217,7 @@ export class EventCatalogService {
     ]);
 
     return {
-      awards: awards.map((award) => this.toCategoryAwardProto(award)),
+      awards: awards.map((award: any) => this.toCategoryAwardProto(award)),
       meta: this.buildMeta(total, awards.length, page, limit),
     };
   }
@@ -278,7 +278,7 @@ export class EventCatalogService {
     ]);
 
     return {
-      winners: winners.map((winner) => this.toAwardWinnerProto(winner)),
+      winners: winners.map((winner: any) => this.toAwardWinnerProto(winner)),
       meta: this.buildMeta(total, winners.length, page, limit),
     };
   }
@@ -341,7 +341,7 @@ export class EventCatalogService {
     ]);
 
     return {
-      details: details.map((detail) => this.toInscriptionDetailProto(detail)),
+      details: details.map((detail: any) => this.toInscriptionDetailProto(detail)),
       meta: this.buildMeta(total, details.length, page, limit),
     };
   }
@@ -406,7 +406,7 @@ export class EventCatalogService {
     ]);
 
     return {
-      recaps: recaps.map((recap) => this.toEventRecapProto(recap)),
+      recaps: recaps.map((recap: any) => this.toEventRecapProto(recap)),
       meta: this.buildMeta(total, recaps.length, page, limit),
     };
   }

@@ -21,6 +21,15 @@ service EventService {
   rpc GetEventMember (GetEventMemberRequest) returns (GetEventMemberResponse) {}
   rpc ListEventMembers (ListEventMembersRequest) returns (ListEventMembersResponse) {}
 
+  // ---- LEGACY COURSES ----
+  rpc CreateCourse (CreateCourseRequest) returns (CreateCourseResponse) {}
+  rpc UpdateCourse (UpdateCourseRequest) returns (UpdateCourseResponse) {}
+  rpc GetCourse (GetCourseRequest) returns (GetCourseResponse) {}
+  rpc ListCourses (ListCoursesRequest) returns (ListCoursesResponse) {}
+  rpc DeleteCourse (DeleteCourseRequest) returns (DeleteCourseResponse) {}
+  rpc ListCoursesByEvent (ListCoursesByEventRequest) returns (ListCoursesResponse) {}
+  rpc ListCoursesForDropdown (ListCoursesForDropdownRequest) returns (ListCoursesForDropdownResponse) {}
+
   // ---- CATEGORIES ----
   rpc CreateCategory (CreateCategoryRequest) returns (CreateCategoryResponse) {}
   rpc UpdateCategory (UpdateCategoryRequest) returns (UpdateCategoryResponse) {}
@@ -313,6 +322,95 @@ message EventMemberProto {
 message ListEventMembersResponse {
   repeated EventMemberProto members = 1;
   PaginationMetadata meta = 2;
+}
+
+// =====================
+//   LEGACY COURSES
+// =====================
+message Course {
+  int32 id = 1;
+  int32 eventId = 2;
+  string code = 3;
+  string description = 4;
+  bool active = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+message CourseDropdown {
+  int32 id = 1;
+  string code = 2;
+  string description = 3;
+}
+
+message CreateCourseRequest {
+  int32 eventId = 1;
+  string code = 2;
+  optional string description = 3;
+  optional bool active = 4;
+}
+
+message CreateCourseResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message UpdateCourseRequest {
+  int32 id = 1;
+  optional string code = 2;
+  optional string description = 3;
+  optional bool active = 4;
+}
+
+message UpdateCourseResponse {
+  bool ok = 1;
+  string message = 2;
+}
+
+message GetCourseRequest {
+  int32 id = 1;
+}
+
+message GetCourseResponse {
+  Course course = 1;
+}
+
+message ListCoursesRequest {
+  optional int32 eventId = 1;
+  optional bool onlyActive = 2;
+  optional int32 page = 3;
+  optional int32 limit = 4;
+  optional string q = 5;
+}
+
+message ListCoursesByEventRequest {
+  int32 eventId = 1;
+  optional bool onlyActive = 2;
+  optional int32 page = 3;
+  optional int32 limit = 4;
+  optional string q = 5;
+}
+
+message ListCoursesResponse {
+  repeated Course courses = 1;
+  PaginationMetadata meta = 2;
+}
+
+message ListCoursesForDropdownRequest {
+  int32 eventId = 1;
+  optional bool onlyActive = 2;
+}
+
+message ListCoursesForDropdownResponse {
+  repeated CourseDropdown courses = 1;
+}
+
+message DeleteCourseRequest {
+  int32 id = 1;
+}
+
+message DeleteCourseResponse {
+  bool ok = 1;
 }
 
 // =====================
