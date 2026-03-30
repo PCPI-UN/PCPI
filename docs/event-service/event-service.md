@@ -47,6 +47,10 @@ This is the main entity in the service. It represents an event created by a user
 - `createdByUserId`: identifier of the user who created the event.
 - `location`: main event location.
 - `locationDetails`: additional location details. Optional.
+- `evaluationType`: evaluation mode configured for the event based on the `EvaluationType` enum. Optional.
+- `inscriptionRequirements`: additional inscription requirements or conditions for participants. Optional.
+- `minimumTeamSize`: minimum number of members required per team. Optional.
+- `aboutOurAllies`: descriptive information about the event allies or partners. Optional.
 - `eventType`: event type based on the `eventType` enum.
 - `collaborators`: array of collaborators associated with the event.
 - `organizers`: array of organizers associated with the event.
