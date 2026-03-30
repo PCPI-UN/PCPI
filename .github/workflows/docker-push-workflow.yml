@@ -68,7 +68,7 @@ jobs:
     - name: Separation of image and tag
       id: image_tag
       run: |
-            IMAGE_&_TAG=${{ steps.sha-tag.outputs.tags }}
+            IMAGE_AND_TAG=${{ steps.sha-tag.outputs.tags }}
             IMAGE=$(echo ${IMAGE_&_TAG%%:*})
             TAG=$(echo ${IMAGE_$_TAG##*:})
             
