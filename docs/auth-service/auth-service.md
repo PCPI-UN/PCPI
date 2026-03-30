@@ -117,7 +117,7 @@ Defines a platform role that can be assigned to users and linked to permissions.
 #### Main fields
 
 - `id`: unique auto-incremented identifier.
-- `name`: unique role name.
+- `name`: role name.
 - `description`: role description.
 - `scope`: scope of the role.
 - `createdAt`: creation timestamp.

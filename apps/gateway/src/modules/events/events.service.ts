@@ -11,13 +11,23 @@ import { UpdateEventDTO } from './dto/events/update-event.dto';
 import { CreateEventMemberDTO } from './dto/event-members/create-event-member.dto';
 import { DeleteEventMemberDTO } from './dto/event-members/delete-event-member.dto';
 import { ListEventMembersDTO } from './dto/event-members/list-event-members.dto';
-import { CreateCourseDTO } from './dto/courses/create-course.dto';
-import { DeleteCourseDTO } from './dto/courses/delete-course.dto';
-import { UpdateCourseDTO } from './dto/courses/update-course.dto';
-import { ListCoursesDTO } from './dto/courses/list-course.dto';
-import { GetCourseDTO } from './dto/courses/get-course.dto';
-import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
-import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
+import {
+  CreateAwardWinnerDTO,
+  CreateCategoryAwardDTO,
+  CreateCategoryDTO,
+  CreateEventInscriptionDetailDTO,
+  CreateEventRecapDTO,
+  ListAwardWinnersDTO,
+  ListCategoriesDTO,
+  ListCategoryAwardsDTO,
+  ListEventInscriptionDetailsDTO,
+  ListEventRecapsDTO,
+  UpdateAwardWinnerDTO,
+  UpdateCategoryAwardDTO,
+  UpdateCategoryDTO,
+  UpdateEventInscriptionDetailDTO,
+  UpdateEventRecapDTO,
+} from './dto/event-catalog.dto';
 import {
   EVENT_SERVICE_NAME,
   EventServiceClient,
@@ -42,19 +52,6 @@ import {
   DeleteEventMemberResponse,
   ListEventMembersRequest,
   ListEventMembersResponse,
-  CreateCourseRequest,
-  CreateCourseResponse,
-  DeleteCourseRequest,
-  DeleteCourseResponse,
-  UpdateCourseRequest,
-  UpdateCourseResponse,
-  ListCoursesRequest,
-  ListCoursesResponse,
-  GetCourseRequest,
-  GetCourseResponse,
-  ListCoursesByEventRequest,
-  ListCoursesForDropdownRequest,
-  ListCoursesForDropdownResponse,
   ListMyEventsRequest,
   ListMyEventsResponse,
   ListEventsRequest,
@@ -64,6 +61,57 @@ import {
   EventStatusMapping,
   EventProto,
   EventWithRole,
+  CreateCategoryRequest,
+  CreateCategoryResponse,
+  UpdateCategoryRequest,
+  UpdateCategoryResponse,
+  GetCategoryRequest,
+  GetCategoryResponse,
+  ListCategoriesRequest,
+  ListCategoriesResponse,
+  ListCategoriesByEventRequest,
+  DeleteCategoryRequest,
+  DeleteCategoryResponse,
+  CreateCategoryAwardRequest,
+  CreateCategoryAwardResponse,
+  UpdateCategoryAwardRequest,
+  UpdateCategoryAwardResponse,
+  GetCategoryAwardRequest,
+  GetCategoryAwardResponse,
+  ListCategoryAwardsRequest,
+  ListCategoryAwardsResponse,
+  DeleteCategoryAwardRequest,
+  DeleteCategoryAwardResponse,
+  CreateAwardWinnerRequest,
+  CreateAwardWinnerResponse,
+  UpdateAwardWinnerRequest,
+  UpdateAwardWinnerResponse,
+  GetAwardWinnerRequest,
+  GetAwardWinnerResponse,
+  ListAwardWinnersRequest,
+  ListAwardWinnersResponse,
+  DeleteAwardWinnerRequest,
+  DeleteAwardWinnerResponse,
+  CreateEventInscriptionDetailRequest,
+  CreateEventInscriptionDetailResponse,
+  UpdateEventInscriptionDetailRequest,
+  UpdateEventInscriptionDetailResponse,
+  GetEventInscriptionDetailRequest,
+  GetEventInscriptionDetailResponse,
+  ListEventInscriptionDetailsRequest,
+  ListEventInscriptionDetailsResponse,
+  DeleteEventInscriptionDetailRequest,
+  DeleteEventInscriptionDetailResponse,
+  CreateEventRecapRequest,
+  CreateEventRecapResponse,
+  UpdateEventRecapRequest,
+  UpdateEventRecapResponse,
+  GetEventRecapRequest,
+  GetEventRecapResponse,
+  ListEventRecapsRequest,
+  ListEventRecapsResponse,
+  DeleteEventRecapRequest,
+  DeleteEventRecapResponse,
 } from '@app/common/generated/event';
 
 @Injectable()
@@ -140,32 +188,108 @@ export class EventService implements OnModuleInit {
         return firstValueFrom(this.eventService.listEventMembers(listEventMembersDTO as ListEventMembersRequest));
     }
 
-    async createCourse(createCourseDTO: CreateCourseDTO): Promise<CreateCourseResponse> {
-        return firstValueFrom(this.eventService.createCourse(createCourseDTO as CreateCourseRequest));
+    async createCategory(dto: CreateCategoryDTO): Promise<CreateCategoryResponse> {
+        return firstValueFrom(this.eventService.createCategory(dto as CreateCategoryRequest));
     }
 
-    async deleteCourse(deleteCourseDTO: DeleteCourseDTO): Promise<DeleteCourseResponse> {
-        return firstValueFrom(this.eventService.deleteCourse(deleteCourseDTO as DeleteCourseRequest));
+    async updateCategory(dto: UpdateCategoryDTO): Promise<UpdateCategoryResponse> {
+        return firstValueFrom(this.eventService.updateCategory(dto as UpdateCategoryRequest));
     }
 
-    async getCourse(getCourseDTO: GetCourseDTO): Promise<GetCourseResponse> {
-        return firstValueFrom(this.eventService.getCourse(getCourseDTO as GetCourseRequest));
+    async getCategory(id: number): Promise<GetCategoryResponse> {
+        return firstValueFrom(this.eventService.getCategory({ id } as GetCategoryRequest));
     }
 
-    async findAllCourses(request: ListCoursesDTO): Promise<ListCoursesResponse> {
-        return firstValueFrom(this.eventService.listCourses(request as ListCoursesRequest));
+    async listCategories(dto: ListCategoriesDTO): Promise<ListCategoriesResponse> {
+        return firstValueFrom(this.eventService.listCategories(dto as ListCategoriesRequest));
     }
 
-    async listCoursesByEvent(listCoursesByEventDTO: ListCoursesByEventDTO): Promise<ListCoursesResponse> {
-        return firstValueFrom(this.eventService.listCoursesByEvent(listCoursesByEventDTO as ListCoursesByEventRequest));
+    async listCategoriesByEvent(eventId: number, dto: ListCategoriesDTO): Promise<ListCategoriesResponse> {
+        return firstValueFrom(this.eventService.listCategoriesByEvent({ ...dto, eventId } as ListCategoriesByEventRequest));
     }
 
-    async listCoursesForDropdown(dto: ListCoursesForDropdownDTO): Promise<ListCoursesForDropdownResponse> {
-        return firstValueFrom(this.eventService.listCoursesForDropdown(dto as ListCoursesForDropdownRequest));
+    async deleteCategory(id: number): Promise<DeleteCategoryResponse> {
+        return firstValueFrom(this.eventService.deleteCategory({ id } as DeleteCategoryRequest));
     }
 
-    async updateCourse(updateCourseDTO: UpdateCourseDTO): Promise<UpdateCourseResponse> {
-        return firstValueFrom(this.eventService.updateCourse(updateCourseDTO as UpdateCourseRequest));
+    async createCategoryAward(dto: CreateCategoryAwardDTO): Promise<CreateCategoryAwardResponse> {
+        return firstValueFrom(this.eventService.createCategoryAward(dto as CreateCategoryAwardRequest));
+    }
+
+    async updateCategoryAward(dto: UpdateCategoryAwardDTO): Promise<UpdateCategoryAwardResponse> {
+        return firstValueFrom(this.eventService.updateCategoryAward(dto as UpdateCategoryAwardRequest));
+    }
+
+    async getCategoryAward(id: number): Promise<GetCategoryAwardResponse> {
+        return firstValueFrom(this.eventService.getCategoryAward({ id } as GetCategoryAwardRequest));
+    }
+
+    async listCategoryAwards(dto: ListCategoryAwardsDTO): Promise<ListCategoryAwardsResponse> {
+        return firstValueFrom(this.eventService.listCategoryAwards(dto as ListCategoryAwardsRequest));
+    }
+
+    async deleteCategoryAward(id: number): Promise<DeleteCategoryAwardResponse> {
+        return firstValueFrom(this.eventService.deleteCategoryAward({ id } as DeleteCategoryAwardRequest));
+    }
+
+    async createAwardWinner(dto: CreateAwardWinnerDTO): Promise<CreateAwardWinnerResponse> {
+        return firstValueFrom(this.eventService.createAwardWinner(dto as CreateAwardWinnerRequest));
+    }
+
+    async updateAwardWinner(dto: UpdateAwardWinnerDTO): Promise<UpdateAwardWinnerResponse> {
+        return firstValueFrom(this.eventService.updateAwardWinner(dto as UpdateAwardWinnerRequest));
+    }
+
+    async getAwardWinner(id: number): Promise<GetAwardWinnerResponse> {
+        return firstValueFrom(this.eventService.getAwardWinner({ id } as GetAwardWinnerRequest));
+    }
+
+    async listAwardWinners(dto: ListAwardWinnersDTO): Promise<ListAwardWinnersResponse> {
+        return firstValueFrom(this.eventService.listAwardWinners(dto as ListAwardWinnersRequest));
+    }
+
+    async deleteAwardWinner(id: number): Promise<DeleteAwardWinnerResponse> {
+        return firstValueFrom(this.eventService.deleteAwardWinner({ id } as DeleteAwardWinnerRequest));
+    }
+
+    async createEventInscriptionDetail(dto: CreateEventInscriptionDetailDTO): Promise<CreateEventInscriptionDetailResponse> {
+        return firstValueFrom(this.eventService.createEventInscriptionDetail(dto as CreateEventInscriptionDetailRequest));
+    }
+
+    async updateEventInscriptionDetail(dto: UpdateEventInscriptionDetailDTO): Promise<UpdateEventInscriptionDetailResponse> {
+        return firstValueFrom(this.eventService.updateEventInscriptionDetail(dto as UpdateEventInscriptionDetailRequest));
+    }
+
+    async getEventInscriptionDetail(id: number): Promise<GetEventInscriptionDetailResponse> {
+        return firstValueFrom(this.eventService.getEventInscriptionDetail({ id } as GetEventInscriptionDetailRequest));
+    }
+
+    async listEventInscriptionDetails(dto: ListEventInscriptionDetailsDTO): Promise<ListEventInscriptionDetailsResponse> {
+        return firstValueFrom(this.eventService.listEventInscriptionDetails(dto as ListEventInscriptionDetailsRequest));
+    }
+
+    async deleteEventInscriptionDetail(id: number): Promise<DeleteEventInscriptionDetailResponse> {
+        return firstValueFrom(this.eventService.deleteEventInscriptionDetail({ id } as DeleteEventInscriptionDetailRequest));
+    }
+
+    async createEventRecap(dto: CreateEventRecapDTO): Promise<CreateEventRecapResponse> {
+        return firstValueFrom(this.eventService.createEventRecap(dto as CreateEventRecapRequest));
+    }
+
+    async updateEventRecap(dto: UpdateEventRecapDTO): Promise<UpdateEventRecapResponse> {
+        return firstValueFrom(this.eventService.updateEventRecap(dto as UpdateEventRecapRequest));
+    }
+
+    async getEventRecap(id: number): Promise<GetEventRecapResponse> {
+        return firstValueFrom(this.eventService.getEventRecap({ id } as GetEventRecapRequest));
+    }
+
+    async listEventRecaps(dto: ListEventRecapsDTO): Promise<ListEventRecapsResponse> {
+        return firstValueFrom(this.eventService.listEventRecaps(dto as ListEventRecapsRequest));
+    }
+
+    async deleteEventRecap(id: number): Promise<DeleteEventRecapResponse> {
+        return firstValueFrom(this.eventService.deleteEventRecap({ id } as DeleteEventRecapRequest));
     }
 
     /**

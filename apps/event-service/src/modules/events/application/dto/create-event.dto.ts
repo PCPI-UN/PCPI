@@ -2,14 +2,18 @@ import {
   IsString,
   IsNotEmpty,
   IsBoolean,
-  IsOptional,
   IsISO8601,
   MinLength,
   MaxLength,
   Matches,
   IsInt,
   Min,
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
 } from 'class-validator';
+import { EventType } from '@app/common/generated/event';
 
 export class CreateEventDTO {
   @IsString()
@@ -18,9 +22,9 @@ export class CreateEventDTO {
   @MaxLength(255)
   name: string;
 
-  @IsOptional()
   @IsString()
-  description?: string;
+  @IsNotEmpty()
+  description: string;
 
   @IsString()
   @IsNotEmpty()
@@ -46,10 +50,30 @@ export class CreateEventDTO {
   @IsISO8601()
   endDate: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  location: string;
+
+  @IsEnum(EventType)
+  eventType: EventType;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  inscriptionCost?: number;
+
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  location?: string;
+  locationDetails?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  collaborators: string[] = [];
+
+  @IsArray()
+  @IsString({ each: true })
+  organizers: string[] = [];
 
   @IsOptional()
   @IsInt()

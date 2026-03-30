@@ -19,7 +19,11 @@ export class GetEventUC {
 
     return {
       ...event,
-      status: getEventStatus(event.startDate, event.endDate),
+      status: getEventStatus(
+        event.startDate,
+        event.endDate,
+        event.inscriptionDeadline,
+      ),
     };
   }
 }

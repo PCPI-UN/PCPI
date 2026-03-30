@@ -1,11 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EventType } from '@app/common/generated/event';
 import {
+  IsArray,
   IsInt,
   IsBoolean,
   IsOptional,
   IsString,
   IsNotEmpty,
   IsDateString,
+  IsEnum,
+  IsNumber,
   Min,
   MinLength,
   MaxLength,
@@ -124,5 +128,51 @@ export class UpdateEventDTO {
   @IsString()
   @MaxLength(255)
   location?: string;
+
+  @ApiProperty({
+    description: 'Updated type of the event',
+    enum: EventType,
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(EventType)
+  eventType?: EventType;
+
+  @ApiProperty({
+    description: 'Updated inscription cost',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  inscriptionCost?: number;
+
+  @ApiProperty({
+    description: 'Updated location details',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  locationDetails?: string;
+
+  @ApiProperty({
+    description: 'Updated collaborators',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  collaborators?: string[];
+
+  @ApiProperty({
+    description: 'Updated organizers',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  organizers?: string[];
 }
 

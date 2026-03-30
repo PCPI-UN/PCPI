@@ -1,5 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, IsNotEmpty, IsDateString, MinLength, MaxLength } from 'class-validator';
+import { EventType } from '@app/common/generated/event';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateEventDTO {
   @ApiProperty({
@@ -17,11 +30,10 @@ export class CreateEventDTO {
   @ApiProperty({
     description: 'Detailed description of the event',
     example: 'A conference bringing together technology enthusiasts from around the world to discuss the latest trends in tech.',
-    required: false,
   })
   @IsString()
-  @IsOptional()
-  description?: string;
+  @IsNotEmpty()
+  description: string;
 
   @ApiProperty({
     description: 'Access code required to join the event',
@@ -74,10 +86,54 @@ export class CreateEventDTO {
   @ApiProperty({
     description: 'Location where the event will take place',
     example: 'Block K, 21K',
-    required: false,
   })
   @IsString()
+  @IsNotEmpty()
+  location: string;
+
+  @ApiProperty({
+    description: 'Type of event',
+    enum: EventType,
+    example: EventType.EXPO,
+  })
+  @IsEnum(EventType)
+  eventType: EventType;
+
+  @ApiProperty({
+    description: 'Optional inscription cost for the event',
+    example: 25000,
+    required: false,
+  })
   @IsOptional()
-  location?: string;
+  @IsNumber()
+  @Min(0)
+  inscriptionCost?: number;
+
+  @ApiProperty({
+    description: 'Additional location details',
+    example: 'Building K, room 204',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  locationDetails?: string;
+
+  @ApiProperty({
+    description: 'Collaborators associated with the event',
+    example: ['Faculty of Engineering', 'Innovation Lab'],
+    type: [String],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  collaborators: string[] = [];
+
+  @ApiProperty({
+    description: 'Organizers of the event',
+    example: ['University Events Office'],
+    type: [String],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  organizers: string[] = [];
 }
  

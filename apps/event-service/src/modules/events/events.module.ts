@@ -3,6 +3,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PrismaService } from '@common/prisma/prisma.service';
 import { EventsController } from '@events/interface/grpc/controller';
 import { EventMemberController } from '@events/interface/grpc/event-members.controller';
+import { EventCatalogController } from '@events/interface/grpc/event-catalog.controller';
 import { PrismaEventRepository } from '@events/infrastructure/prisma/prisma-event.repository';
 import { PrismaEventMemberRepository } from '@events/infrastructure/prisma/prisma-event-member.repository';
 import { CreateEventUC } from '@events/application/use-cases/create-event.uc';
@@ -22,6 +23,7 @@ import { GrpcAuthClientAdapter } from '@events/infrastructure/adapters/grpc-auth
 import { EventRepository } from '@events/domain/repositories/event.repository';
 import { EventMemberRepository } from '@events/domain/repositories/event-member.repository';
 import { AUTH_SERVICE_NAME, protobufPackage } from '@app/common/generated/auth';
+import { EventCatalogService } from '@events/application/event-catalog.service';
 
 @Module({
   imports: [
@@ -37,9 +39,10 @@ import { AUTH_SERVICE_NAME, protobufPackage } from '@app/common/generated/auth';
       },
     ]),
   ],
-  controllers: [EventsController, EventMemberController],
+  controllers: [EventsController, EventMemberController, EventCatalogController],
   providers: [
     PrismaService,
+    EventCatalogService,
     {
       provide: EventRepository,
       useClass: PrismaEventRepository,

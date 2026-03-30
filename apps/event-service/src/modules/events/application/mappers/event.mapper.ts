@@ -9,6 +9,7 @@ import {
   EventWithRole,
   PaginationMetadata,
   EventStatus as PbEventStatus,
+  EventType,
 } from '@app/common/generated/event';
 import { Event } from '@events/domain/entities/event.entity';
 import { getEventStatus } from '@events/domain/events/get-event-status.util';
@@ -38,6 +39,12 @@ export class EventMapper {
       updatedAt: e.updatedAt ? e.updatedAt.toISOString() : '',
       location: e.location ?? '',
       status: status as PbEventStatus,
+      inscriptionCost: e.inscriptionCost ?? 0,
+      locationDetails: e.locationDetails ?? '',
+      eventType: e.eventType ?? EventType.EVENT_TYPE_UNSPECIFIED,
+      collaborators: e.collaborators ?? [],
+      organizers: e.organizers ?? [],
+      createdByUserId: e.createdByUserId ?? 0,
     };
   }
 
@@ -107,6 +114,12 @@ export class EventMapper {
       location: event.location || '',
       status: this.computeStatus(event),
       roleId: event.userEventRoleId || 0, // Only roleId - gateway enriches
+      inscriptionCost: event.inscriptionCost ?? 0,
+      locationDetails: event.locationDetails || '',
+      eventType: event.eventType ?? EventType.EVENT_TYPE_UNSPECIFIED,
+      collaborators: event.collaborators ?? [],
+      organizers: event.organizers ?? [],
+      createdByUserId: event.createdByUserId ?? 0,
     }));
 
     // Create pagination metadata

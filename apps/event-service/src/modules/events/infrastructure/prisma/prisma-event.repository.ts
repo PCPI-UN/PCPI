@@ -2,9 +2,31 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { EventRepository } from '../../domain/repositories/event.repository';
 import { Event as DomainEvent } from '../../domain/entities/event.entity';
-import { EventStatus } from '@app/common/generated/event';
+import { EventStatus, EventType } from '@app/common/generated/event';
 
 type PrismaEvent = any;
+
+function toProtoEventType(value: string | null | undefined): EventType {
+  switch (value) {
+    case 'Expo':
+      return EventType.EXPO;
+    case 'Competencia':
+      return EventType.COMPETENCIA;
+    default:
+      return EventType.EVENT_TYPE_UNSPECIFIED;
+  }
+}
+
+function toPrismaEventType(value: EventType | undefined): 'Expo' | 'Competencia' {
+  switch (value) {
+    case EventType.COMPETENCIA:
+      return 'Competencia';
+    case EventType.EXPO:
+    case EventType.EVENT_TYPE_UNSPECIFIED:
+    default:
+      return 'Expo';
+  }
+}
 
 function toDomainEvent(p: any): DomainEvent {
   if (!p) {
@@ -17,6 +39,7 @@ function toDomainEvent(p: any): DomainEvent {
     accessCode: p.accessCode,
     isPubliclyJoinable: p.isPubliclyJoinable,
     inscriptionDeadline: p.inscriptionDeadline,
+    inscriptionCost: p.inscriptionCost ?? null,
     evaluationsOpened: p.evaluationsOpened,
     startDate: p.startDate,
     endDate: p.endDate,
@@ -25,6 +48,10 @@ function toDomainEvent(p: any): DomainEvent {
     updatedAt: p.updatedAt,
     createdByUserId: p.createdByUserId,
     location: p.location,
+    locationDetails: p.locationDetails ?? null,
+    eventType: toProtoEventType(p.eventType),
+    collaborators: p.collaborators ?? [],
+    organizers: p.organizers ?? [],
   };
 }
 
@@ -100,12 +127,17 @@ export class PrismaEventRepository extends EventRepository {
       accessCode: input.accessCode,
       isPubliclyJoinable: input.isPubliclyJoinable ?? false,
       inscriptionDeadline: input.inscriptionDeadline,
+      inscriptionCost: input.inscriptionCost ?? null,
       evaluationsOpened: input.evaluationsOpened ?? false,
       startDate: input.startDate,
       endDate: input.endDate,
-      location: input.location ?? null,
+      location: input.location,
+      locationDetails: input.locationDetails ?? null,
+      eventType: toPrismaEventType(input.eventType),
+      collaborators: input.collaborators ?? [],
+      organizers: input.organizers ?? [],
       active: input.active ?? true,
-      createdByUserId: input.createdByUserId ?? null,
+      createdByUserId: input.createdByUserId ?? 0,
     };
 
     const created = await this.prisma.event.create({ data });
@@ -115,7 +147,6 @@ export class PrismaEventRepository extends EventRepository {
   async findById(id: number): Promise<DomainEvent | null> {
     const row = await this.prisma.event.findUnique({
       where: { id },
-      include: { courses: true },
     });
 
     if (!row) return null;
@@ -143,14 +174,19 @@ export class PrismaEventRepository extends EventRepository {
   async update(id: number, input: any) {
     const data = {
       name: input.name,
-      description: input.description ?? null,
+      description: input.description !== undefined ? input.description : undefined,
       accessCode: input.accessCode,
       isPubliclyJoinable: input.isPubliclyJoinable,
       inscriptionDeadline: input.inscriptionDeadline,
+      inscriptionCost: input.inscriptionCost,
       evaluationsOpened: input.evaluationsOpened,
       startDate: input.startDate,
       endDate: input.endDate,
-      location: input.location ?? null,
+      location: input.location,
+      locationDetails: input.locationDetails,
+      eventType: input.eventType !== undefined ? toPrismaEventType(input.eventType) : undefined,
+      collaborators: input.collaborators,
+      organizers: input.organizers,
       active: input.active,
     };
 
@@ -203,7 +239,7 @@ export class PrismaEventRepository extends EventRepository {
     };
   }
 
-  // 👉 SOLO EVENTOS DONDE EL USER ES MEMBER (EventMember)
+  // 👉 SOLO EVENTOS DONDE EL USER ES MEMBER (StaffEventMember)
   async findPaginatedByMember(params: {
   page: number;
   limit: number;
@@ -219,7 +255,7 @@ export class PrismaEventRepository extends EventRepository {
   // ==========================================================
   // 🔎 LOG 1: Ver todos los EventMembers del usuario
   // ==========================================================
-  const userMemberships = await this.prisma.eventMember.findMany({
+  const userMemberships = await (this.prisma as any).staffEventMember.findMany({
     where: { userId },
   });
 

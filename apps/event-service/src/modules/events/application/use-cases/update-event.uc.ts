@@ -60,6 +60,7 @@ export class UpdateEventUC {
       description: input.description,
       accessCode: input.accessCode,
       isPubliclyJoinable: input.isPubliclyJoinable,
+      inscriptionCost: input.inscriptionCost,
       inscriptionDeadline: input.inscriptionDeadline
         ? parseBogotaToUTC(input.inscriptionDeadline)
         : undefined,
@@ -71,7 +72,11 @@ export class UpdateEventUC {
         ? parseBogotaToUTC(input.endDate) 
         : undefined,
       active: input.active,
-      location: input.location ?? null,
+      location: input.location,
+      locationDetails: input.locationDetails,
+      eventType: input.eventType,
+      collaborators: input.collaborators,
+      organizers: input.organizers,
     });
   }
 }

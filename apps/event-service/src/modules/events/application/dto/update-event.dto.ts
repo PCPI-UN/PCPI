@@ -8,7 +8,11 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  IsArray,
+  IsEnum,
+  IsNumber,
 } from 'class-validator';
+import { EventType } from '@app/common/generated/event';
 
 export class UpdateEventDTO {
   @IsInt()
@@ -62,4 +66,27 @@ export class UpdateEventDTO {
   @IsString()
   @MaxLength(255)
   location?: string;
+
+  @IsOptional()
+  @IsEnum(EventType)
+  eventType?: EventType;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  inscriptionCost?: number;
+
+  @IsOptional()
+  @IsString()
+  locationDetails?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  collaborators?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  organizers?: string[];
 }
