@@ -73,7 +73,7 @@ jobs:
             TAG=$(echo ${IMAGE_AND_TAG##*:})
             
             echo "image=$IMAGE" >> $GITHUB_OUTPUT
-            echo "tag=$TAG" >> GITHUB_OUTPUT
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
     
     - name: post dinamic env value
       id: dinamic-env
@@ -110,8 +110,6 @@ jobs:
             --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}' \
             --header 'Content-Type: application/json' \
             --data '{
-            "project_uuid": ${{ secrets.PROJECT_UUID }},
-            "environment_name": ${{ secrets.ENVIROMENT_NAME }},
             "docker_registry_image_name": ${{ steps.image_tag.outputs.image }},
             "docker_registry_image_tag": ${{ steps.image_tag.outputs.tag }},
             }'
