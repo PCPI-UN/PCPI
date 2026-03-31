@@ -23,6 +23,7 @@ jobs:
         uses: dorny/paths-filter@v4
         id: filter
         with:
+          base: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.event.before }}
           filters: |
                   auth-service:
                     - 'apps/auth-service/**'
