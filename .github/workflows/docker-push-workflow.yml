@@ -110,8 +110,8 @@ jobs:
             --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}' \
             --header 'Content-Type: application/json' \
             --data '{
-            "docker_registry_image_name": ${{ steps.image_tag.outputs.image }},
-            "docker_registry_image_tag": ${{ steps.image_tag.outputs.tag }},
+            "docker_registry_image_name": "${{ steps.image_tag.outputs.image }}",
+            "docker_registry_image_tag": "${{ steps.image_tag.outputs.tag }}"
             }'
 
     - name: Redeploy Coolify Image
