@@ -59,6 +59,70 @@ class CreateSpecificInscriptionDetailDTO {
   isRequired?: boolean = true;
 }
 
+class CreateEventCategoryDTO {
+  @ApiProperty({
+    description: 'Name of the category to create with the event',
+    example: 'General',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({
+    description: 'Optional description of the category',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    description: 'Whether the category is active',
+    required: false,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean = true;
+}
+
+class CreateNestedAwardDTO {
+  @ApiProperty({
+    description: 'Title of the award',
+    example: 'Primer puesto',
+  })
+  @IsString()
+  title: string;
+
+  @ApiProperty({
+    description: 'Optional description of the award',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    description: 'Optional numeric value of the award',
+    required: false,
+    example: 5000,
+  })
+  @IsOptional()
+  @IsNumber()
+  value?: number;
+
+  @ApiProperty({
+    description: 'Position of the award',
+    required: false,
+    default: 0,
+    example: 1,
+  })
+  @IsOptional()
+  @IsNumber()
+  position?: number = 0;
+}
+
 export class CreateEventDTO {
   @ApiProperty({
     description: 'Name of the event',
@@ -218,6 +282,27 @@ export class CreateEventDTO {
   @IsArray()
   @IsString({ each: true })
   organizers: string[] = [];
+
+  @ApiProperty({
+    description: 'Optional category to create together with the event',
+    type: CreateEventCategoryDTO,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateEventCategoryDTO)
+  category?: CreateEventCategoryDTO;
+
+  @ApiProperty({
+    description: 'Awards created together with the category of the event',
+    type: [CreateNestedAwardDTO],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateNestedAwardDTO)
+  awards?: CreateNestedAwardDTO[];
 
   @ApiProperty({
     description: 'Specific inscription details created together with the event',

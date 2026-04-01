@@ -138,10 +138,14 @@ export class EventService implements OnModuleInit {
 
     async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
         const {
+            category,
+            awards,
             specificInscriptionDetails,
             eventInscriptionDetails,
             ...eventPayload
         } = createEventDTO as CreateEventDTO & {
+            category?: CreateCategoryDTO;
+            awards?: Omit<CreateCategoryAwardDTO, 'categoryId'>[];
             specificInscriptionDetails?: CreateEventInscriptionDetailDTO[];
             eventInscriptionDetails?: CreateEventInscriptionDetailDTO[];
         };
@@ -149,6 +153,38 @@ export class EventService implements OnModuleInit {
             specificInscriptionDetails ?? eventInscriptionDetails;
 
         const response = await firstValueFrom(this.eventService.createEvent(eventPayload as CreateEventRequest));
+
+        if (response.event) {
+            let createdCategoryId: number | undefined;
+            try {
+                const categoryResponse = await this.createCategory({
+                    eventId: response.event.id,
+                    name: category?.name?.trim() || String(response.event.id),
+                    description: category?.description,
+                    active: category?.active ?? true,
+                });
+                createdCategoryId = categoryResponse.category?.id;
+
+                if (createdCategoryId && awards?.length) {
+                    await Promise.all(
+                        awards.map((award) =>
+                            this.createCategoryAward({
+                                ...award,
+                                categoryId: createdCategoryId!,
+                            }),
+                        ),
+                    );
+                }
+            } catch (error) {
+                if (createdCategoryId) {
+                    try {
+                        await this.deleteCategory(createdCategoryId);
+                    } catch {}
+                }
+                await this.delete({ id: response.event.id });
+                throw error;
+            }
+        }
 
         if (response.event && nestedInscriptionDetails?.length) {
             try {
