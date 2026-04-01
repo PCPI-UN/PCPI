@@ -229,5 +229,16 @@ export class CreateEventDTO {
   @ValidateNested({ each: true })
   @Type(() => CreateSpecificInscriptionDetailDTO)
   specificInscriptionDetails?: CreateSpecificInscriptionDetailDTO[];
+
+  @ApiProperty({
+    description: 'Alias of specificInscriptionDetails for nested event inscription details',
+    type: [CreateSpecificInscriptionDetailDTO],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSpecificInscriptionDetailDTO)
+  eventInscriptionDetails?: CreateSpecificInscriptionDetailDTO[];
 }
  

@@ -137,16 +137,23 @@ export class EventService implements OnModuleInit {
     }
 
     async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
-        const { specificInscriptionDetails, ...eventPayload } = createEventDTO as CreateEventDTO & {
+        const {
+            specificInscriptionDetails,
+            eventInscriptionDetails,
+            ...eventPayload
+        } = createEventDTO as CreateEventDTO & {
             specificInscriptionDetails?: CreateEventInscriptionDetailDTO[];
+            eventInscriptionDetails?: CreateEventInscriptionDetailDTO[];
         };
+        const nestedInscriptionDetails =
+            specificInscriptionDetails ?? eventInscriptionDetails;
 
         const response = await firstValueFrom(this.eventService.createEvent(eventPayload as CreateEventRequest));
 
-        if (response.event && specificInscriptionDetails?.length) {
+        if (response.event && nestedInscriptionDetails?.length) {
             try {
                 await Promise.all(
-                    specificInscriptionDetails.map((detail) =>
+                    nestedInscriptionDetails.map((detail) =>
                         this.createEventInscriptionDetail({
                             ...detail,
                             eventId: response.event!.id,
