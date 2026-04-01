@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { EvaluationType, EventType } from '@app/common/generated/event';
 import {
   IsArray,
@@ -10,11 +10,54 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateNested,
   MaxLength,
   Min,
   MinLength,
 } from 'class-validator';
-import { transformEventType } from './event-type-transformer';
+import {
+  transformEvaluationType,
+  transformEventType,
+} from './event-type-transformer';
+
+class CreateSpecificInscriptionDetailDTO {
+  @ApiProperty({
+    description: 'Title of the inscription detail',
+    example: 'Documento de identidad',
+  })
+  @IsString()
+  title: string;
+
+  @ApiProperty({
+    description: 'Optional description for the inscription detail',
+    example: 'Cada integrante debe adjuntar una copia.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    description: 'Optional numeric value associated with the detail',
+    example: 0,
+    required: false,
+    default: 0,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  value?: number = 0;
+
+  @ApiProperty({
+    description: 'Whether the detail is required',
+    example: true,
+    required: false,
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isRequired?: boolean = true;
+}
 
 export class CreateEventDTO {
   @ApiProperty({
@@ -125,8 +168,10 @@ export class CreateEventDTO {
     description: 'Evaluation scale configured for the event',
     enum: EvaluationType,
     required: false,
+    example: 'ZERO_TO_FIVE',
   })
   @IsOptional()
+  @Transform(transformEvaluationType)
   @IsEnum(EvaluationType)
   evaluationType?: EvaluationType;
 
@@ -173,5 +218,16 @@ export class CreateEventDTO {
   @IsArray()
   @IsString({ each: true })
   organizers: string[] = [];
+
+  @ApiProperty({
+    description: 'Specific inscription details created together with the event',
+    type: [CreateSpecificInscriptionDetailDTO],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateSpecificInscriptionDetailDTO)
+  specificInscriptionDetails?: CreateSpecificInscriptionDetailDTO[];
 }
  

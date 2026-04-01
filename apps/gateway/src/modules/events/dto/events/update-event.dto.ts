@@ -16,7 +16,10 @@ import {
   MaxLength,
   Matches,
 } from 'class-validator';
-import { transformEventType } from './event-type-transformer';
+import {
+  transformEvaluationType,
+  transformEventType,
+} from './event-type-transformer';
 
 export class UpdateEventDTO {
   @ApiProperty({
@@ -163,8 +166,10 @@ export class UpdateEventDTO {
     description: 'Updated evaluation scale configured for the event',
     enum: EvaluationType,
     required: false,
+    example: 'ZERO_TO_FIVE',
   })
   @IsOptional()
+  @Transform(transformEvaluationType)
   @IsEnum(EvaluationType)
   evaluationType?: EvaluationType;
 

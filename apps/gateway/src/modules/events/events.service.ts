@@ -137,7 +137,27 @@ export class EventService implements OnModuleInit {
     }
 
     async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
-        const response = await firstValueFrom(this.eventService.createEvent(createEventDTO as CreateEventRequest));
+        const { specificInscriptionDetails, ...eventPayload } = createEventDTO as CreateEventDTO & {
+            specificInscriptionDetails?: CreateEventInscriptionDetailDTO[];
+        };
+
+        const response = await firstValueFrom(this.eventService.createEvent(eventPayload as CreateEventRequest));
+
+        if (response.event && specificInscriptionDetails?.length) {
+            try {
+                await Promise.all(
+                    specificInscriptionDetails.map((detail) =>
+                        this.createEventInscriptionDetail({
+                            ...detail,
+                            eventId: response.event!.id,
+                        }),
+                    ),
+                );
+            } catch (error) {
+                await this.delete({ id: response.event.id });
+                throw error;
+            }
+        }
 
         if (response.event) {
             const statuses = await this.getAndCacheStatuses();
