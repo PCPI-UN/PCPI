@@ -12,7 +12,9 @@ import {
   IsEnum,
   IsNumber,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { EvaluationType, EventType } from '@app/common/generated/event';
+import { transformEventType } from './event-type-transformer';
 
 export class UpdateEventDTO {
   @IsInt()
@@ -68,6 +70,7 @@ export class UpdateEventDTO {
   location?: string;
 
   @IsOptional()
+  @Transform(transformEventType)
   @IsEnum(EventType)
   eventType?: EventType;
 

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { EvaluationType, EventType } from '@app/common/generated/event';
 import {
   IsArray,
@@ -15,6 +16,7 @@ import {
   MaxLength,
   Matches,
 } from 'class-validator';
+import { transformEventType } from './event-type-transformer';
 
 export class UpdateEventDTO {
   @ApiProperty({
@@ -133,8 +135,10 @@ export class UpdateEventDTO {
     description: 'Updated type of the event',
     enum: EventType,
     required: false,
+    example: 'Competition',
   })
   @IsOptional()
+  @Transform(transformEventType)
   @IsEnum(EventType)
   eventType?: EventType;
 

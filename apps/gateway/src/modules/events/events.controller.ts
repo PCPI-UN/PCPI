@@ -75,7 +75,7 @@ export class EventsController {
     description: 'Get a paginated list of upcoming events. No authentication required. Status is always UPCOMING.',
   })
   @ApiResponse({ status: 200, description: 'Returns list of upcoming events with pagination' })
-  async listPublicEvents(@Query() query: ListMyEventsDTO) {
+  async listPublicEvents(@Query() query: ListEventsDTO) {
     // Hardcode status to UPCOMING and onlyActive to true
     return this.eventsService.listEvents({
       ...query,

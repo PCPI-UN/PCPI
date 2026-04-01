@@ -135,14 +135,19 @@ export class PrismaEventRepository extends EventRepository {
 
   /** Calcula EventStatus (enum numérico del proto) con base en fechas */
   private computeStatus(e: PrismaEvent): number {
-    // EventStatus:
-    // 0: UNSPECIFIED, 1: UPCOMING, 2: AVAILABLE, 3: CLOSED
     const now = new Date();
     const start = e?.startDate ? new Date(e.startDate) : undefined;
     const end = e?.endDate ? new Date(e.endDate) : undefined;
-    if (start && now < start) return 1;  // UPCOMING
-    if (end && now > end) return 3;      // CLOSED
-    return 2;                            // AVAILABLE
+    const inscriptionDeadline = e?.inscriptionDeadline
+      ? new Date(e.inscriptionDeadline)
+      : undefined;
+
+    if (end && now > end) return EventStatus.CLOSED;
+    if (start && now >= start && (!end || now <= end)) return EventStatus.AVAILABLE;
+    if (inscriptionDeadline && start && now >= inscriptionDeadline && now < start) {
+      return EventStatus.REGISTRATION_CLOSED;
+    }
+    return EventStatus.UPCOMING;
   }
 
   // ==========================
