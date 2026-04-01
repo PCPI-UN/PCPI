@@ -15,6 +15,7 @@ import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
 import { SignupUseCase } from '@auth/application/use-cases/signup.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { TokenServicePort } from '@auth/application/ports/token.service.port';
+import { NotificationServicePort } from '@auth/application/ports/notification.service.port';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { EmailServicePort } from '@common/ports/email-service.port';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
@@ -88,6 +89,10 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
       provide: EmailServicePort,
       useClass: NotificationServiceAdapter,
     },
+    {
+      provide: NotificationServicePort,
+      useClass: NotificationServiceAdapter,
+    }
   ],
 })
 export class AuthModule { }

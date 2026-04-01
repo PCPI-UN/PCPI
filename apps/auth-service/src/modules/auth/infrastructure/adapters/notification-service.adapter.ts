@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NotificationServicePort } from '../../application/ports/notification-service.port';
+import { NotificationServicePort } from '../../application/ports/notification.service.port';
 import { NotificationGrpcClient } from '../../../../common/gprc-client/notification.gprc-client';
 import { EmailTemplate } from '@app/common/generated/notification';
 
