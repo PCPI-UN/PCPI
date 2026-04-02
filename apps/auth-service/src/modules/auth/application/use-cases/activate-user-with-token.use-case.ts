@@ -17,6 +17,8 @@ export class ActivateUserWithTokenUseCase {
   ) {}
 
   async execute(validateTokenDto: ValidateTokenDto): Promise<{ success: boolean }> {
+    // DRY: Duplicate code for generating account setup token and sending email
+    // TODO: refactor into a shared service to avoid depending on another use case
     const { valid, userId, tokenType } = await this.validateTokenUseCase.execute(
       validateTokenDto.token,
     );

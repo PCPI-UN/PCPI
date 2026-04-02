@@ -52,6 +52,7 @@ export class LoginWithMicrosoftUseCase {
                 active: true,
                 status: UserStatus.CONFIRMED,
             };
+            // TODO: Use a dynamic role assignment strategy instead of hardcoding role ID
             await this.userRepository.createWithRoles(newUser, [3]); // Role "User"
             user = await this.userRepository.findByEmail(email);
         }
@@ -63,9 +64,9 @@ export class LoginWithMicrosoftUseCase {
             });
         }
 
-        const { accessToken, refreshToken } = await this.tokenService.generateTokens(user!);
+        const { accessToken, refreshToken } = await this.tokenService.generateTokens(user);
 
-        await this.tokenRepository.deleteByUserId(user!.id);
+        await this.tokenRepository.deleteByUserId(user.id);
 
         const expiresInDays = this.configService.get<number>(
             'JWT_REFRESH_TOKEN_EXPIRATION_DAYS',
@@ -76,7 +77,7 @@ export class LoginWithMicrosoftUseCase {
         const refreshTokenEntity = new Token(
             randomUUID(),
             refreshToken,
-            user!.id,
+            user.id,
             TokenType.REFRESH_TOKEN,
             expiresAt,
         );
