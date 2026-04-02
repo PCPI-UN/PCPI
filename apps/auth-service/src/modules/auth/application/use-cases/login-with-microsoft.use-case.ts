@@ -8,6 +8,7 @@ import { LoginWithMicrosoftDto } from '../dto/login-with-microsoft.dto';
 import { Token, TokenType } from '@auth/domain/entities/token.entity';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { UserStatus } from '@users/domain/entities/user.entity';
 
 @Injectable()
 export class LoginWithMicrosoftUseCase {
@@ -43,24 +44,27 @@ export class LoginWithMicrosoftUseCase {
             }
         } else {
             const newUser = {
+                id: 0, // ID will be set by the repository
                 email,
-                name: payload.name || email.split('@')[0],
+                firstName: payload.given_name || '',
+                lastName: payload.family_name || '',
                 oid,
                 active: true,
+                status: UserStatus.CONFIRMED,
             };
             await this.userRepository.save(newUser);
         }
 
-        if (!user.active) {
+        if (user && !user.active) {
             throw new RpcException({
                 code: status.PERMISSION_DENIED,
                 message: 'This user account is inactive',
             });
         }
 
-        const { accessToken, refreshToken } = await this.tokenService.generateTokens(user);
+        const { accessToken, refreshToken } = await this.tokenService.generateTokens(user!);
 
-        await this.tokenRepository.deleteByUserId(user.id);
+        await this.tokenRepository.deleteByUserId(user!.id);
 
         const expiresInDays = this.configService.get<number>(
             'JWT_REFRESH_TOKEN_EXPIRATION_DAYS',
@@ -71,7 +75,7 @@ export class LoginWithMicrosoftUseCase {
         const refreshTokenEntity = new Token(
             randomUUID(),
             refreshToken,
-            user.id,
+            user!.id,
             TokenType.REFRESH_TOKEN,
             expiresAt,
         );

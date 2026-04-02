@@ -76,7 +76,7 @@ export class AuthController {
       user.email,
       user.firstName,
       user.lastName,
-      user.phone,
+      user.phone ?? '',
       user.active,
       user.status,
     );
