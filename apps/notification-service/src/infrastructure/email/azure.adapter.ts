@@ -65,6 +65,9 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
       case EmailTemplate.PLATFORM_INVITATION:
         templatePath += 'platform_invitation.html';
         break;
+      case EmailTemplate.SIGNUP_CONFIRMATION:
+        templatePath += 'signup_confirmation.html';
+        break;
       default:
         throw new Error(`Unsupported email template: ${template}`);
     }

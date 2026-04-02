@@ -3,6 +3,7 @@ import { GrpcMethod } from '@nestjs/microservices';
 
 // Use cases
 import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
+import { SignupUseCase } from '@auth/application/use-cases/signup.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { SetPasswordUseCase } from '@auth/application/use-cases/set-password.use-case';
 import { ValidateTokenUseCase } from '@auth/application/use-cases/validate-token.use-case';
@@ -10,22 +11,25 @@ import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-passwo
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
 import { GenerateAccountSetupTokenUseCase } from '@auth/application/use-cases/generate-account-setup-token.use-case';
-
+import { ActivateUserWithTokenUseCase } from '@auth/application/use-cases/activate-user-with-token.use-case';
 
 // Proto Responses types
 import {
   AUTH_SERVICE_NAME,
   LoginResponse,
+  SignupResponse,
   RefreshResponse,
   SetPasswordResponse,
   ValidateTokenResponse,
   ForgotPasswordResponse,
   ChangePasswordResponse,
   GenerateAccountSetupTokenResponse,
+  ActivateUserResponse,
 } from '@app/common/generated/auth';
 
 // DTOs
 import { LoginDto } from '@auth/application/dto/login.dto';
+import { SignupDto } from '@auth/application/dto/signup.dto';
 import { RefreshDto } from '@auth/application/dto/refresh.dto';
 import { SetPasswordDto } from '@auth/application/dto/set-password.dto';
 import { ValidateTokenDto } from '@auth/application/dto/validate-token.dto';
@@ -42,6 +46,7 @@ import { AuthMapper } from '@auth/application/mappers/auth.mapper';
 export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
+    private readonly signupUseCase: SignupUseCase,
     private readonly refreshUseCase: RefreshUseCase,
     private readonly setPasswordUseCase: SetPasswordUseCase,
     private readonly validateTokenUseCase: ValidateTokenUseCase,
@@ -49,6 +54,7 @@ export class AuthController {
     private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly loginWithMicrosoftUseCase: LoginWithMicrosoftUseCase,
     private readonly generateAccountSetupTokenUseCase: GenerateAccountSetupTokenUseCase,
+    private readonly activateUserWithTokenUseCase: ActivateUserWithTokenUseCase,
   ) { }
 
 
@@ -64,6 +70,24 @@ export class AuthController {
     return AuthMapper.toLoginResponse(accessToken, refreshToken);
   }
 
+  @GrpcMethod(AUTH_SERVICE_NAME, 'Signup')
+  async signup(request: SignupDto): Promise<SignupResponse> {
+    const user = await this.signupUseCase.execute(request);
+    return AuthMapper.toSignupResponse(
+      user.id,
+      user.email,
+      user.firstName,
+      user.lastName,
+      user.phone ?? '',
+      user.active,
+      user.status,
+    );
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'ActivateUserWithToken')
+  async activateUserWithToken(request: ValidateTokenDto): Promise<ActivateUserResponse> {
+    return this.activateUserWithTokenUseCase.execute(request);
+  }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Refresh')
   async refresh(request: RefreshDto): Promise<RefreshResponse> {
