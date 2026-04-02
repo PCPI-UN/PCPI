@@ -8,7 +8,7 @@ help: ## Show this help message
 
 # Development targets
 dev-up: ## Start all services in development mode with .env file
-	docker compose -f docker-compose.dev.yml --env-file .env up -d
+	docker compose -f docker-compose.dev.yml --env-file .env up
 
 dev-down: ## Stop all development services
 	docker compose -f docker-compose.dev.yml --env-file .env down

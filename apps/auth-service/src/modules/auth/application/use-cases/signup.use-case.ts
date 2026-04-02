@@ -4,7 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { UserRepositoryPort } from '@users/domain/repositories/user.repository.port';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
 import { TokenRepositoryPort } from '@auth/domain/repositories/token.repository.port';
-import { NotificationServicePort } from '@auth/application/ports/notification.service.port';
+import { EmailServicePort } from '@common/ports/email-service.port';
 import { TokenServicePort } from '@auth/application/ports/token.service.port';
 import { GenerateAccountSetupTokenUseCase } from './generate-account-setup-token.use-case'; 
 import { SignupDto } from '@auth/application/dto/signup.dto';
@@ -17,7 +17,7 @@ export class SignupUseCase {
     private readonly userRepository: UserRepositoryPort,
     private readonly passwordHasher: PasswordHasherPort,
     private readonly tokenRepository: TokenRepositoryPort,
-    private readonly notificationService: NotificationServicePort,
+    private readonly emailService: EmailServicePort,
     private readonly tokenService: TokenServicePort,
     private readonly configService: ConfigService,
     private readonly generateAccountSetupTokenUseCase: GenerateAccountSetupTokenUseCase,
@@ -52,7 +52,7 @@ export class SignupUseCase {
     // This message was not written with AI btw, this is actually me
     const { token, expiresAt } = await this.generateAccountSetupTokenUseCase.execute(savedUser.id);
 
-    await this.notificationService.sendSignupConfirmationEmail({
+    await this.emailService.sendSignupConfirmationEmail({
       to: email,
       firstName,
       invitationLink: this.configService.get('FRONTEND_URL') + '/auth/confirm?token=' + token, // this screen needs to be created

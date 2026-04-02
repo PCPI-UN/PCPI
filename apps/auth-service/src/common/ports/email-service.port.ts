@@ -9,4 +9,10 @@ export abstract class EmailServicePort {
     to: string,
     userName: string,
   ): Promise<void>;
+
+  abstract sendSignupConfirmationEmail(params: {
+    to: string;
+    firstName: string;
+    invitationLink: string;
+  }): Promise<{ success: boolean }>;
 }
