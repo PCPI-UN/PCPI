@@ -23,7 +23,7 @@ import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-passwo
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
 import { GenerateAccountSetupTokenUseCase } from '@auth/application/use-cases/generate-account-setup-token.use-case';
-
+import { ActivateUserWithTokenUseCase } from '@auth/application/use-cases/activate-user-with-token.use-case';
 
 // Infrastructure Layer
 import { JwtServiceAdapter } from '@auth/infrastructure/jwt/jwt.service.adapter';
@@ -71,6 +71,7 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
     ChangePasswordUseCase,
     LoginWithMicrosoftUseCase,
     GenerateAccountSetupTokenUseCase,
+    ActivateUserWithTokenUseCase,
 
     {
       provide: TokenServicePort,

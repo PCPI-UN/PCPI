@@ -9,6 +9,7 @@ import {
   AUTH_SERVICE_NAME,
   LoginRequest,
   SignupRequest,
+  ActivateUserWithTokenRequest,
   RefreshRequest,
   GetUserRequest,
   ValidateTokenRequest,
@@ -24,9 +25,11 @@ import {
   ForgotPasswordResponse,
   SetPasswordResponse,
   ChangePasswordResponse,
+  ActivateUserResponse,
   User,
 } from '@app/common/generated/auth';
 import { LoginDto } from './dto/login.dto';
+import { ActivateUserDto } from './dto/activate-user.dto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -65,6 +68,12 @@ export class AuthService implements OnModuleInit {
   async signup(signupDto: SignupRequest): Promise<SignupResponse> {
     return firstValueFrom(
       this.authService.signup(signupDto as SignupRequest),
+    );
+  }
+
+  async activateUserWithToken(activateUserDto: ActivateUserDto): Promise<ActivateUserResponse> {
+    return firstValueFrom(
+      this.authService.activateUserWithToken(activateUserDto as ActivateUserWithTokenRequest),
     );
   }
 

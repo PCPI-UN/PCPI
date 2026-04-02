@@ -11,7 +11,7 @@ import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-passwo
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
 import { GenerateAccountSetupTokenUseCase } from '@auth/application/use-cases/generate-account-setup-token.use-case';
-
+import { ActivateUserWithTokenUseCase } from '@auth/application/use-cases/activate-user-with-token.use-case';
 
 // Proto Responses types
 import {
@@ -24,6 +24,7 @@ import {
   ForgotPasswordResponse,
   ChangePasswordResponse,
   GenerateAccountSetupTokenResponse,
+  ActivateUserResponse,
 } from '@app/common/generated/auth';
 
 // DTOs
@@ -53,6 +54,7 @@ export class AuthController {
     private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly loginWithMicrosoftUseCase: LoginWithMicrosoftUseCase,
     private readonly generateAccountSetupTokenUseCase: GenerateAccountSetupTokenUseCase,
+    private readonly activateUserWithTokenUseCase: ActivateUserWithTokenUseCase,
   ) { }
 
 
@@ -80,6 +82,11 @@ export class AuthController {
       user.active,
       user.status,
     );
+  }
+
+  @GrpcMethod(AUTH_SERVICE_NAME, 'ActivateUserWithToken')
+  async activateUserWithToken(request: ValidateTokenDto): Promise<ActivateUserResponse> {
+    return this.activateUserWithTokenUseCase.execute(request);
   }
 
   @GrpcMethod(AUTH_SERVICE_NAME, 'Refresh')

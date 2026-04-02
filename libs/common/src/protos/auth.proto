@@ -39,6 +39,8 @@ service AuthService {
   rpc ActivateUser(ActivateUserRequest) returns (ActivateUserResponse);
   // Activates a user by linking their Microsoft account
   rpc ActivateUserWithMicrosoft(ActivateUserWithMicrosoftRequest) returns (ActivateUserResponse);
+  // Activates a user using their token
+  rpc ActivateUserWithToken(ActivateUserWithTokenRequest) returns (ActivateUserResponse);
 
   // Retrieves a user by their ID
   rpc GetUser (GetUserRequest) returns (User) {}
@@ -141,6 +143,10 @@ message ActivateUserRequest {
 message ActivateUserWithMicrosoftRequest {
   int32 userId = 1;
   string token = 2;
+}
+
+message ActivateUserWithTokenRequest {
+  string token = 1;
 }
 
 message ActivateUserResponse {

@@ -30,6 +30,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { InvitationsService } from '../invitations/invitations.service';
 import { AppUser } from './types/app-user.type';
+import { ActivateUserDto } from './dto/activate-user.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -160,6 +161,15 @@ export class AuthController {
     const user = await this.authService.signup(signupDto);    
 
     return { success: true, message: 'Signup successful' };
+  }
+
+  @Public()
+  @Post('activate')
+  @ApiOperation({ summary: 'Activate user account' })
+  @ApiResponse({ status: 200, description: 'User account activated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid token or user already activated' })
+  async activateUser(@Body() activateUserDto: ActivateUserDto) {
+    return this.authService.activateUserWithToken(activateUserDto);
   }
 
   @Post('logout')
