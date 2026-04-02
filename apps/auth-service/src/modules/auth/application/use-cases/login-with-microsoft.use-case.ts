@@ -30,7 +30,7 @@ export class LoginWithMicrosoftUseCase {
             throw new RpcException({ code: status.INVALID_ARGUMENT, message: 'Token missing email claim' });
         }
 
-        const user = await this.userRepository.findByEmail(email);
+        let user = await this.userRepository.findByEmail(email);
 
         if (user) {
             if (!user.oid) {
@@ -46,13 +46,14 @@ export class LoginWithMicrosoftUseCase {
             const newUser = {
                 id: 0, // ID will be set by the repository
                 email,
-                firstName: payload.given_name || '',
-                lastName: payload.family_name || '',
+                firstName: payload.name || '',
+                lastName: '',
                 oid,
                 active: true,
                 status: UserStatus.CONFIRMED,
             };
-            await this.userRepository.save(newUser);
+            await this.userRepository.createWithRoles(newUser, [3]); // Role "User"
+            user = await this.userRepository.findByEmail(email);
         }
 
         if (user && !user.active) {
