@@ -64,9 +64,9 @@ export class LoginWithMicrosoftUseCase {
             });
         }
 
-        const { accessToken, refreshToken } = await this.tokenService.generateTokens(user);
+        const { accessToken, refreshToken } = await this.tokenService.generateTokens(user!);
 
-        await this.tokenRepository.deleteByUserId(user.id);
+        await this.tokenRepository.deleteByUserId(user!.id);
 
         const expiresInDays = this.configService.get<number>(
             'JWT_REFRESH_TOKEN_EXPIRATION_DAYS',
@@ -77,7 +77,7 @@ export class LoginWithMicrosoftUseCase {
         const refreshTokenEntity = new Token(
             randomUUID(),
             refreshToken,
-            user.id,
+            user!.id,
             TokenType.REFRESH_TOKEN,
             expiresAt,
         );
