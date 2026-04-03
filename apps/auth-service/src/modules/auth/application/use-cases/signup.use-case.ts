@@ -44,18 +44,17 @@ export class SignupUseCase {
       hashedPassword,
     );
 
+    // TODO: Use a dynamic role assignment strategy instead of hardcoding role ID
     const savedUser = await this.userRepository.createWithRoles(user, [3]); // Assign default role "User"
 
-    // Not sure if accessing the token generation use case directly like this is the best approach
-    // LET ME KNOW IF THIS BREAKS ANY ARCHITECTURAL RULES
-    // I just wanted to reuse the logic for generating the token and sending the email without duplicating code
-    // This message was not written with AI btw, this is actually me
+    // DRY: Duplicate code for generating account setup token and sending email
+    // TODO: refactor into a shared service to avoid depending on another use case
     const { token, expiresAt } = await this.generateAccountSetupTokenUseCase.execute(savedUser.id);
 
     await this.emailService.sendSignupConfirmationEmail({
       to: email,
       firstName,
-      invitationLink: this.configService.get('FRONTEND_URL') + '/auth/confirm?token=' + token, // this screen needs to be created
+      invitationLink: this.configService.get('FRONTEND_URL') + '/auth/confirm?token=' + token,
     });
 
     return savedUser;

@@ -75,7 +75,6 @@ export class NotificationServiceAdapter
     firstName: string;
     lastName?: string;
     invitationLink: string;
-    roles: string;
   }): Promise<{ success: boolean }> {
     try {
       await firstValueFrom(
@@ -86,7 +85,6 @@ export class NotificationServiceAdapter
             firstName: params.firstName,
             lastName: params.lastName,
             invitationLink: params.invitationLink,
-            roles: params.roles,
           },
         }),
       );
