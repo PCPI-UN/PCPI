@@ -180,6 +180,16 @@ export class EventsController {
    * Get event by ID
    * Requires read:events permission
    */
+  @Public()
+  @Get('public/:id')
+  @ApiOperation({ summary: 'Get public event by ID' })
+  @ApiParam({ name: 'id', description: 'Event ID', type: Number })
+  @ApiResponse({ status: 200, description: 'Returns public event details' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async getPublicEvent(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.get({ id });
+  }
+
   @RequirePermission('read:events')
   @Get(':id')
   @ApiOperation({ summary: 'Get event by ID' })
