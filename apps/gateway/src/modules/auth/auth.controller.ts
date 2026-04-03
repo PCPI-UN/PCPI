@@ -152,7 +152,7 @@ export class AuthController {
   @Post('signup')
   @ApiOperation({ summary: 'Sign up for a new account' })
   @ApiBody({ type: SignupDto })
-  @ApiResponse({ status: 201, description: 'Signup successful. Sets access_token and refresh_token as HTTP-only cookies.' })
+  @ApiResponse({ status: 201, description: 'Signup successful. Sends confirmation email.' })
   @ApiResponse({ status: 400, description: 'Validation failed or user already exists' })
   async signUp(
     @Body() signupDto: SignupDto,
