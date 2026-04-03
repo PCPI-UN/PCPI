@@ -1,8 +1,6 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches: [ "feature/CU-86e0kh5gg/CICD-Add-automatic-service-redeployment-to-GitHub-Actions-workflow" ]
   pull_request:
     branches: [ "dev" ]
   workflow_dispatch:
