@@ -147,7 +147,7 @@ export class AuthController {
     });
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-    if (state && state.startsWith(':')) {
+    if (state && state.startsWith('redirect:')) {
       const redirectPath = state.split(':')[1];
       response.redirect(`${frontendUrl}${redirectPath}`);
     } else {
