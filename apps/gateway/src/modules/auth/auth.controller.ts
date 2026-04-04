@@ -84,11 +84,13 @@ export class AuthController {
   @Get('login/microsoft')
   @ApiOperation({ summary: 'Redirect to Microsoft Login' })
   @ApiQuery({ name: 'invitation_token', required: false, description: 'Invitation token' })
+  @ApiQuery({ name: 'redirect', required: false, description: 'Frontend redirect path after login (e.g., /public/projects/1)' })
   async loginWithMicrosoft(
     @Res() res: Response,
     @Query('invitation_token') invitationToken?: string,
+    @Query('redirect') redirectUrl?: string,
   ) {
-    const url = this.authService.getAuthorizeUrl(invitationToken);
+    const url = this.authService.getAuthorizeUrl(invitationToken, redirectUrl);
     return res.redirect(url);
   }
 
@@ -145,7 +147,12 @@ export class AuthController {
     });
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-    response.redirect(`${frontendUrl}/app`);
+    if (state && state.startsWith(':')) {
+      const redirectPath = state.split(':')[1];
+      response.redirect(`${frontendUrl}${redirectPath}`);
+    } else {
+      response.redirect(`${frontendUrl}/app`);
+    }
   }
 
   @Public()
