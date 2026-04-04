@@ -70,6 +70,6 @@ import { EventCatalogService } from '@events/application/event-catalog.service';
     ListEventMembersUseCase,
     GetJurorMembershipUseCase,
   ],
-  exports: [EventRepository, EventMemberRepository],
+  exports: [EventRepository, EventMemberRepository, EventCatalogService],
 })
 export class EventsModule {}

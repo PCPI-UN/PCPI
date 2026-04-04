@@ -11,6 +11,11 @@ import { UpdateEventDTO } from './dto/events/update-event.dto';
 import { CreateEventMemberDTO } from './dto/event-members/create-event-member.dto';
 import { DeleteEventMemberDTO } from './dto/event-members/delete-event-member.dto';
 import { ListEventMembersDTO } from './dto/event-members/list-event-members.dto';
+import { CreateCourseDTO } from './dto/courses/create-course.dto';
+import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
+import { ListCoursesDTO } from './dto/courses/list-course.dto';
+import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
+import { UpdateCourseDTO } from './dto/courses/update-course.dto';
 import {
   CreateAwardWinnerDTO,
   CreateCategoryAwardDTO,
@@ -72,16 +77,22 @@ import {
   ListCategoriesByEventRequest,
   DeleteCategoryRequest,
   DeleteCategoryResponse,
+  CreateCourseResponse,
+  DeleteCourseResponse,
   CreateCategoryAwardRequest,
   CreateCategoryAwardResponse,
+  GetCourseResponse,
   UpdateCategoryAwardRequest,
   UpdateCategoryAwardResponse,
+  ListCoursesForDropdownResponse,
+  ListCoursesResponse,
   GetCategoryAwardRequest,
   GetCategoryAwardResponse,
   ListCategoryAwardsRequest,
   ListCategoryAwardsResponse,
   DeleteCategoryAwardRequest,
   DeleteCategoryAwardResponse,
+  UpdateCourseResponse,
   CreateAwardWinnerRequest,
   CreateAwardWinnerResponse,
   UpdateAwardWinnerRequest,
@@ -134,6 +145,28 @@ export class EventService implements OnModuleInit {
        this.authService = this.authClient.getService<AuthServiceClient>(
          AUTH_SERVICE_NAME,
        );
+    }
+
+    private mapCourseForFrontend(
+        category: {
+            id: number;
+            eventId: number;
+            name: string;
+            description: string;
+            active: boolean;
+            createdAt: string;
+        },
+        event?: { id: number; name: string },
+    ) {
+        return {
+            id: category.id,
+            eventId: category.eventId,
+            code: category.name,
+            description: category.description || undefined,
+            active: category.active,
+            event,
+            createdAt: category.createdAt ? new Date(category.createdAt).getTime() : 0,
+        };
     }
 
     async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
@@ -273,6 +306,127 @@ export class EventService implements OnModuleInit {
 
     async deleteCategory(id: number): Promise<DeleteCategoryResponse> {
         return firstValueFrom(this.eventService.deleteCategory({ id } as DeleteCategoryRequest));
+    }
+
+    async createCourse(dto: CreateCourseDTO): Promise<CreateCourseResponse> {
+        await this.createCategory({
+            eventId: dto.eventId,
+            name: dto.code,
+            description: dto.description,
+            active: dto.active,
+        });
+
+        return {
+            ok: true,
+            message: 'Course created successfully',
+        };
+    }
+
+    async updateCourse(dto: UpdateCourseDTO): Promise<UpdateCourseResponse> {
+        await this.updateCategory({
+            id: dto.id,
+            name: dto.code,
+            description: dto.description,
+            active: dto.active,
+        });
+
+        return {
+            ok: true,
+            message: 'Course updated successfully',
+        };
+    }
+
+    async getCourse(id: number): Promise<GetCourseResponse> {
+        const response = await this.getCategory(id);
+        const category = response.category;
+
+        if (!category) {
+            throw new Error(`Category ${id} was not returned by event-service`);
+        }
+
+        return {
+            course: {
+                id: category.id,
+                eventId: category.eventId,
+                code: category.name,
+                description: category.description,
+                active: category.active,
+                createdAt: category.createdAt,
+                updatedAt: category.updatedAt,
+            },
+        };
+    }
+
+    async listCourses(dto: ListCoursesDTO): Promise<ListCoursesResponse> {
+        const response = await this.listCategories({
+            eventId: dto.eventId,
+            onlyActive: dto.onlyActive,
+            page: dto.page,
+            limit: dto.limit,
+            q: dto.q,
+        });
+
+        return {
+            courses: response.categories.map((category) => ({
+                id: category.id,
+                eventId: category.eventId,
+                code: category.name,
+                description: category.description,
+                active: category.active,
+                createdAt: category.createdAt,
+                updatedAt: category.updatedAt,
+            })),
+            meta: response.meta,
+        };
+    }
+
+    async listCoursesByEvent(eventId: number, dto: ListCoursesByEventDTO): Promise<ListCoursesResponse> {
+        const [categoriesResponse, eventResponse] = await Promise.all([
+            this.listCategories({
+                ...dto,
+                eventId,
+            }),
+            this.get({ id: eventId }),
+        ]);
+
+        const event = eventResponse.event
+            ? {
+                id: eventResponse.event.id,
+                name: eventResponse.event.name,
+            }
+            : undefined;
+
+        return {
+            courses: categoriesResponse.categories.map((category) =>
+                this.mapCourseForFrontend(category, event),
+            ) as any,
+            nextPageToken: '',
+        } as any;
+    }
+
+    async listCoursesForDropdown(dto: ListCoursesForDropdownDTO): Promise<ListCoursesForDropdownResponse> {
+        const eventId = dto.eventId as number;
+        const response = await this.listCategoriesByEvent(eventId, {
+            eventId,
+            onlyActive: dto.onlyActive,
+            page: 1,
+            limit: 1000,
+        });
+
+        return {
+            courses: response.categories.map((category) => ({
+                id: category.id,
+                code: category.name,
+                description: category.description,
+            })),
+        };
+    }
+
+    async deleteCourse(id: number): Promise<DeleteCourseResponse> {
+        await this.deleteCategory(id);
+        return {
+            ok: true,
+        };
     }
 
     async createCategoryAward(dto: CreateCategoryAwardDTO): Promise<CreateCategoryAwardResponse> {

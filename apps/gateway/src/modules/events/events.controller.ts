@@ -35,6 +35,11 @@ import { ListMyEventsDTO } from './dto/events/list-my-events.dto';
 import { CreateEventMemberDTO } from './dto/event-members/create-event-member.dto';
 import { DeleteEventMemberDTO } from './dto/event-members/delete-event-member.dto';
 import { ListEventMembersDTO } from './dto/event-members/list-event-members.dto';
+import { CreateCourseDTO } from './dto/courses/create-course.dto';
+import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
+import { ListCoursesDTO } from './dto/courses/list-course.dto';
+import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
+import { UpdateCourseDTO } from './dto/courses/update-course.dto';
 import {
   CreateAwardWinnerDTO,
   CreateCategoryAwardDTO,
@@ -277,6 +282,62 @@ export class EventsController {
   @ApiResponse({ status: 404, description: 'Event not found' })
   async listEventMembers(@Query() listEventMembers: ListEventMembersDTO) {
     return this.eventsService.listMembers(listEventMembers);
+  }
+
+  @Post('courses')
+  @RequirePermission('create:event-members')
+  @ApiOperation({ summary: 'Create a course alias backed by categories' })
+  async createCourse(@Body() dto: CreateCourseDTO) {
+    return this.eventsService.createCourse(dto);
+  }
+
+  @Get('courses')
+  @ApiOperation({ summary: 'List course aliases backed by categories' })
+  async listCourses(@Query() dto: ListCoursesDTO) {
+    return this.eventsService.listCourses(dto);
+  }
+
+  @Get('courses/event/:eventId')
+  @ApiOperation({ summary: 'List course aliases by event backed by categories' })
+  async listCoursesByEvent(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() dto: ListCoursesByEventDTO,
+  ) {
+    return this.eventsService.listCoursesByEvent(eventId, dto);
+  }
+
+  @Get('courses/dropdown/:eventId')
+  @ApiOperation({ summary: 'List course aliases for dropdown backed by categories' })
+  async listCoursesForDropdown(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() dto: ListCoursesForDropdownDTO,
+  ) {
+    return this.eventsService.listCoursesForDropdown({
+      ...dto,
+      eventId,
+    });
+  }
+
+  @Get('courses/:id')
+  @ApiOperation({ summary: 'Get a course alias backed by categories' })
+  async getCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.getCourse(id);
+  }
+
+  @Patch('courses/:id')
+  @ApiOperation({ summary: 'Update a course alias backed by categories' })
+  async updateCourse(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCourseDTO,
+  ) {
+    return this.eventsService.updateCourse({ ...dto, id });
+  }
+
+  @Delete('courses/:id')
+  @RequirePermission('delete:event-members')
+  @ApiOperation({ summary: 'Delete a course alias backed by categories' })
+  async deleteCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteCourse(id);
   }
 
   @Post('categories')
