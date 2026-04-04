@@ -19,7 +19,7 @@ CREATE TABLE "public"."projects" (
     "description" TEXT,
     "event_number" VARCHAR(150),
     "state" "public"."ProjectState" NOT NULL,
-    "rejection_reason" TEXT,
+    "reason" TEXT,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP NOT NULL,
 

@@ -75,7 +75,7 @@ message Project {
   string updatedAt = 7; 
   int32 courseId = 8;
   ProjectState state = 9;
-  optional string rejectionReason = 10;
+  optional string reason = 10;
 }
 
 message ProjectComplete {
@@ -88,7 +88,7 @@ message ProjectComplete {
   string updatedAt = 7; 
   int32 courseId = 8;
   ProjectState state = 9;
-  optional string rejectionReason = 10;
+  optional string reason = 10;
   repeated ProjectParticipant participants = 11;
   repeated ProjectDocument documents = 12;
   repeated PendingProjectParticipant pendingParticipants = 13;

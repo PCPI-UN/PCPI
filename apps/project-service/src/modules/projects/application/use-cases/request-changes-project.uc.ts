@@ -50,7 +50,7 @@ export class RequestChangesProjectUC {
             firstName,
             lastName,
             projectName: project.name,
-            rejectionReason: input.reason || '',
+            reason: input.reason || '',
           },
         });
       } catch (error) {

@@ -11,7 +11,7 @@ export interface Project {
   description?: string | null;
   eventNumber?: string | null;
   state: ProjectState;
-  rejectionReason?: string | null;
+  reason?: string | null;
 }
 
 export interface ProjectDocument {

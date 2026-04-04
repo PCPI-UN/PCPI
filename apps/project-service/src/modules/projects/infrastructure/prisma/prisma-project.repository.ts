@@ -124,7 +124,7 @@ export class PrismaProjectRepository implements ProjectRepository {
       where: { id },
       data: { 
         state,
-        rejectionReason: reason,
+        reason: reason,
       },
     })) as unknown as Project;
   }
