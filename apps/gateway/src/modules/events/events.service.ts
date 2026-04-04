@@ -165,8 +165,18 @@ export class EventService implements OnModuleInit {
             description: category.description || undefined,
             active: category.active,
             event,
-            createdAt: category.createdAt ? new Date(category.createdAt).getTime() : 0,
+            createdAt: category.createdAt ? Math.floor(new Date(category.createdAt).getTime() / 1000) : 0,
         };
+    }
+
+    private getNextPageToken(meta?: {
+        currentPage?: number;
+        totalPages?: number;
+    }): string {
+        const currentPage = meta?.currentPage ?? 1;
+        const totalPages = meta?.totalPages ?? 1;
+
+        return currentPage < totalPages ? String(currentPage + 1) : '';
     }
 
     async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
@@ -358,35 +368,15 @@ export class EventService implements OnModuleInit {
     }
 
     async listCourses(dto: ListCoursesDTO): Promise<ListCoursesResponse> {
-        const response = await this.listCategories({
-            eventId: dto.eventId,
-            onlyActive: dto.onlyActive,
-            page: dto.page,
-            limit: dto.limit,
-            q: dto.q,
-        });
-
-        return {
-            courses: response.categories.map((category) => ({
-                id: category.id,
-                eventId: category.eventId,
-                code: category.name,
-                description: category.description,
-                active: category.active,
-                createdAt: category.createdAt,
-                updatedAt: category.updatedAt,
-            })),
-            meta: response.meta,
-        };
-    }
-
-    async listCoursesByEvent(eventId: number, dto: ListCoursesByEventDTO): Promise<ListCoursesResponse> {
-        const [categoriesResponse, eventResponse] = await Promise.all([
+        const [response, eventResponse] = await Promise.all([
             this.listCategories({
-                ...dto,
-                eventId,
+                eventId: dto.eventId,
+                onlyActive: dto.onlyActive,
+                page: dto.page,
+                limit: dto.limit,
+                q: dto.q,
             }),
-            this.get({ id: eventId }),
+            dto.eventId ? this.get({ id: dto.eventId }) : Promise.resolve({ event: undefined } as GetEventResponse),
         ]);
 
         const event = eventResponse.event
@@ -397,11 +387,20 @@ export class EventService implements OnModuleInit {
             : undefined;
 
         return {
-            courses: categoriesResponse.categories.map((category) =>
+            courses: response.categories.map((category) =>
                 this.mapCourseForFrontend(category, event),
             ) as any,
-            nextPageToken: '',
+            nextPageToken: this.getNextPageToken(response.meta),
         } as any;
+    }
+
+    async listCoursesByEvent(eventId: number, dto: ListCoursesByEventDTO): Promise<ListCoursesResponse> {
+        const response = await this.listCourses({
+            ...dto,
+            eventId,
+        });
+
+        return response;
     }
 
     async listCoursesForDropdown(dto: ListCoursesForDropdownDTO): Promise<ListCoursesForDropdownResponse> {
