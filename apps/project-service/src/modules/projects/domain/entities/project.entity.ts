@@ -1,4 +1,4 @@
-export type ProjectState = 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+export type ProjectState = 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGES';
 export type StudentStatus = 'PENDING' | 'INVITED' | 'JOINED';
 export type TypedDocument = 'LOGO' | 'POSTER' | 'SUPPORTING_DOCUMENT';
 export type Status = 'ACTIVE' | 'INACTIVE';

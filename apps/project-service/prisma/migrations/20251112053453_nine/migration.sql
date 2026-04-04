@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "public"."ProjectState" AS ENUM ('UNDER_REVIEW', 'APPROVED', 'REJECTED');
+CREATE TYPE "public"."ProjectState" AS ENUM ('UNDER_REVIEW', 'APPROVED', 'REJECTED', 'REQUEST_CHANGES');
 
 -- CreateEnum
 CREATE TYPE "public"."TypedDocument" AS ENUM ('POSTER', 'SUPPORTING_DOCUMENT');

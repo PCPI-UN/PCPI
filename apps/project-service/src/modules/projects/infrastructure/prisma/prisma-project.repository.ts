@@ -11,7 +11,7 @@ type CreateProjectInput = {
   name: string;
   description?: string;
   eventNumber?: string;
-  state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+  state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGES';
 };
 
 type AddPendingParticipantInput = {

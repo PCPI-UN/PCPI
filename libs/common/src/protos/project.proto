@@ -25,7 +25,8 @@ service ProjectsService {
 
   rpc UpdateProject (UpdateProjectRequest) returns (ProjectResponse);      
   rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);
-  rpc RejectProject (RejectProjectRequest) returns (ProjectResponse);     
+  rpc RejectProject (RejectProjectRequest) returns (ProjectResponse);
+  rpc RequestChangesProject (RequestChangesProjectRequest) returns (ProjectResponse);
   rpc AssignJurorToProjects (AssignJurorToProjectsRequest) returns (AssignJurorToProjectsResponse); 
   rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
@@ -41,6 +42,7 @@ enum ProjectState {
   UNDER_REVIEW = 1;
   APPROVED = 2;
   REJECTED = 3;
+  REQUEST_CHANGES = 4;
 }
 
 enum TypedDocument {
@@ -181,6 +183,12 @@ message RejectProjectRequest {
   int32 id = 1; 
   int32 actingUserId = 2;
   optional string reason = 3; // Reason for rejection (stored in database)
+}
+
+message RequestChangesProjectRequest {
+  int32 id = 1;
+  int32 actingUserId = 2;
+  string reason = 3;
 }
 
 // Service will:

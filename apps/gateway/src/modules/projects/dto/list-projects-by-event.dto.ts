@@ -6,6 +6,7 @@ export enum ProjectStateFilter {
   UNDER_REVIEW = 'UNDER_REVIEW',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  REQUEST_CHANGES = 'REQUEST_CHANGES'
 }
 
 export class ListProjectsByEventDto {

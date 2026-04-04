@@ -11,6 +11,7 @@ import { DeleteProjectUC } from './application/use-cases/delete-project.uc';
 import { UpdateProjectUC } from './application/use-cases/update-project.uc';
 import { ApproveProjectUC } from './application/use-cases/approve-project.uc';
 import { RejectProjectUC } from './application/use-cases/reject-project.uc';
+import { RequestChangesProjectUC } from './application/use-cases/request-changes-project.uc';
 import { AssignJurorBulkUC } from './application/use-cases/assign-juror-bulk.uc';
 import { ReassignProjectJurorUC } from './application/use-cases/reassign-project-juror.uc';
 import { ListProjectJurorsUC } from './application/use-cases/list-project-jurors.uc';
@@ -48,7 +49,7 @@ import { UpdateProjectDocumentUC } from './application/use-cases/update-document
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
     ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,
     ListProjectsAssignedToJurorUC,ListProjectsForReviewUC,
-    NotificateStudentUC,UpdateProjectDocumentUC,
+    NotificateStudentUC,UpdateProjectDocumentUC, RequestChangesProjectUC,
     {
       provide: NOTIFICATION_SERVICE_PORT,
       useExisting: NotificationServiceAdapter,

@@ -53,6 +53,9 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
       case EmailTemplate.PROJECT_REJECTED:
         templatePath += 'project_rejected.html';
         break;
+      case EmailTemplate.REQUEST_CHANGES:
+        templatePath += 'requested_changes.html'
+        break;
       case EmailTemplate.JUROR_INVITATION:
         templatePath += 'juror_invitation.html';
         break;
