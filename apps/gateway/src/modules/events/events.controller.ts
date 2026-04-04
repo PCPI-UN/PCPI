@@ -62,7 +62,7 @@ import {
 @ApiSecurity('JWT-auth')
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventService) {}
+  constructor(private readonly eventsService: EventService) { }
 
   // =====================
   // EVENT LISTING ENDPOINTS
@@ -291,10 +291,20 @@ export class EventsController {
     return this.eventsService.createCourse(dto);
   }
 
-  @Get('courses')
-  @ApiOperation({ summary: 'List course aliases backed by categories' })
-  async listCourses(@Query() dto: ListCoursesDTO) {
-    return this.eventsService.listCourses(dto);
+  @Patch('courses/:id')
+  @ApiOperation({ summary: 'Update a course alias backed by categories' })
+  async updateCourse(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCourseDTO,
+  ) {
+    return this.eventsService.updateCourse({ ...dto, id });
+  }
+
+  @Delete('courses/:id')
+  @RequirePermission('delete:event-members')
+  @ApiOperation({ summary: 'Delete a course alias backed by categories' })
+  async deleteCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteCourse(id);
   }
 
   @Get('courses/event/:eventId')
@@ -318,26 +328,16 @@ export class EventsController {
     });
   }
 
+  @Get('courses')
+  @ApiOperation({ summary: 'List course aliases backed by categories' })
+  async listCourses(@Query() dto: ListCoursesDTO) {
+    return this.eventsService.listCourses(dto);
+  }
+
   @Get('courses/:id')
   @ApiOperation({ summary: 'Get a course alias backed by categories' })
   async getCourse(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.getCourse(id);
-  }
-
-  @Patch('courses/:id')
-  @ApiOperation({ summary: 'Update a course alias backed by categories' })
-  async updateCourse(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateCourseDTO,
-  ) {
-    return this.eventsService.updateCourse({ ...dto, id });
-  }
-
-  @Delete('courses/:id')
-  @RequirePermission('delete:event-members')
-  @ApiOperation({ summary: 'Delete a course alias backed by categories' })
-  async deleteCourse(@Param('id', ParseIntPipe) id: number) {
-    return this.eventsService.deleteCourse(id);
   }
 
   @Post('categories')
