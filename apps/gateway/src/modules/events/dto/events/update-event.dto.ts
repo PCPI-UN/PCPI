@@ -1,16 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { EvaluationType, EventType } from '@app/common/generated/event';
 import {
+  IsArray,
   IsInt,
   IsBoolean,
   IsOptional,
   IsString,
   IsNotEmpty,
   IsDateString,
+  IsEnum,
+  IsNumber,
   Min,
   MinLength,
   MaxLength,
   Matches,
 } from 'class-validator';
+import {
+  transformEvaluationType,
+  transformEventType,
+} from './event-type-transformer';
 
 export class UpdateEventDTO {
   @ApiProperty({
@@ -124,5 +133,90 @@ export class UpdateEventDTO {
   @IsString()
   @MaxLength(255)
   location?: string;
+
+  @ApiProperty({
+    description: 'Updated type of the event',
+    enum: EventType,
+    required: false,
+    example: 'Competition',
+  })
+  @IsOptional()
+  @Transform(transformEventType)
+  @IsEnum(EventType)
+  eventType?: EventType;
+
+  @ApiProperty({
+    description: 'Updated inscription cost',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  inscriptionCost?: number;
+
+  @ApiProperty({
+    description: 'Updated location details',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  locationDetails?: string;
+
+  @ApiProperty({
+    description: 'Updated evaluation scale configured for the event',
+    enum: EvaluationType,
+    required: false,
+    example: 'ZERO_TO_FIVE',
+  })
+  @IsOptional()
+  @Transform(transformEvaluationType)
+  @IsEnum(EvaluationType)
+  evaluationType?: EvaluationType;
+
+  @ApiProperty({
+    description: 'Updated inscription requirements',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  inscriptionRequirements?: string;
+
+  @ApiProperty({
+    description: 'Updated minimum team size',
+    required: false,
+    example: 2,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  minimumTeamSize?: number;
+
+  @ApiProperty({
+    description: 'Updated information about allies or partners',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  aboutOurAllies?: string;
+
+  @ApiProperty({
+    description: 'Updated collaborators',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  collaborators?: string[];
+
+  @ApiProperty({
+    description: 'Updated organizers',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  organizers?: string[];
 }
 

@@ -2,14 +2,23 @@ import {
   IsString,
   IsNotEmpty,
   IsBoolean,
-  IsOptional,
   IsISO8601,
   MinLength,
   MaxLength,
   Matches,
   IsInt,
   Min,
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { EvaluationType, EventType } from '@app/common/generated/event';
+import {
+  transformEvaluationType,
+  transformEventType,
+} from './event-type-transformer';
 
 export class CreateEventDTO {
   @IsString()
@@ -18,9 +27,9 @@ export class CreateEventDTO {
   @MaxLength(255)
   name: string;
 
-  @IsOptional()
   @IsString()
-  description?: string;
+  @IsNotEmpty()
+  description: string;
 
   @IsString()
   @IsNotEmpty()
@@ -46,10 +55,49 @@ export class CreateEventDTO {
   @IsISO8601()
   endDate: string;
 
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  location: string;
+
+  @Transform(transformEventType)
+  @IsEnum(EventType)
+  eventType: EventType;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  inscriptionCost?: number;
+
   @IsOptional()
   @IsString()
-  @MaxLength(255)
-  location?: string;
+  locationDetails?: string;
+
+  @IsOptional()
+  @Transform(transformEvaluationType)
+  @IsEnum(EvaluationType)
+  evaluationType?: EvaluationType;
+
+  @IsOptional()
+  @IsString()
+  inscriptionRequirements?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  minimumTeamSize?: number;
+
+  @IsOptional()
+  @IsString()
+  aboutOurAllies?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  collaborators: string[] = [];
+
+  @IsArray()
+  @IsString({ each: true })
+  organizers: string[] = [];
 
   @IsOptional()
   @IsInt()

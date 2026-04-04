@@ -6,10 +6,11 @@ export class ListCoursesByEventDTO {
   @ApiProperty({
     description: 'ID of the event to filter courses',
     example: 1,
+    required: false,
   })
-  @IsInt() @IsPositive()
+  @IsInt() @IsOptional() @IsPositive()
   @Type(() => Number)
-  eventId: number;      // required
+  eventId?: number;
 
   @ApiProperty({
     description: 'Filter to only include active courses',

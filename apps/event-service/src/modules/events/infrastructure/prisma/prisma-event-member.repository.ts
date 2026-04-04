@@ -7,6 +7,10 @@ import { EventMember } from '../../domain/entities/event-member.entity';
 export class PrismaEventMemberRepository implements EventMemberRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private get db(): any {
+    return this.prisma as any;
+  }
+
   async create(input: {
     userId: number;
     eventId: number;
@@ -15,7 +19,7 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
     createdAt: Date;
     updatedAt: Date;
   }): Promise<EventMember> {
-    const result = await this.prisma.eventMember.create({
+    const result = await this.db.staffEventMember.create({
       data: {
         userId: input.userId,
         eventId: input.eventId,
@@ -30,7 +34,7 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
   }
 
   async softDelete(userId: number, eventId: number): Promise<void> {
-    await this.prisma.eventMember.updateMany({
+    await this.db.staffEventMember.updateMany({
       where: { userId, eventId },
       data: { active: false, updatedAt: new Date() },
     });
@@ -40,7 +44,7 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
     userId: number,
     eventId: number,
   ): Promise<EventMember | null> {
-    const result = await this.prisma.eventMember.findFirst({
+    const result = await this.db.staffEventMember.findFirst({
       where: { userId, eventId },
     });
 
@@ -51,7 +55,7 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
     userId: number,
     eventId: number,
   ): Promise<EventMember | null> {
-    const result = await this.prisma.eventMember.findFirst({
+    const result = await this.db.staffEventMember.findFirst({
       where: {
         userId,
         eventId,
@@ -85,13 +89,13 @@ export class PrismaEventMemberRepository implements EventMemberRepository {
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
-      this.prisma.eventMember.findMany({
+      this.db.staffEventMember.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.eventMember.count({ where }),
+      this.db.staffEventMember.count({ where }),
     ]);
 
     return [data as EventMember[], total];
