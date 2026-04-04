@@ -329,6 +329,7 @@ export class EventsController {
   }
 
   @Get('courses')
+  @Get('courses/all')
   @ApiOperation({ summary: 'List course aliases backed by categories' })
   async listCourses(@Query() dto: ListCoursesDTO) {
     return this.eventsService.listCourses(dto);
