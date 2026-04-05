@@ -8,6 +8,7 @@ import { ListProjectsByEventUC } from './application/use-cases/list-projects-by-
 import { AddProjectDocumentUC } from './application/use-cases/add-document.uc';
 import { ListDocumentsUC } from './application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from './application/use-cases/delete-project.uc';
+import { GetMyProjectByEventUC } from './application/use-cases/get-my-project-by-event.uc';
 import { UpdateProjectUC } from './application/use-cases/update-project.uc';
 import { ApproveProjectUC } from './application/use-cases/approve-project.uc';
 import { RejectProjectUC } from './application/use-cases/reject-project.uc';
@@ -44,7 +45,7 @@ import { UpdateProjectDocumentUC } from './application/use-cases/update-document
       useExisting: EventServiceAdapter,
     },
     GetProjectUC,ListProjectsByEventUC,
-    AddProjectDocumentUC,ListDocumentsUC,DeleteProjectUC,
+    AddProjectDocumentUC,ListDocumentsUC,DeleteProjectUC, GetMyProjectByEventUC,
     UpdateProjectUC, ApproveProjectUC, RejectProjectUC, AssignJurorBulkUC, 
     ReassignProjectJurorUC,ListProjectJurorsUC, AddParticipantUC,
     ListParticipantsUC,AddPendingParticipantUC,ListPendingParticipantsUC,

@@ -33,5 +33,6 @@
             "username": "postgres",
             "name": "auth"
         }
-    ]
+    ],
+    "chatgpt.openOnStartup": false
 }

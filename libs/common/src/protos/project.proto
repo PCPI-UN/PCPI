@@ -31,6 +31,7 @@ service ProjectsService {
   rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
   rpc ListAssignedProjects(ListAssignedProjectsRequest) returns (ListAssignedProjectsResponse);
+  rpc GetMyProjectByEvent (GetMyProjectByEventRequest) returns (GetMyProjectByEventResponse);
 
   rpc ListProjectsForReview(ListProjectsForReviewRequest) returns (ListProjectsForReviewResponse);
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
@@ -305,4 +306,13 @@ message UpdateProjectDocumentRequest {
   optional string url = 2;         // si viene vacío, no lo cambias
   optional TypedDocument type = 3;  // si viene DOCUMENT_TYPE_UNSPECIFIED, no lo cambias
   optional DocumentStatus state = 4; // igual idea
+}
+
+message GetMyProjectByEventRequest {
+  int32 eventId = 1;
+  int32 userId = 2;
+}
+
+message GetMyProjectByEventResponse {
+  ProjectComplete project = 1;
 }

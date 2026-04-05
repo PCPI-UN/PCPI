@@ -16,119 +16,120 @@ import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
 import { ListCoursesDTO } from './dto/courses/list-course.dto';
 import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
 import { UpdateCourseDTO } from './dto/courses/update-course.dto';
+import { ProjectsService } from '../projects/projects.service';
 import {
-  CreateAwardWinnerDTO,
-  CreateCategoryAwardDTO,
-  CreateCategoryDTO,
-  CreateEventInscriptionDetailDTO,
-  CreateEventRecapDTO,
-  ListAwardWinnersDTO,
-  ListCategoriesDTO,
-  ListCategoryAwardsDTO,
-  ListEventInscriptionDetailsDTO,
-  ListEventRecapsDTO,
-  UpdateAwardWinnerDTO,
-  UpdateCategoryAwardDTO,
-  UpdateCategoryDTO,
-  UpdateEventInscriptionDetailDTO,
-  UpdateEventRecapDTO,
+    CreateAwardWinnerDTO,
+    CreateCategoryAwardDTO,
+    CreateCategoryDTO,
+    CreateEventInscriptionDetailDTO,
+    CreateEventRecapDTO,
+    ListAwardWinnersDTO,
+    ListCategoriesDTO,
+    ListCategoryAwardsDTO,
+    ListEventInscriptionDetailsDTO,
+    ListEventRecapsDTO,
+    UpdateAwardWinnerDTO,
+    UpdateCategoryAwardDTO,
+    UpdateCategoryDTO,
+    UpdateEventInscriptionDetailDTO,
+    UpdateEventRecapDTO,
 } from './dto/event-catalog.dto';
 import {
-  EVENT_SERVICE_NAME,
-  EventServiceClient,
-  EventStatus,
+    EVENT_SERVICE_NAME,
+    EventServiceClient,
+    EventStatus,
 } from '@app/common/generated/event';
 import {
-  AUTH_SERVICE_NAME,
-  AuthServiceClient,
+    AUTH_SERVICE_NAME,
+    AuthServiceClient,
 } from '@app/common/generated/auth';
 import {
-  CreateEventRequest,
-  CreateEventResponse,
-  DeleteEventRequest,
-  DeleteEventResponse,
-  GetEventRequest,
-  GetEventResponse,
-  UpdateEventRequest,
-  UpdateEventResponse,
-  CreateEventMemberRequest,
-  CreateEventMemberResponse,
-  DeleteEventMemberRequest,
-  DeleteEventMemberResponse,
-  ListEventMembersRequest,
-  ListEventMembersResponse,
-  ListMyEventsRequest,
-  ListMyEventsResponse,
-  ListEventsRequest,
-  ListEventsResponse,
-  GetEventStatusesRequest,
-  GetEventStatusesResponse,
-  EventStatusMapping,
-  EventProto,
-  EventWithRole,
-  CreateCategoryRequest,
-  CreateCategoryResponse,
-  UpdateCategoryRequest,
-  UpdateCategoryResponse,
-  GetCategoryRequest,
-  GetCategoryResponse,
-  ListCategoriesRequest,
-  ListCategoriesResponse,
-  ListCategoriesByEventRequest,
-  DeleteCategoryRequest,
-  DeleteCategoryResponse,
-  CreateCourseResponse,
-  DeleteCourseResponse,
-  CreateCategoryAwardRequest,
-  CreateCategoryAwardResponse,
-  GetCourseResponse,
-  UpdateCategoryAwardRequest,
-  UpdateCategoryAwardResponse,
-  ListCoursesForDropdownResponse,
-  ListCoursesResponse,
-  GetCategoryAwardRequest,
-  GetCategoryAwardResponse,
-  ListCategoryAwardsRequest,
-  ListCategoryAwardsResponse,
-  DeleteCategoryAwardRequest,
-  DeleteCategoryAwardResponse,
-  UpdateCourseResponse,
-  CreateAwardWinnerRequest,
-  CreateAwardWinnerResponse,
-  UpdateAwardWinnerRequest,
-  UpdateAwardWinnerResponse,
-  GetAwardWinnerRequest,
-  GetAwardWinnerResponse,
-  ListAwardWinnersRequest,
-  ListAwardWinnersResponse,
-  DeleteAwardWinnerRequest,
-  DeleteAwardWinnerResponse,
-  CreateEventInscriptionDetailRequest,
-  CreateEventInscriptionDetailResponse,
-  UpdateEventInscriptionDetailRequest,
-  UpdateEventInscriptionDetailResponse,
-  GetEventInscriptionDetailRequest,
-  GetEventInscriptionDetailResponse,
-  ListEventInscriptionDetailsRequest,
-  ListEventInscriptionDetailsResponse,
-  DeleteEventInscriptionDetailRequest,
-  DeleteEventInscriptionDetailResponse,
-  CreateEventRecapRequest,
-  CreateEventRecapResponse,
-  UpdateEventRecapRequest,
-  UpdateEventRecapResponse,
-  GetEventRecapRequest,
-  GetEventRecapResponse,
-  ListEventRecapsRequest,
-  ListEventRecapsResponse,
-  DeleteEventRecapRequest,
-  DeleteEventRecapResponse,
+    CreateEventRequest,
+    CreateEventResponse,
+    DeleteEventRequest,
+    DeleteEventResponse,
+    GetEventRequest,
+    GetEventResponse,
+    UpdateEventRequest,
+    UpdateEventResponse,
+    CreateEventMemberRequest,
+    CreateEventMemberResponse,
+    DeleteEventMemberRequest,
+    DeleteEventMemberResponse,
+    ListEventMembersRequest,
+    ListEventMembersResponse,
+    ListMyEventsRequest,
+    ListMyEventsResponse,
+    ListEventsRequest,
+    ListEventsResponse,
+    GetEventStatusesRequest,
+    GetEventStatusesResponse,
+    EventStatusMapping,
+    EventProto,
+    EventWithRole,
+    CreateCategoryRequest,
+    CreateCategoryResponse,
+    UpdateCategoryRequest,
+    UpdateCategoryResponse,
+    GetCategoryRequest,
+    GetCategoryResponse,
+    ListCategoriesRequest,
+    ListCategoriesResponse,
+    ListCategoriesByEventRequest,
+    DeleteCategoryRequest,
+    DeleteCategoryResponse,
+    CreateCourseResponse,
+    DeleteCourseResponse,
+    CreateCategoryAwardRequest,
+    CreateCategoryAwardResponse,
+    GetCourseResponse,
+    UpdateCategoryAwardRequest,
+    UpdateCategoryAwardResponse,
+    ListCoursesForDropdownResponse,
+    ListCoursesResponse,
+    GetCategoryAwardRequest,
+    GetCategoryAwardResponse,
+    ListCategoryAwardsRequest,
+    ListCategoryAwardsResponse,
+    DeleteCategoryAwardRequest,
+    DeleteCategoryAwardResponse,
+    UpdateCourseResponse,
+    CreateAwardWinnerRequest,
+    CreateAwardWinnerResponse,
+    UpdateAwardWinnerRequest,
+    UpdateAwardWinnerResponse,
+    GetAwardWinnerRequest,
+    GetAwardWinnerResponse,
+    ListAwardWinnersRequest,
+    ListAwardWinnersResponse,
+    DeleteAwardWinnerRequest,
+    DeleteAwardWinnerResponse,
+    CreateEventInscriptionDetailRequest,
+    CreateEventInscriptionDetailResponse,
+    UpdateEventInscriptionDetailRequest,
+    UpdateEventInscriptionDetailResponse,
+    GetEventInscriptionDetailRequest,
+    GetEventInscriptionDetailResponse,
+    ListEventInscriptionDetailsRequest,
+    ListEventInscriptionDetailsResponse,
+    DeleteEventInscriptionDetailRequest,
+    DeleteEventInscriptionDetailResponse,
+    CreateEventRecapRequest,
+    CreateEventRecapResponse,
+    UpdateEventRecapRequest,
+    UpdateEventRecapResponse,
+    GetEventRecapRequest,
+    GetEventRecapResponse,
+    ListEventRecapsRequest,
+    ListEventRecapsResponse,
+    DeleteEventRecapRequest,
+    DeleteEventRecapResponse,
 } from '@app/common/generated/event';
 
 @Injectable()
 export class EventService implements OnModuleInit {
-    private eventService: EventServiceClient;
-    private authService: AuthServiceClient;
+    private eventService!: EventServiceClient;
+    private authService!: AuthServiceClient;
     private statusCache: EventStatusMapping[] | null = null;
     private rolesCache: any[] | null = null;
 
@@ -136,15 +137,16 @@ export class EventService implements OnModuleInit {
         @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
         @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
         private readonly configService: ConfigService,
-    ) {}
+        private readonly projectsService: ProjectsService,
+    ) { }
 
     onModuleInit() {
-       this.eventService = this.eventClient.getService<EventServiceClient>(
-         EVENT_SERVICE_NAME,
-       );
-       this.authService = this.authClient.getService<AuthServiceClient>(
-         AUTH_SERVICE_NAME,
-       );
+        this.eventService = this.eventClient.getService<EventServiceClient>(
+            EVENT_SERVICE_NAME,
+        );
+        this.authService = this.authClient.getService<AuthServiceClient>(
+            AUTH_SERVICE_NAME,
+        );
     }
 
     private mapCourseForFrontend(
@@ -222,7 +224,7 @@ export class EventService implements OnModuleInit {
                 if (createdCategoryId) {
                     try {
                         await this.deleteCategory(createdCategoryId);
-                    } catch {}
+                    } catch { }
                 }
                 await this.delete({ id: response.event.id });
                 throw error;
@@ -633,5 +635,15 @@ export class EventService implements OnModuleInit {
             ...response,
             events: enrichedEvents as EventProto[],
         };
+    }
+
+    async getMyProjectForEvent(userId: number, eventId: number) {
+        const [projectResponse, eventResponse] = await Promise.all([
+            this.projectsService.getMyProjectByEvent(userId, eventId),
+            this.get({ id: eventId }),
+        ]);
+        return {
+            project: projectResponse.project, event: eventResponse.event,
+        }
     }
 }
