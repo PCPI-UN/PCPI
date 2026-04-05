@@ -21,8 +21,6 @@ enum EvaluationType {
 
 // Main event entity.
 // Stores event metadata, scheduling, visibility rules, and high-level ownership.
-// Specific detail:
-// - `createdByUserId` references a user managed by auth-service.
 model Event {
   id                      Int             @id @default(autoincrement())
   name                    String          @db.VarChar(255)

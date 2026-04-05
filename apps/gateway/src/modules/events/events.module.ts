@@ -4,6 +4,7 @@ import { EventService } from './events.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
+import { ProjectsModule } from '../projects/projects.module';
 import {
   EVENT_SERVICE_NAME,
   protobufPackage as eventProtobufPackage,
@@ -46,8 +47,9 @@ import {
         inject: [ConfigService],
       },
     ]),
+    ProjectsModule,
   ],
   controllers: [EventsController],
   providers: [EventService],
 })
-export class EventsModule {}
+export class EventsModule { }
