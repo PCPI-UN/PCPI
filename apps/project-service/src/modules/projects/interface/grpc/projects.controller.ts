@@ -22,6 +22,7 @@ import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
 import { ListProjectsForReviewUC } from '../../application/use-cases/list-projects-for-review.uc';
 import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto';
 import { UpdateProjectDocumentUC } from '../../application/use-cases/update-document.uc';
+import { RequestChangesProjectUC } from '../../application/use-cases/request-changes-project.uc';
 import { GetMyProjectByEventUC } from '../../application/use-cases/get-my-project-by-event.uc';
 
 @Controller()
@@ -36,6 +37,7 @@ export class ProjectsController {
     private readonly updateProjectUC: UpdateProjectUC,
     private readonly approveProjectUC: ApproveProjectUC,
     private readonly rejectProjectUC: RejectProjectUC,
+    private readonly requestChangesProjectUC: RequestChangesProjectUC,
     private readonly assignJurorBulkUC: AssignJurorBulkUC,
     private readonly reassignProjectJurorUC: ReassignProjectJurorUC,
     private readonly listProjectJurorsUC: ListProjectJurorsUC, 
@@ -129,6 +131,16 @@ export class ProjectsController {
       reason: req.reason 
     });
     return { project: toProtoProject(updated) };
+  }
+
+  @GrpcMethod('ProjectsService', 'RequestChangesProject')
+  async requestChangesProject(req: {id: number; actingUserId: number; reason?: string}) {
+    const updated = await this.requestChangesProjectUC.execute({
+      id: req.id,
+      actingUserId: req.actingUserId,
+      reason: req.reason
+    })
+    return { project: toProtoProject(updated) }
   }
 
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')

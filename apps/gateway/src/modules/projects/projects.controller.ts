@@ -36,6 +36,7 @@ import { DocumentStatusFilter, UpdateProjectDocumentDto } from './dto/update-pro
 import { TypedDocument } from './dto/project-document-input.dto';
 import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-juror.dto';
 import { AddProjectDocumentsMultipartDto} from './dto/add-project-files-multipart.dto';
+import { RequestChangesProjectDto } from './dto/request-changes-project.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -216,6 +217,41 @@ export class ProjectsController {
   ) {
     return this.projectsService.rejectProject({ id, ...rejectDto }, user.id);
   }
+
+  @Patch(':id/request-changes')
+  @ApiOperation({
+    summary: 'Request changes of a project',
+    description: 'Marks a project as request changes with a mandatory reason. Requires admin or event manager role.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Required changes succesfully'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires platform permissions'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found'
+  })
+  requestChangesProject(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() requestChangesDto: RequestChangesProjectDto,
+    @GetUser() user: AppUser,
+  ) {
+    return this.projectsService.requestChangesProject({ id, ...requestChangesDto }, user.id)
+  }
+  
 
 
   @Get('by-event/:eventId')

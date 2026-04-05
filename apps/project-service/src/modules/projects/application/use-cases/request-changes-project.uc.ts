@@ -5,7 +5,7 @@ import { NOTIFICATION_SERVICE_PORT, NotificationServicePort } from '../ports/not
 import { EmailTemplate } from '@app/common/generated/notification';
 
 @Injectable()
-export class RejectProjectUC {
+export class RequestChangesProjectUC {
 
   constructor(
     @Inject('ProjectRepository') private readonly repo: ProjectRepository,
@@ -17,25 +17,25 @@ export class RejectProjectUC {
     const project = await this.repo.findById(input.id);
     if (!project) throw new NotFoundError('Project not found');
 
-    if (project.state === 'REJECTED') {
-      console.log('Project already rejected:', project.id);
+    if (project.state === 'REQUEST_CHANGES') {
+      console.log('You have already requested changes to this project:', project.id);
       return project;
     }
 
     if (project.state !== 'UNDER_REVIEW') {
       throw new ValidationError(
-        `Project in invalid state for rejection: ${project.state}`,
+        `Project in invalid state for request changes: ${project.state}`,
       );
     }
 
-    // Update project state to REJECTED and store the reason
-    const rejectedProject = await this.repo.setProjectStateWithReason(
+    // Update project state to REQUEST_CHANGES and store the reason
+    const requestedChange = await this.repo.setProjectStateWithReason(
       project.id!,
-      'REJECTED',
+      'REQUEST_CHANGES',
       input.reason,
     );
 
-    // Notify all pending participants about the rejection
+    // Notify all pending participants about the changes requested
     const pendings = await this.repo.listPendingParticipants(project.id!);
 
     for (const pending of pendings) {
@@ -45,7 +45,7 @@ export class RejectProjectUC {
       try {
         await this.notificationService.sendEmail({
           to: pending.email,
-          template: EmailTemplate.PROJECT_REJECTED,
+          template: EmailTemplate.REQUEST_CHANGES,
           params: {
             firstName,
             lastName,
@@ -59,6 +59,6 @@ export class RejectProjectUC {
       }
     }
 
-    return rejectedProject;
+    return requestedChange;
   }
 }

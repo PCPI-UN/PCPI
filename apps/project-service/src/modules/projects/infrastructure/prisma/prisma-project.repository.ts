@@ -11,7 +11,7 @@ type CreateProjectInput = {
   name: string;
   description?: string;
   eventNumber?: string;
-  state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+  state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGES';
 };
 
 type AddPendingParticipantInput = {
@@ -124,7 +124,7 @@ export class PrismaProjectRepository implements ProjectRepository {
       where: { id },
       data: {
         state,
-        rejectionReason: reason,
+        reason: reason,
       },
     })) as unknown as Project;
   }

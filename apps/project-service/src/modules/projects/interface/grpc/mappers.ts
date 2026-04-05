@@ -3,10 +3,11 @@ import { TypedDocument ,ProjectState, ProjectDocument, Project, JurorKey, Status
 // Mapear enum de dominio a enum del proto (numérico)
 const stateToProto = (s: ProjectState): number => {
   switch (s) {
-    case 'UNDER_REVIEW': return 1;
-    case 'APPROVED':     return 2;
-    case 'REJECTED':     return 3;
-    default:             return 0; // UNSPECIFIED
+    case 'UNDER_REVIEW':    return 1;
+    case 'APPROVED':        return 2;
+    case 'REJECTED':        return 3;
+    case 'REQUEST_CHANGES': return 4;
+    default:                return 0; // UNSPECIFIED
   }
 };
 
@@ -16,6 +17,7 @@ export const protoToState = (n?: number): ProjectState => {
     case 1: return 'UNDER_REVIEW';
     case 2: return 'APPROVED';
     case 3: return 'REJECTED';
+    case 4: return 'REQUEST_CHANGES'
     default: return 'UNDER_REVIEW';
   }
 };
@@ -80,7 +82,7 @@ export const toProtoProject = (p: any) => ({
   description: p.description ?? undefined,
   eventNumber: p.eventNumber ?? p.event_number ?? undefined,
   state: stateToProto(p.state as ProjectState),
-  rejectionReason: p.rejectionReason ?? p.rejection_reason ?? undefined,      
+  reason: p.reason ?? p.reason ?? undefined,      
   createdAt: p.createdAt?.toISOString?.() ?? p.created_at,
   updatedAt: p.updatedAt?.toISOString?.() ?? p.updated_at,
 });
