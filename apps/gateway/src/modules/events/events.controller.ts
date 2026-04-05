@@ -519,4 +519,15 @@ export class EventsController {
   async deleteEventRecap(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.deleteEventRecap(id);
   }
+
+  @Get(':id/my-project')
+  @ApiOperation({ summary: 'Get my project for event' })
+  @ApiResponse({ status: 200, description: 'Returns user\'s project for the specified event' })
+  @ApiResponse({ status: 404, description: 'No project found for this user in the specified event' })
+  async getMyProjectForEvent(
+    @Param('id', ParseIntPipe) eventId: number,
+    @GetUser('id') userId: number,
+  ) {
+    return this.eventsService.getMyProjectForEvent(userId, eventId);
+  }
 }

@@ -22,6 +22,7 @@ import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
 import { ListProjectsForReviewUC } from '../../application/use-cases/list-projects-for-review.uc';
 import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto';
 import { UpdateProjectDocumentUC } from '../../application/use-cases/update-document.uc';
+import { GetMyProjectByEventUC } from '../../application/use-cases/get-my-project-by-event.uc';
 
 @Controller()
 export class ProjectsController {
@@ -46,6 +47,7 @@ export class ProjectsController {
     private readonly notificateStudentUC: NotificateStudentUC,  
     private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
     private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
+    private readonly getMyProjectByEventUC: GetMyProjectByEventUC,
 
   ) {}
 
@@ -314,4 +316,11 @@ async updateProjectDocumentRpc(req: any) {
   return { document: toProtoDocument(updatedDoc) };
 
 }
+
+@GrpcMethod('ProjectsService', 'GetMyProjectByEvent')
+async getMyProjectByEventRpc(req: { eventId: number; userId: number }) {
+  const project = await this.getMyProjectByEventUC.execute({ eventId: req.eventId, userId: req.userId });
+  return { project: toProtoProjectComplete(project)};
+}
+
 }
