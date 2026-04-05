@@ -1,5 +1,5 @@
 import { SignupRequest } from '@app/common/generated/auth';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SignupDto implements SignupRequest {
@@ -40,5 +40,6 @@ export class SignupDto implements SignupRequest {
     example: '+57 300 123 4567',
   })
   @IsString()
+  @IsOptional()
   phone?: string;
 }

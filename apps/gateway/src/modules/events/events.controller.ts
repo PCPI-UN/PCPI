@@ -35,21 +35,34 @@ import { ListMyEventsDTO } from './dto/events/list-my-events.dto';
 import { CreateEventMemberDTO } from './dto/event-members/create-event-member.dto';
 import { DeleteEventMemberDTO } from './dto/event-members/delete-event-member.dto';
 import { ListEventMembersDTO } from './dto/event-members/list-event-members.dto';
-
-// Course DTOs
 import { CreateCourseDTO } from './dto/courses/create-course.dto';
-import { DeleteCourseDTO } from './dto/courses/delete-course.dto';
-import { UpdateCourseDTO } from './dto/courses/update-course.dto';
-import { ListCoursesDTO } from './dto/courses/list-course.dto';
-import { GetCourseDTO } from './dto/courses/get-course.dto';
 import { ListCoursesByEventDTO } from './dto/courses/list-courses-by-event.dto';
+import { ListCoursesDTO } from './dto/courses/list-course.dto';
 import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
+import { UpdateCourseDTO } from './dto/courses/update-course.dto';
+import {
+  CreateAwardWinnerDTO,
+  CreateCategoryAwardDTO,
+  CreateCategoryDTO,
+  CreateEventInscriptionDetailDTO,
+  CreateEventRecapDTO,
+  ListAwardWinnersDTO,
+  ListCategoriesDTO,
+  ListCategoryAwardsDTO,
+  ListEventInscriptionDetailsDTO,
+  ListEventRecapsDTO,
+  UpdateAwardWinnerDTO,
+  UpdateCategoryAwardDTO,
+  UpdateCategoryDTO,
+  UpdateEventInscriptionDetailDTO,
+  UpdateEventRecapDTO,
+} from './dto/event-catalog.dto';
 
 @ApiTags('events')
 @ApiSecurity('JWT-auth')
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventService) {}
+  constructor(private readonly eventsService: EventService) { }
 
   // =====================
   // EVENT LISTING ENDPOINTS
@@ -67,7 +80,7 @@ export class EventsController {
     description: 'Get a paginated list of upcoming events. No authentication required. Status is always UPCOMING.',
   })
   @ApiResponse({ status: 200, description: 'Returns list of upcoming events with pagination' })
-  async listPublicEvents(@Query() query: ListMyEventsDTO) {
+  async listPublicEvents(@Query() query: ListEventsDTO) {
     // Hardcode status to UPCOMING and onlyActive to true
     return this.eventsService.listEvents({
       ...query,
@@ -172,6 +185,16 @@ export class EventsController {
    * Get event by ID
    * Requires read:events permission
    */
+  @Public()
+  @Get('public/:id')
+  @ApiOperation({ summary: 'Get public event by ID' })
+  @ApiParam({ name: 'id', description: 'Event ID', type: Number })
+  @ApiResponse({ status: 200, description: 'Returns public event details' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async getPublicEvent(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.get({ id });
+  }
+
   @RequirePermission('read:events')
   @Get(':id')
   @ApiOperation({ summary: 'Get event by ID' })
@@ -261,74 +284,239 @@ export class EventsController {
     return this.eventsService.listMembers(listEventMembers);
   }
 
-  // =====================
-  // COURSES ENDPOINTS
-  // =====================
-
-  @Public()
-  @RequirePermission('create:courses')
   @Post('courses')
-  @ApiOperation({ summary: 'Create a new course' })
-  @ApiResponse({ status: 201, description: 'Course created successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing create:courses permission' })
-  async createCourse(@Body() createCourseDTO: CreateCourseDTO) {
-    return this.eventsService.createCourse(createCourseDTO);
+  @RequirePermission('create:event-members')
+  @ApiOperation({ summary: 'Create a course alias backed by categories' })
+  async createCourse(@Body() dto: CreateCourseDTO) {
+    return this.eventsService.createCourse(dto);
+  }
+
+  @Patch('courses/:id')
+  @ApiOperation({ summary: 'Update a course alias backed by categories' })
+  async updateCourse(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCourseDTO,
+  ) {
+    return this.eventsService.updateCourse({ ...dto, id });
+  }
+
+  @Delete('courses/:id')
+  @RequirePermission('delete:event-members')
+  @ApiOperation({ summary: 'Delete a course alias backed by categories' })
+  async deleteCourse(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteCourse(id);
+  }
+
+  @Get('courses/event/:eventId')
+  @ApiOperation({ summary: 'List course aliases by event backed by categories' })
+  async listCoursesByEvent(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() dto: ListCoursesByEventDTO,
+  ) {
+    return this.eventsService.listCoursesByEvent(eventId, dto);
+  }
+
+  @Get('courses/dropdown/:eventId')
+  @ApiOperation({ summary: 'List course aliases for dropdown backed by categories' })
+  async listCoursesForDropdown(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() dto: ListCoursesForDropdownDTO,
+  ) {
+    return this.eventsService.listCoursesForDropdown({
+      ...dto,
+      eventId,
+    });
   }
 
   @Get('courses/all')
-  @ApiOperation({ summary: 'Get all courses with optional filters' })
-  @ApiResponse({ status: 200, description: 'Returns list of courses' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing read:courses permission' })
-  async findAllCourses(@Query() query: ListCoursesDTO) {
-    return this.eventsService.findAllCourses(query);
+  @ApiOperation({ summary: 'List all course aliases backed by categories' })
+  async listAllCourses(@Query() dto: ListCoursesDTO) {
+    return this.eventsService.listCourses(dto);
   }
 
-  @Public()
-  @RequirePermission('update:courses')
-  @Patch('courses/update')
-  @ApiOperation({ summary: 'Update course details' })
-  @ApiResponse({ status: 200, description: 'Course updated successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing update:courses permission' })
-  @ApiResponse({ status: 404, description: 'Course not found' })
-  async updateCourse(@Body() updateCourseDTO: UpdateCourseDTO) {
-    return this.eventsService.updateCourse(updateCourseDTO);
+  @Get('courses')
+  @ApiOperation({ summary: 'List course aliases backed by categories' })
+  async listCourses(@Query() dto: ListCoursesDTO) {
+    return this.eventsService.listCourses(dto);
   }
 
-  @Public()
-  @RequirePermission('delete:courses')
-  @Delete('courses/delete')
-  @ApiOperation({ summary: 'Delete a course' })
-  @ApiResponse({ status: 200, description: 'Course deleted successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing delete:courses permission' })
-  @ApiResponse({ status: 404, description: 'Course not found' })
-  async deleteCourse(@Body() deleteCourseDTO: DeleteCourseDTO) {
-    return this.eventsService.deleteCourse(deleteCourseDTO);
-  }
-
-  @Public()
   @Get('courses/:id')
-  @ApiOperation({ summary: 'Get course by ID' })
-  @ApiParam({ name: 'id', description: 'Course ID', type: Number })
-  @ApiResponse({ status: 200, description: 'Returns course details' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing read:courses permission' })
-  @ApiResponse({ status: 404, description: 'Course not found' })
+  @ApiOperation({ summary: 'Get a course alias backed by categories' })
   async getCourse(@Param('id', ParseIntPipe) id: number) {
-    return this.eventsService.getCourse({ id });
+    return this.eventsService.getCourse(id);
   }
 
-  @Public()
-  @Get('courses/event/:eventId')
-  @ApiOperation({ summary: 'Get courses for dropdown (minimal data)' })
-  @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
-  @ApiResponse({ status: 200, description: 'Returns list of courses with id, code, and description only' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing read:courses permission' })
-  @ApiResponse({ status: 404, description: 'Event not found' })
-  async listCoursesForDropdown(
+  @Post('categories')
+  @ApiOperation({ summary: 'Create a category for an event' })
+  async createCategory(@Body() dto: CreateCategoryDTO) {
+    return this.eventsService.createCategory(dto);
+  }
+
+  @Get('categories')
+  @ApiOperation({ summary: 'List categories' })
+  async listCategories(@Query() dto: ListCategoriesDTO) {
+    return this.eventsService.listCategories(dto);
+  }
+
+  @Get('categories/event/:eventId')
+  @ApiOperation({ summary: 'List categories by event' })
+  async listCategoriesByEvent(
     @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() dto: ListCategoriesDTO,
   ) {
-    return this.eventsService.listCoursesForDropdown({ eventId, onlyActive: true });
+    return this.eventsService.listCategoriesByEvent(eventId, dto);
+  }
+
+  @Get('categories/:id')
+  @ApiOperation({ summary: 'Get category by id' })
+  async getCategory(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.getCategory(id);
+  }
+
+  @Patch('categories/:id')
+  @ApiOperation({ summary: 'Update category' })
+  async updateCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCategoryDTO,
+  ) {
+    return this.eventsService.updateCategory({ ...dto, id });
+  }
+
+  @Delete('categories/:id')
+  @ApiOperation({ summary: 'Delete category' })
+  async deleteCategory(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteCategory(id);
+  }
+
+  @Post('category-awards')
+  @ApiOperation({ summary: 'Create category award' })
+  async createCategoryAward(@Body() dto: CreateCategoryAwardDTO) {
+    return this.eventsService.createCategoryAward(dto);
+  }
+
+  @Get('category-awards')
+  @ApiOperation({ summary: 'List category awards' })
+  async listCategoryAwards(@Query() dto: ListCategoryAwardsDTO) {
+    return this.eventsService.listCategoryAwards(dto);
+  }
+
+  @Get('category-awards/:id')
+  @ApiOperation({ summary: 'Get category award by id' })
+  async getCategoryAward(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.getCategoryAward(id);
+  }
+
+  @Patch('category-awards/:id')
+  @ApiOperation({ summary: 'Update category award' })
+  async updateCategoryAward(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateCategoryAwardDTO,
+  ) {
+    return this.eventsService.updateCategoryAward({ ...dto, id });
+  }
+
+  @Delete('category-awards/:id')
+  @ApiOperation({ summary: 'Delete category award' })
+  async deleteCategoryAward(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteCategoryAward(id);
+  }
+
+  @Post('award-winners')
+  @ApiOperation({ summary: 'Create award winner' })
+  async createAwardWinner(@Body() dto: CreateAwardWinnerDTO) {
+    return this.eventsService.createAwardWinner(dto);
+  }
+
+  @Get('award-winners')
+  @ApiOperation({ summary: 'List award winners' })
+  async listAwardWinners(@Query() dto: ListAwardWinnersDTO) {
+    return this.eventsService.listAwardWinners(dto);
+  }
+
+  @Get('award-winners/:id')
+  @ApiOperation({ summary: 'Get award winner by id' })
+  async getAwardWinner(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.getAwardWinner(id);
+  }
+
+  @Patch('award-winners/:id')
+  @ApiOperation({ summary: 'Update award winner' })
+  async updateAwardWinner(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateAwardWinnerDTO,
+  ) {
+    return this.eventsService.updateAwardWinner({ ...dto, id });
+  }
+
+  @Delete('award-winners/:id')
+  @ApiOperation({ summary: 'Delete award winner' })
+  async deleteAwardWinner(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteAwardWinner(id);
+  }
+
+  @Post('inscription-details')
+  @ApiOperation({ summary: 'Create inscription detail' })
+  async createEventInscriptionDetail(@Body() dto: CreateEventInscriptionDetailDTO) {
+    return this.eventsService.createEventInscriptionDetail(dto);
+  }
+
+  @Get('inscription-details')
+  @ApiOperation({ summary: 'List inscription details' })
+  async listEventInscriptionDetails(@Query() dto: ListEventInscriptionDetailsDTO) {
+    return this.eventsService.listEventInscriptionDetails(dto);
+  }
+
+  @Get('inscription-details/:id')
+  @ApiOperation({ summary: 'Get inscription detail by id' })
+  async getEventInscriptionDetail(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.getEventInscriptionDetail(id);
+  }
+
+  @Patch('inscription-details/:id')
+  @ApiOperation({ summary: 'Update inscription detail' })
+  async updateEventInscriptionDetail(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateEventInscriptionDetailDTO,
+  ) {
+    return this.eventsService.updateEventInscriptionDetail({ ...dto, id });
+  }
+
+  @Delete('inscription-details/:id')
+  @ApiOperation({ summary: 'Delete inscription detail' })
+  async deleteEventInscriptionDetail(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteEventInscriptionDetail(id);
+  }
+
+  @Post('recaps')
+  @ApiOperation({ summary: 'Create event recap' })
+  async createEventRecap(@Body() dto: CreateEventRecapDTO) {
+    return this.eventsService.createEventRecap(dto);
+  }
+
+  @Get('recaps')
+  @ApiOperation({ summary: 'List event recaps' })
+  async listEventRecaps(@Query() dto: ListEventRecapsDTO) {
+    return this.eventsService.listEventRecaps(dto);
+  }
+
+  @Get('recaps/:id')
+  @ApiOperation({ summary: 'Get event recap by id' })
+  async getEventRecap(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.getEventRecap(id);
+  }
+
+  @Patch('recaps/:id')
+  @ApiOperation({ summary: 'Update event recap' })
+  async updateEventRecap(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateEventRecapDTO,
+  ) {
+    return this.eventsService.updateEventRecap({ ...dto, id });
+  }
+
+  @Delete('recaps/:id')
+  @ApiOperation({ summary: 'Delete event recap' })
+  async deleteEventRecap(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteEventRecap(id);
   }
 }

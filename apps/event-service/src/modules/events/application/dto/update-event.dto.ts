@@ -8,7 +8,16 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  IsArray,
+  IsEnum,
+  IsNumber,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { EvaluationType, EventType } from '@app/common/generated/event';
+import {
+  transformEvaluationType,
+  transformEventType,
+} from './event-type-transformer';
 
 export class UpdateEventDTO {
   @IsInt()
@@ -62,4 +71,46 @@ export class UpdateEventDTO {
   @IsString()
   @MaxLength(255)
   location?: string;
+
+  @IsOptional()
+  @Transform(transformEventType)
+  @IsEnum(EventType)
+  eventType?: EventType;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  inscriptionCost?: number;
+
+  @IsOptional()
+  @IsString()
+  locationDetails?: string;
+
+  @IsOptional()
+  @Transform(transformEvaluationType)
+  @IsEnum(EvaluationType)
+  evaluationType?: EvaluationType;
+
+  @IsOptional()
+  @IsString()
+  inscriptionRequirements?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  minimumTeamSize?: number;
+
+  @IsOptional()
+  @IsString()
+  aboutOurAllies?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  collaborators?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  organizers?: string[];
 }

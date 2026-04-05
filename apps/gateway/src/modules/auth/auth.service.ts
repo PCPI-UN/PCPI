@@ -132,7 +132,7 @@ export class AuthService implements OnModuleInit {
     );
   }
 
-  getAuthorizeUrl(invitationToken?: string) {
+  getAuthorizeUrl(invitationToken?: string, redirectUrl?: string): string {
     // We use the 'state' parameter to pass the invitation token through the OAuth flow.
     // This ensures that when the user returns from Microsoft, we know they were trying to accept an invitation.
     const state = invitationToken ? `invitation:${invitationToken}` : 'login';
@@ -143,7 +143,7 @@ export class AuthService implements OnModuleInit {
       redirect_uri: this.redirectUri,
       response_mode: 'query',
       scope: 'openid profile email',
-      state: state,
+      state: redirectUrl || state,
       prompt: 'select_account',
     });
     return `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/authorize?${params.toString()}`;
