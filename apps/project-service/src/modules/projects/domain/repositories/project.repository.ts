@@ -74,4 +74,6 @@ export interface ProjectRepository {
     type?: TypedDocument;
     state?: Status;
   }): Promise<ProjectDocument>;
+
+  findByEventIdAndUserId(eventId:number, userId: number): Promise<Project | null>;
 }
