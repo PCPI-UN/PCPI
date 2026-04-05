@@ -42,7 +42,7 @@ model Project {
   description     String?      @db.Text
   eventNumber     String?      @map("event_number") @db.VarChar(150)
   state           ProjectState @map("state")
-  reason String?      @map("reason") @db.Text
+  reason          String?      @map("reason") @db.Text
   createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamp()
   updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamp()
 

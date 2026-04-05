@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "public"."ProjectState" AS ENUM ('UNDER_REVIEW', 'APPROVED', 'REJECTED', 'REQUEST_CHANGES');
+CREATE TYPE "public"."ProjectState" AS ENUM ('UNDER_REVIEW', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
 CREATE TYPE "public"."TypedDocument" AS ENUM ('POSTER', 'SUPPORTING_DOCUMENT');
@@ -19,7 +19,7 @@ CREATE TABLE "public"."projects" (
     "description" TEXT,
     "event_number" VARCHAR(150),
     "state" "public"."ProjectState" NOT NULL,
-    "reason" TEXT,
+    "rejection_reason" TEXT,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP NOT NULL,
 
