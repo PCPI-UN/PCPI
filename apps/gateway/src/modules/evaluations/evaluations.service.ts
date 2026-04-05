@@ -214,7 +214,7 @@ export class EvaluationsService implements OnModuleInit {
                     updatedAt: project.updatedAt,
                     courseId: project.courseId,
                     state: project.state,
-                    rejectionReason: project.rejectionReason,
+                    reason: project.reason,
                     participants: project.participants,
                     documents: project.documents,
                     pendingParticipants: project.pendingParticipants,

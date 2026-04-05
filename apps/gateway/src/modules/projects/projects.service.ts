@@ -326,6 +326,17 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
+  async requestChangesProject(dto: { id: number; reason: string }, actingUserId: number) {
+    const response = await firstValueFrom(
+      this.projectsService.requestChangesProject({
+        id: dto.id,
+        actingUserId,
+        reason: dto.reason
+      })
+    );
+
+    return response;
+  }
 
   // Helper method to convert DTO TypedDocument to Proto TypedDocument
   private mapDocumentTypeToProto(type: TypedDocument): ProtoTypedDocument {
@@ -348,6 +359,8 @@ export class ProjectsService implements OnModuleInit {
         return ProjectState.APPROVED;
       case ProjectStateFilter.REJECTED:
         return ProjectState.REJECTED;
+      case ProjectStateFilter.REQUEST_CHANGES:
+        return ProjectState.REQUEST_CHANGES
       default:
         return undefined;
     }
@@ -508,7 +521,7 @@ export class ProjectsService implements OnModuleInit {
         updatedAt: project.updatedAt,
         courseId: project.courseId,
         state: project.state,
-        rejectionReason: project.rejectionReason,
+        reason: project.reason,
         participants: project.participants,
         documents: project.documents,
         pendingParticipants: project.pendingParticipants,
