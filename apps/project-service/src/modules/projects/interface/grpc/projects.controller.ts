@@ -1,5 +1,5 @@
 import { Controller, Inject, Injectable } from '@nestjs/common';
-import { GrpcMethod } from '@nestjs/microservices';
+import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { CreateProjectUC } from '../../application/use-cases/create-project.uc';
 import { ListProjectsByEventUC } from '../../application/use-cases/list-projects-by-event.uc';
 import { GetProjectUC } from '../../application/use-cases/get-project.uc';
@@ -24,9 +24,11 @@ import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto
 import { UpdateProjectDocumentUC } from '../../application/use-cases/update-document.uc';
 import { RequestChangesProjectUC } from '../../application/use-cases/request-changes-project.uc';
 import { GetMyProjectByEventUC } from '../../application/use-cases/get-my-project-by-event.uc';
+import { CheckActiveSubmissionByEmailsUC } from '../../application/use-cases/check-active-submission-by-emails.uc';
 import { ClientGrpc } from '@nestjs/microservices';
 import { INVITATION_SERVICE_NAME } from '@app/common/generated/invitation';
 import { lastValueFrom } from 'rxjs';
+import { status } from '@grpc/grpc-js';
 
 interface InvitationGrpcService {
   CreateInvitation(data: {
@@ -69,6 +71,7 @@ export class ProjectsController {
     private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
     private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
     private readonly getMyProjectByEventUC: GetMyProjectByEventUC,
+    private readonly checkActiveSubmissionByEmailsUC: CheckActiveSubmissionByEmailsUC,
     @Inject(INVITATION_SERVICE_NAME) private readonly client: ClientGrpc,
   ) {}
 
@@ -232,6 +235,14 @@ async listPendingParticipantsRpc(req: { projectId: number }) {
 
 @GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
 async createProjectWithPendingParticipantsRpc(req: any) {
+  if (req.participants && req.participants.length > 0) {
+    const emails = req.participants.map((p: any) => p.email);
+    const { hasConflict, conflictEmails } = await this.checkActiveSubmissionByEmailsUC.execute({ eventId: req.eventId, emails });
+    if (hasConflict) {
+      throw new RpcException({ code: status.ALREADY_EXISTS, message: `Conflicting active submissions found for emails: ${conflictEmails.join(', ')}` });
+    }
+  }
+
   try {
     const project = await this.createProject.execute({
       eventId: req.eventId,

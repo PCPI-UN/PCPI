@@ -80,6 +80,10 @@ export class ProjectsController {
     description: 'Invalid input data, file too large, or too many files',
   })
   @ApiResponse({
+    status: 409,
+    description: 'One or more of the project participants already have an existing project in this event.'
+  })
+  @ApiResponse({
     status: 413,
     description: 'File size exceeds 5MB limit',
   })
