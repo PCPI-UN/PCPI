@@ -36,6 +36,7 @@ export abstract class NotificationServicePort {
    */
   abstract sendProjectSubmittedInvitationEmail(params: {
     to: string;
+    eventType: string;
     firstName: string;
     lastName?: string;
     invitationLink: string;

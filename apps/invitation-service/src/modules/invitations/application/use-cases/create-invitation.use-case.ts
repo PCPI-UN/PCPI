@@ -269,9 +269,9 @@ export class CreateInvitationUseCase {
       }
 
       case InvitationTargetType.PROJECT: {
-        // A PROJECT invitation is always for project submission
         await this.notificationService.sendProjectSubmittedInvitationEmail({
           to: params.to,
+          eventType: params.eventType,
           firstName: params.firstName,
           lastName: params.lastName,
           invitationLink: params.invitationLink,

@@ -68,15 +68,20 @@ export class NotificationServiceAdapter implements NotificationServicePort {
 
   async sendProjectSubmittedInvitationEmail(params: {
     to: string;
+    eventType: string;
     firstName: string;
     lastName?: string;
     invitationLink: string;
     projectName: string;
     eventName: string;
   }): Promise<{ success: boolean }> {
+    const template = params.eventType === 'Exposition'
+      ? EmailTemplate.PROJECT_SUBMITTED
+      : EmailTemplate.PARTICIPANTS_SUBMITTED;
+
     return this.sendEmail({
       to: params.to,
-      template: EmailTemplate.PROJECT_SUBMITTED,
+      template,
       params: {
         firstName: params.firstName,
         lastName: params.lastName || '',
