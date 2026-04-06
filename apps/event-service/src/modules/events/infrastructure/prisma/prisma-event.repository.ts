@@ -90,7 +90,44 @@ export class PrismaEventRepository extends EventRepository {
     super();
   }
 
-  private buildWhere(where?: { q?: string; onlyActive?: boolean; status?: EventStatus }) {
+  private buildStatusCondition(status: EventStatus, now: Date) {
+    if (status === EventStatus.UPCOMING) {
+      return {
+        AND: [
+          { startDate: { gt: now } },
+          { inscriptionDeadline: { gt: now } },
+        ],
+      };
+    }
+
+    if (status === EventStatus.REGISTRATION_CLOSED) {
+      return {
+        AND: [
+          { inscriptionDeadline: { lte: now } },
+          { startDate: { gt: now } },
+        ],
+      };
+    }
+
+    if (status === EventStatus.AVAILABLE) {
+      return {
+        AND: [
+          { startDate: { lte: now } },
+          { endDate: { gte: now } },
+        ],
+      };
+    }
+
+    if (status === EventStatus.CLOSED) {
+      return {
+        endDate: { lt: now },
+      };
+    }
+
+    return undefined;
+  }
+
+  private buildWhere(where?: { q?: string; onlyActive?: boolean; statuses?: EventStatus[] }) {
     const filters: any = {};
     if (where?.onlyActive) filters.active = true;
     if (where?.q?.trim()) {
@@ -100,33 +137,18 @@ export class PrismaEventRepository extends EventRepository {
       ];
     }
 
-    // Status filtering based on dates
-    if (where?.status !== undefined && where?.status !== EventStatus.UNSPECIFIED) {
-      const now = new Date();
+    const statuses = where?.statuses?.filter(
+      (status) => status !== undefined && status !== EventStatus.UNSPECIFIED,
+    );
 
-      if (where.status === EventStatus.UPCOMING) {
-        // UPCOMING: Registrations still open, event hasn't started
-        // inscriptionDeadline > now AND startDate > now
-        filters.AND = [
-          { startDate: { gt: now } },
-          { inscriptionDeadline: { gt: now } },
-        ];
-      } else if (where.status === EventStatus.REGISTRATION_CLOSED) {
-        // REGISTRATION_CLOSED: Registrations closed, event hasn't started
-        // inscriptionDeadline <= now AND startDate > now
-        filters.AND = [
-          { inscriptionDeadline: { lte: now } },
-          { startDate: { gt: now } },
-        ];
-      } else if (where.status === EventStatus.AVAILABLE) {
-        // AVAILABLE: startDate <= now AND endDate >= now
-        filters.AND = [
-          { startDate: { lte: now } },
-          { endDate: { gte: now } },
-        ];
-      } else if (where.status === EventStatus.CLOSED) {
-        // CLOSED: endDate < now
-        filters.endDate = { lt: now };
+    if (statuses?.length) {
+      const now = new Date();
+      const statusConditions = statuses
+        .map((status) => this.buildStatusCondition(status, now))
+        .filter(Boolean);
+
+      if (statusConditions.length) {
+        filters.AND = [...(filters.AND ?? []), { OR: statusConditions }];
       }
     }
 
@@ -264,11 +286,11 @@ export class PrismaEventRepository extends EventRepository {
     limit: number;
     q?: string;
     onlyActive?: boolean;
-    status?: EventStatus;
+    statuses?: EventStatus[];
   }): Promise<{ items: DomainEvent[]; total: number }> {
-    const { page, limit, q, onlyActive, status } = params;
+    const { page, limit, q, onlyActive, statuses } = params;
 
-    const where = this.buildWhere({ q, onlyActive, status });
+    const where = this.buildWhere({ q, onlyActive, statuses });
     const skip = (page - 1) * limit;
 
     const [rows, total] = await Promise.all([

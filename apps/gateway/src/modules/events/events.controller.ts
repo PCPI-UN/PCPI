@@ -81,10 +81,11 @@ export class EventsController {
   })
   @ApiResponse({ status: 200, description: 'Returns list of upcoming events with pagination' })
   async listPublicEvents(@Query() query: ListEventsDTO) {
-    // Hardcode status to UPCOMING and onlyActive to true
+    // Hardcode statuses to UPCOMING and onlyActive to true
     return this.eventsService.listEvents({
       ...query,
-      status: EventStatus.UPCOMING,
+      status: undefined,
+      statuses: [EventStatus.UPCOMING, EventStatus.AVAILABLE, EventStatus.REGISTRATION_CLOSED],
       onlyActive: true,
     });
   }
