@@ -132,7 +132,7 @@ jobs:
           --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}")
 
           echo $RESPONSE
-          DEPLOYMENT_UUID=$(echo "$RESPONSE" | jq -r ".deployment_uuid")
+          DEPLOYMENT_UUID=$(echo "$RESPONSE" | jq -r ".deployments[0].deployment_uuid")
           echo "deployment_uuid=$DEPLOYMENT_UUID" >> $GITHUB_OUTPUT
     
       - name: Check redeployment status of Coolify Migration Image
