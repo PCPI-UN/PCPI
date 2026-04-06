@@ -112,6 +112,7 @@ export class EventsController {
    * Returns events with user's role information
    */
   @Get('my-events')
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'List my events',
     description: 'Get a paginated list of events where the authenticated user is a member. Includes role information.',
