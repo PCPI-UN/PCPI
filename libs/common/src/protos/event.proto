@@ -247,6 +247,7 @@ message ListEventsRequest {
   optional string q = 3;
   optional bool onlyActive = 4;
   optional EventStatus status = 5;
+  repeated EventStatus statuses = 6;
 }
 
 message ListEventsResponse {

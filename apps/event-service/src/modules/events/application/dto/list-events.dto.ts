@@ -7,6 +7,7 @@ import {
   Max,
   MinLength,
   IsEnum,
+  IsArray,
 } from 'class-validator';
 import { EventStatus } from '@app/common/generated/event';
 
@@ -34,4 +35,9 @@ export class ListEventsDTO {
   @IsOptional()
   @IsEnum(EventStatus)
   status?: EventStatus;
+
+  @IsOptional()
+  @IsArray()
+  @IsEnum(EventStatus, { each: true })
+  statuses?: EventStatus[];
 }
