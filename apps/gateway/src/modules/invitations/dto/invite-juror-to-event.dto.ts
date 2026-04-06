@@ -11,6 +11,14 @@ export class InviteJurorToEventDto {
   email: string;
 
   @ApiProperty({
+    description: 'Type of event for the invitation (e.g., Competition, Exposition)',
+    example: 'Competition',
+  })
+  @IsString()
+  @IsNotEmpty()
+  eventType: string;
+
+  @ApiProperty({
     description: 'First name of the juror',
     example: 'John',
   })

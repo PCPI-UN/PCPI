@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject, Injectable } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { CreateProjectUC } from '../../application/use-cases/create-project.uc';
 import { ListProjectsByEventUC } from '../../application/use-cases/list-projects-by-event.uc';
@@ -24,9 +24,28 @@ import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto
 import { UpdateProjectDocumentUC } from '../../application/use-cases/update-document.uc';
 import { RequestChangesProjectUC } from '../../application/use-cases/request-changes-project.uc';
 import { GetMyProjectByEventUC } from '../../application/use-cases/get-my-project-by-event.uc';
+import { ClientGrpc } from '@nestjs/microservices';
+import { INVITATION_SERVICE_NAME } from '@app/common/generated/invitation';
+import { lastValueFrom } from 'rxjs';
 
+interface InvitationGrpcService {
+  CreateInvitation(data: {
+    email: string;
+    eventType: string;
+    targetType: string;
+    targetId: number;
+    invitedByUserId: number;
+    roleIds: number[];
+    firstName?: string;
+    lastName?: string;
+  }): any;
+}
+
+@Injectable()
 @Controller()
 export class ProjectsController {
+  private invitationService: InvitationGrpcService;
+
   constructor(
     private readonly createProject: CreateProjectUC,
     private readonly getProject: GetProjectUC,
@@ -50,8 +69,13 @@ export class ProjectsController {
     private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
     private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
     private readonly getMyProjectByEventUC: GetMyProjectByEventUC,
-
+    @Inject(INVITATION_SERVICE_NAME) private readonly client: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.invitationService =
+      this.client.getService<InvitationGrpcService>('InvitationService');
+  }
 
   @GrpcMethod('ProjectsService', 'CreateProject')
   async createProjectRpc(req: any) {
@@ -225,31 +249,41 @@ async createProjectWithPendingParticipantsRpc(req: any) {
      
     if (req.participants && req.participants.length > 0) {
       try {
-      for (const p of req.participants) {
-        const pendingParticipant = await this.addPendingParticipantUC.execute({
-          projectId: project.id,
-          firstName: p.firstName,
-          lastName: p.lastName ?? undefined,
-          email: p.email,
-          studentCode: p.studentCode,
-          status: 'PENDING',
-        });
-        pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
-      }
+        for (const p of req.participants) {
+          const pendingParticipant = await this.addPendingParticipantUC.execute({
+            projectId: project.id,
+            firstName: p.firstName,
+            lastName: p.lastName ?? undefined,
+            email: p.email,
+            studentCode: p.studentCode,
+            status: 'PENDING',
+          });
+          pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
+        }
+
       } catch (error) {
         // Si hay un error al agregar participantes, eliminamos el proyecto creado
         console.error('❌ Error adding pending participants, deleting project:', error);
         await this.deleteProjectUC.execute({ id: project.id! });
-      throw error;
-    }
-      //notificamos al primer participante
-      const firstParticipant = req.participants[0];
-      await this.notificateStudentUC.execute({
-        firstName: firstParticipant.firstName,
-        lastName: firstParticipant.lastName ?? '',
-        email: firstParticipant.email,
-        projectName: project.name,
-      });
+        throw error;
+      }
+      console.log('eventType=', req.eventType, JSON.stringify(req));
+      for (const pending of pendingParticipants) {
+        const obs$ = this.invitationService.CreateInvitation({
+          email: pending.email,            // ajusta al nombre real
+          eventType: req.eventType,
+          targetType: 'PROJECT',
+          targetId: project.id!,
+          invitedByUserId: 1, // AJUSTA: quién envía la invitación
+          roleIds: [5], // AJUSTA: roles si es necesario
+          firstName: pending.firstName,
+          lastName: pending.lastName ?? '',
+        });
+        //console.log('Sending invitation to:', pending.email);
+        //console.log('Invitation observable:', obs$);
+
+        await lastValueFrom(obs$);
+      }
     }
 
     // Manejo de documentos del proyecto

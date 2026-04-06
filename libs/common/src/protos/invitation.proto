@@ -41,6 +41,7 @@ message CreateInvitationRequest {
   repeated int32 roleIds = 6;
   optional string firstName = 7;
   optional string lastName = 8;
+  string eventType = 9;
 }
 
 // The request message for getting an invitation by token
