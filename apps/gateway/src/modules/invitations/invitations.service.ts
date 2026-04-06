@@ -133,6 +133,7 @@ export class InvitationsService implements OnModuleInit {
     const invitation = await firstValueFrom(
       this.invitationService.createInvitation({
         email: dto.email,
+        eventType: dto.eventType,
         firstName: dto.firstName,
         lastName: dto.lastName,
         targetType: InvitationTargetType[InvitationTargetType.EVENT],

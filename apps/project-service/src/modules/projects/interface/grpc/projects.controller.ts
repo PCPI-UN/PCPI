@@ -44,6 +44,8 @@ interface InvitationGrpcService {
 @Injectable()
 @Controller()
 export class ProjectsController {
+  private invitationService: InvitationGrpcService;
+
   constructor(
     private readonly createProject: CreateProjectUC,
     private readonly getProject: GetProjectUC,
@@ -67,7 +69,6 @@ export class ProjectsController {
     private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
     private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
     private readonly getMyProjectByEventUC: GetMyProjectByEventUC,
-    private invitationService: InvitationGrpcService,
     @Inject(INVITATION_SERVICE_NAME) private readonly client: ClientGrpc,
   ) {}
 
@@ -260,28 +261,28 @@ async createProjectWithPendingParticipantsRpc(req: any) {
           pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
         }
 
-        for (const pending of pendingParticipants) {
-          const obs$ = this.invitationService.CreateInvitation({
-            email: pending.email,            // ajusta al nombre real
-            eventType: req.eventType,
-            targetType: 'PROJECT',
-            targetId: project.id!,
-            invitedByUserId: 1, // AJUSTA: quién envía la invitación
-            roleIds: [5], // AJUSTA: roles si es necesario
-            firstName: pending.firstName,
-            lastName: pending.lastName ?? '',
-          });
-          //console.log('Sending invitation to:', pending.email);
-          //console.log('Invitation observable:', obs$);
-
-          await lastValueFrom(obs$);
-        }
-
       } catch (error) {
         // Si hay un error al agregar participantes, eliminamos el proyecto creado
         console.error('❌ Error adding pending participants, deleting project:', error);
         await this.deleteProjectUC.execute({ id: project.id! });
         throw error;
+      }
+      console.log('eventType=', req.eventType, JSON.stringify(req));
+      for (const pending of pendingParticipants) {
+        const obs$ = this.invitationService.CreateInvitation({
+          email: pending.email,            // ajusta al nombre real
+          eventType: req.eventType,
+          targetType: 'PROJECT',
+          targetId: project.id!,
+          invitedByUserId: 1, // AJUSTA: quién envía la invitación
+          roleIds: [5], // AJUSTA: roles si es necesario
+          firstName: pending.firstName,
+          lastName: pending.lastName ?? '',
+        });
+        //console.log('Sending invitation to:', pending.email);
+        //console.log('Invitation observable:', obs$);
+
+        await lastValueFrom(obs$);
       }
     }
 

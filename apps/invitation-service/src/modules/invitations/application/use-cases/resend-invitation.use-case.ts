@@ -148,7 +148,7 @@ export class ResendInvitationUseCase {
         if (user.status === 'PENDING')
             invitationLink = `${frontendUrl}/auth/chg-password?token=${token}`;
         else // The user already exists and therefore they can accept invitations in the dashboard
-            invitationLink = `${frontendUrl}/dashboard/invitations`;
+            invitationLink = `${frontendUrl}/app/invitations`;
 
         await this.sendInvitationEmail({
             targetType: invitation.targetType,

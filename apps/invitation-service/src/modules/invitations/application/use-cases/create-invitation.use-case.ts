@@ -31,7 +31,6 @@ export class CreateInvitationUseCase {
 
   async execute(dto: CreateInvitationDto): Promise<{ invitation: Invitation; invitationRoles: InvitationRole[] }> {
     const { email, eventType, firstName, lastName, roleIds, ...rest } = dto;
-
     // Step 1: Check for existing accepted invitation
     const acceptedInvitation = await this.invitationRepository.findAcceptedByEmailAndTargetType(
       email,
@@ -203,7 +202,7 @@ export class CreateInvitationUseCase {
     if (user.status === 'PENDING')
       invitationLink = `${frontendUrl}/auth/chg-password?token=${invitation.token}`;
     else // The user already exist and therefore they can accept invitations in the dashboard
-      invitationLink = `${frontendUrl}/dashboard/invitations`;
+      invitationLink = `${frontendUrl}/app/invitations`;
 
 
     await this.sendInvitationEmail({

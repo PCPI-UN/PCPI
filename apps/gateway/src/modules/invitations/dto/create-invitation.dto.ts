@@ -21,6 +21,14 @@ export class CreateInvitationDto {
   email: string;
 
   @ApiProperty({
+    description: 'Type of event for the invitation (e.g., Competition, Exposition)',
+    example: 'Competition',
+  })
+  @IsString()
+  @IsNotEmpty()
+  eventType: string;
+
+  @ApiProperty({
     description: 'Type of target for the invitation',
     enum: InvitationTargetType,
     enumName: 'InvitationTargetType',
