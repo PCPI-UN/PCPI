@@ -142,6 +142,7 @@ jobs:
               "https://${{ secrets.COOLIFY_URL }}/api/v1/deployments/${{ steps.redeploy-and-deploymentID.outputs.deployment_uuid }}" \
               -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" | jq -r ".status")
 
+            echo $STATUS  
             if [ "$STATUS" = "finished" ]; then
               echo "Deploy exitoso"
               echo "final_status=True" >> $GITHUB_OUTPUT
