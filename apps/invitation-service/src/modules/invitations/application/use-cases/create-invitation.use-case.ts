@@ -30,7 +30,7 @@ export class CreateInvitationUseCase {
   ) { }
 
   async execute(dto: CreateInvitationDto): Promise<{ invitation: Invitation; invitationRoles: InvitationRole[] }> {
-    const { email, firstName, lastName, roleIds, ...rest } = dto;
+    const { email, eventType, firstName, lastName, roleIds, ...rest } = dto;
 
     // Step 1: Check for existing accepted invitation
     const acceptedInvitation = await this.invitationRepository.findAcceptedByEmailAndTargetType(
@@ -208,6 +208,7 @@ export class CreateInvitationUseCase {
 
     await this.sendInvitationEmail({
       targetType: rest.targetType,
+      eventType,
       to: email,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -225,6 +226,7 @@ export class CreateInvitationUseCase {
    */
   private async sendInvitationEmail(params: {
     targetType: InvitationTargetType;
+    eventType: string;
     to: string;
     firstName: string;
     lastName?: string;
@@ -268,8 +270,8 @@ export class CreateInvitationUseCase {
       }
 
       case InvitationTargetType.PROJECT: {
-        // A PROJECT invitation is always for project approval
-        await this.notificationService.sendProjectApprovedInvitationEmail({
+        // A PROJECT invitation is always for project submission
+        await this.notificationService.sendProjectSubmittedInvitationEmail({
           to: params.to,
           firstName: params.firstName,
           lastName: params.lastName,

@@ -87,6 +87,11 @@ export class ProjectsService implements OnModuleInit {
       `Creating project with ${files.length} files: ${body.name}`,
     );
 
+    let eventType = body.eventType;
+    if (eventType !== 'Competition' && eventType !== 'Exposition') {
+      throw new BadRequestException('Invalid event type. Must be "Competition" or "Exposition".');
+    }
+
     let participants: PendingParticipantInputDto[] = [];
     if (body.participants) {
       try {
@@ -181,6 +186,7 @@ export class ProjectsService implements OnModuleInit {
       const response = await firstValueFrom(
         this.projectsService.createProjectWithPendingParticipants({
           eventId,
+          eventType,
           courseId,
           name: body.name,
           description: body.description,
@@ -261,6 +267,7 @@ export class ProjectsService implements OnModuleInit {
     const response = await firstValueFrom(
       this.projectsService.createProjectWithPendingParticipants({
         eventId: dto.eventId,
+        eventType: dto.eventType,
         courseId: dto.courseId,
         name: dto.name,
         description: dto.description,

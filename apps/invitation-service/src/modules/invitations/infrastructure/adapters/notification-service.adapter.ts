@@ -66,7 +66,7 @@ export class NotificationServiceAdapter implements NotificationServicePort {
     });
   }
 
-  async sendProjectApprovedInvitationEmail(params: {
+  async sendProjectSubmittedInvitationEmail(params: {
     to: string;
     firstName: string;
     lastName?: string;
@@ -76,7 +76,7 @@ export class NotificationServiceAdapter implements NotificationServicePort {
   }): Promise<{ success: boolean }> {
     return this.sendEmail({
       to: params.to,
-      template: EmailTemplate.PROJECT_APPROVED,
+      template: EmailTemplate.PROJECT_SUBMITTED,
       params: {
         firstName: params.firstName,
         lastName: params.lastName || '',

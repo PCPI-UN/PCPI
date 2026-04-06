@@ -32,9 +32,9 @@ export abstract class NotificationServicePort {
   }): Promise<{ success: boolean }>;
 
   /**
-   * Sends a project approved invitation email
+   * Sends a project submitted invitation email
    */
-  abstract sendProjectApprovedInvitationEmail(params: {
+  abstract sendProjectSubmittedInvitationEmail(params: {
     to: string;
     firstName: string;
     lastName?: string;

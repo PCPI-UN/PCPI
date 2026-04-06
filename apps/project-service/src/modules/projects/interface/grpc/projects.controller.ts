@@ -31,6 +31,7 @@ import { lastValueFrom } from 'rxjs';
 interface InvitationGrpcService {
   CreateInvitation(data: {
     email: string;
+    eventType: string;
     targetType: string;
     targetId: number;
     invitedByUserId: number;
@@ -262,6 +263,7 @@ async createProjectWithPendingParticipantsRpc(req: any) {
         for (const pending of pendingParticipants) {
           const obs$ = this.invitationService.CreateInvitation({
             email: pending.email,            // ajusta al nombre real
+            eventType: req.eventType,
             targetType: 'PROJECT',
             targetId: project.id!,
             invitedByUserId: 1, // AJUSTA: quién envía la invitación
@@ -281,15 +283,6 @@ async createProjectWithPendingParticipantsRpc(req: any) {
         await this.deleteProjectUC.execute({ id: project.id! });
         throw error;
       }
-
-      //notificamos al primer participante
-      const firstParticipant = req.participants[0];
-      await this.notificateStudentUC.execute({
-        firstName: firstParticipant.firstName,
-        lastName: firstParticipant.lastName ?? '',
-        email: firstParticipant.email,
-        projectName: project.name,
-      });
     }
 
     // Manejo de documentos del proyecto

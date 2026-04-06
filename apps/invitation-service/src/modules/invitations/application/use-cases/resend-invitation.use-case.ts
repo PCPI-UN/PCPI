@@ -202,7 +202,7 @@ export class ResendInvitationUseCase {
             }
 
             case InvitationTargetType.PROJECT: {
-                await this.notificationService.sendProjectApprovedInvitationEmail({
+                await this.notificationService.sendProjectSubmittedInvitationEmail({
                     to: params.to,
                     firstName: params.firstName,
                     lastName: params.lastName,

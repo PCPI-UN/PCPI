@@ -261,6 +261,7 @@ message CreateProjectWithParticipantsRequest {
   optional ProjectState state = 6; // Optional - backend defaults to UNDER_REVIEW for public submissions
   repeated PendingParticipantInput participants = 7;
   repeated ProjectDocumentInput documents = 8;
+  string eventType = 9;
 }
 
 message CreateProjectWithParticipantsResponse {
