@@ -25,25 +25,26 @@ jobs:
         with:
           base: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref || github.event.before }}
           filters: |
-                  auth-service:
-                    - 'apps/auth-service/**'
-                  evaluation-service:
-                    - 'apps/evaluation-service/**'
-                  event-service:
-                    - 'apps/event-service/**'
-                  invitation-service:
-                    - 'apps/invitation-service/**'
-                  project-service:
-                    - 'apps/project-service/**'
-                  notification-service:
-                    - 'apps/notification-service/**'
-                  gateway:
-                    - 'apps/gateway/**'
+            auth-service:
+              - 'apps/auth-service/**'
+            evaluation-service:
+              - 'apps/evaluation-service/**'
+            event-service:
+              - 'apps/event-service/**'
+            invitation-service:
+              - 'apps/invitation-service/**'
+            project-service:
+              - 'apps/project-service/**'
+            notification-service:
+              - 'apps/notification-service/**'
+            gateway:
+              - 'apps/gateway/**'
 
   migrations-service-build:
     runs-on: ubuntu-24.04
     needs: search-individual-migration-service-changes
     if: ${{ needs.search-individual-migration-service-changes.outputs.services != '[]' }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -54,90 +55,92 @@ jobs:
         
     steps:
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         
-    - name: Creation of the SHA tag 
-      uses: docker/metadata-action@v5
-      id: sha-tag
-      with:
+      - name: Creation of the SHA tag 
+        uses: docker/metadata-action@v5
+        id: sha-tag
+        with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}
           tags: type=sha,prefix=sha-,suffix=-${{ matrix.services }}
     
-    - name: Separation of image and tag
-      id: image_tag
-      run: |
-            IMAGE_AND_TAG=${{ steps.sha-tag.outputs.tags }}
-            IMAGE=$(echo ${IMAGE_AND_TAG%%:*})
-            TAG=$(echo ${IMAGE_AND_TAG##*:})
-            
-            echo "image=$IMAGE" >> $GITHUB_OUTPUT
-            echo "tag=$TAG" >> $GITHUB_OUTPUT
+      - name: Separation of image and tag
+        id: image_tag
+        run: |
+          IMAGE_AND_TAG="${{ steps.sha-tag.outputs.tags }}"
+          IMAGE="${IMAGE_AND_TAG%%:*}"
+          TAG="${IMAGE_AND_TAG##*:}"
+          
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
     
-    - name: post dinamic env value
-      id: dinamic-env
-      run: |
-            WEBHOOK_APP_URL=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ github.ref_name }}"."${{ matrix.services }}".webhook_app_url')
-            APP_UUID=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ github.ref_name }}"."${{ matrix.services }}".app_uuid')
-            WEBHOOK_MIGRATION_URL=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ github.ref_name }}"."${{ matrix.services }}".webhook_migration_url')
-            MIGRATION_UUID=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ github.ref_name }}"."${{ matrix.services }}".migration_uuid')
+      - name: post dinamic env value
+        id: dinamic-env
+        run: |
+          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".webhook_app_url")
+          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".app_uuid")
+          WEBHOOK_MIGRATION_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".webhook_migration_url")
+          MIGRATION_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".migration_uuid")
 
-            echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
-            echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
-            echo "webhook_migration_url=$WEBHOOK_MIGRATION_URL" >> $GITHUB_OUTPUT
-            echo "migration_uuid=$MIGRATION_UUID" >> $GITHUB_OUTPUT
+          echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
+          echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
+          echo "webhook_migration_url=$WEBHOOK_MIGRATION_URL" >> $GITHUB_OUTPUT
+          echo "migration_uuid=$MIGRATION_UUID" >> $GITHUB_OUTPUT
 
-      env:
-        COOLIFY_WEBHOOKS_JSON: ${{ secrets.COOLIFY_WEBHOOKS_JSON }}
+        env:
+          COOLIFY_WEBHOOKS_JSON: ${{ secrets.COOLIFY_WEBHOOKS_JSON }}
         
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
         
-    - name: Build and push base image
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        file: ./apps/${{ matrix.services }}/Dockerfile 
-        tags: ${{ steps.sha-tag.outputs.tags }}
-        platforms: linux/arm64
-        push: true
-        no-cache: true
+      - name: Build and push base image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/${{ matrix.services }}/Dockerfile 
+          tags: ${{ steps.sha-tag.outputs.tags }}
+          platforms: linux/arm64
+          push: true
+          no-cache: true
     
-    - name: Set Coolify Migration Tag
-      run: |
-            curl 'https://${{ secrets.COOLIFY_URL }}/api/v1/applications/${{ steps.dinamic-env.outputs.migration_uuid }}' \
-            --request PATCH \
-            --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}' \
-            --header 'Content-Type: application/json' \
-            --data '{
-            "docker_registry_image_name": "${{ steps.image_tag.outputs.image }}",
-            "docker_registry_image_tag": "${{ steps.image_tag.outputs.tag }}"
-            }'
+      - name: Set Coolify Migration Tag
+        run: |
+          curl "https://${{ secrets.COOLIFY_URL }}/api/v1/applications/${{ steps.dinamic-env.outputs.migration_uuid }}" \
+          --request PATCH \
+          --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+          --header "Content-Type: application/json" \
+          --data "{
+            \"docker_registry_image_name\": \"${{ steps.image_tag.outputs.image }}\",
+            \"docker_registry_image_tag\": \"${{ steps.image_tag.outputs.tag }}\"
+          }"
 
-    - name: Redeploy Coolify Migration Image
-      id: redeploy-and-deploymentID
-      run: |
-          RESPONSE=$(curl --request GET '${{ steps.dinamic-env.outputs.webhook_migration_url }}' --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}')
-          DEPLOYMENT_UUID=$( echo "$RESPONSE" | jq -r '."deployment_uuid")
+      - name: Redeploy Coolify Migration Image
+        id: redeploy-and-deploymentID
+        run: |
+          RESPONSE=$(curl -sS -f \
+          --request GET "${{ steps.dinamic-env.outputs.webhook_migration_url }}" \
+          --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}")
+
+          DEPLOYMENT_UUID=$(echo "$RESPONSE" | jq -r ".deployment_uuid")
           echo "deployment_uuid=$DEPLOYMENT_UUID" >> $GITHUB_OUTPUT
     
-    - name: Check redeployment status of Coolify Migration Image
-      id: check-status-deployment
-      run: |
+      - name: Check redeployment status of Coolify Migration Image
+        id: check-status-deployment
+        run: |
           while true; do
             STATUS=$(curl -s \
-              "https://tu-coolify.com/api/v1/deployments/${{ steps.redeploy-and-deploymentID.outputs.deployment_uuid }}" \
-              -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" | jq -r '.status')
-
+              "https://${{ secrets.COOLIFY_URL }}/api/v1/deployments/${{ steps.redeploy-and-deploymentID.outputs.deployment_uuid }}" \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" | jq -r ".status")
 
             if [ "$STATUS" = "finished" ]; then
               echo "Deploy exitoso"
@@ -152,26 +155,28 @@ jobs:
             sleep 5
           done
     
-    - name: set coolify application tag
-      if: ${{ steps.check-status-deployment.outputs.final_status == 'True' }}
-      run: |
-            curl 'https://${{ secrets.COOLIFY_URL }}/api/v1/applications/${{ steps.dinamic-env.outputs.app_uuid }}' \
-            --request PATCH \
-            --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}' \
-            --header 'Content-Type: application/json' \
-            --data '{
-            "docker_registry_image_name": "${{ steps.image_tag.outputs.image }}",
-            "docker_registry_image_tag": "${{ steps.image_tag.outputs.tag }}"
-            }'
+      - name: set coolify application tag
+        if: ${{ steps.check-status-deployment.outputs.final_status == 'True' }}
+        run: |
+          curl "https://${{ secrets.COOLIFY_URL }}/api/v1/applications/${{ steps.dinamic-env.outputs.app_uuid }}" \
+          --request PATCH \
+          --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+          --header "Content-Type: application/json" \
+          --data "{
+            \"docker_registry_image_name\": \"${{ steps.image_tag.outputs.image }}\",
+            \"docker_registry_image_tag\": \"${{ steps.image_tag.outputs.tag }}\"
+          }"
 
-    - name: Redeploy Coolify Application Image
-      run: |
-          curl --request GET '${{ steps.dinamic-env.outputs.webhook_app_url }}' --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
+      - name: Redeploy Coolify Application Image
+        run: |
+          curl --request GET "${{ steps.dinamic-env.outputs.webhook_app_url }}" \
+          --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
   
   no-migration-service-build:
     runs-on: ubuntu-24.04
     needs: search-individual-migration-service-changes
     if: ${{ needs.search-individual-migration-service-changes.outputs.services != '[]' }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -185,72 +190,72 @@ jobs:
 
     steps:
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         
-    - name: Creation of the SHA tag 
-      uses: docker/metadata-action@v5
-      id: sha-tag
-      with:
+      - name: Creation of the SHA tag 
+        uses: docker/metadata-action@v5
+        id: sha-tag
+        with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}
           tags: type=sha,prefix=sha-,suffix=-${{ matrix.services }}
     
-    - name: Separation of image and tag
-      id: image_tag
-      run: |
-            IMAGE_AND_TAG=${{ steps.sha-tag.outputs.tags }}
-            IMAGE=$(echo ${IMAGE_AND_TAG%%:*})
-            TAG=$(echo ${IMAGE_AND_TAG##*:})
-            
-            echo "image=$IMAGE" >> $GITHUB_OUTPUT
-            echo "tag=$TAG" >> $GITHUB_OUTPUT
+      - name: Separation of image and tag
+        id: image_tag
+        run: |
+          IMAGE_AND_TAG="${{ steps.sha-tag.outputs.tags }}"
+          IMAGE="${IMAGE_AND_TAG%%:*}"
+          TAG="${IMAGE_AND_TAG##*:}"
+          
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
     
-    - name: post dinamic env value
-      id: dinamic-env
-      run: |
-            WEBHOOK_APP_URL=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ github.ref_name }}"."${{ matrix.services }}".webhook_app_url')
-            APP_UUID=$( echo "${COOLIFY_WEBHOOKS_JSON}" | jq -r '."${{ github.ref_name }}"."${{ matrix.services }}".app_uuid')
+      - name: post dinamic env value
+        id: dinamic-env
+        run: |
+          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".webhook_app_url")
+          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".app_uuid")
 
-            echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
-            echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
+          echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
+          echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
 
-      env:
-        COOLIFY_WEBHOOKS_JSON: ${{ secrets.COOLIFY_WEBHOOKS_JSON }}
+        env:
+          COOLIFY_WEBHOOKS_JSON: ${{ secrets.COOLIFY_WEBHOOKS_JSON }}
         
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
         
-    - name: Build and push base image
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        file: ./apps/${{ matrix.services }}/Dockerfile 
-        tags: ${{ steps.sha-tag.outputs.tags }}
-        platforms: linux/arm64
-        push: true
-        no-cache: true
+      - name: Build and push base image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/${{ matrix.services }}/Dockerfile 
+          tags: ${{ steps.sha-tag.outputs.tags }}
+          platforms: linux/arm64
+          push: true
+          no-cache: true
     
-    
-    - name: set coolify Application tag
-      run: |
-            curl 'https://${{ secrets.COOLIFY_URL }}/api/v1/applications/${{ steps.dinamic-env.outputs.app_uuid }}' \
-            --request PATCH \
-            --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}' \
-            --header 'Content-Type: application/json' \
-            --data '{
-            "docker_registry_image_name": "${{ steps.image_tag.outputs.image }}",
-            "docker_registry_image_tag": "${{ steps.image_tag.outputs.tag }}"
-            }'
+      - name: set coolify Application tag
+        run: |
+          curl "https://${{ secrets.COOLIFY_URL }}/api/v1/applications/${{ steps.dinamic-env.outputs.app_uuid }}" \
+          --request PATCH \
+          --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+          --header "Content-Type: application/json" \
+          --data "{
+            \"docker_registry_image_name\": \"${{ steps.image_tag.outputs.image }}\",
+            \"docker_registry_image_tag\": \"${{ steps.image_tag.outputs.tag }}\"
+          }"
 
-    - name: Redeploy Coolify Application Image
-      run: |
-          curl --request GET '${{ steps.dinamic-env.outputs.webhook_app_url }}' --header 'Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}'
+      - name: Redeploy Coolify Application Image
+        run: |
+          curl --request GET "${{ steps.dinamic-env.outputs.webhook_app_url }}" \
+          --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
