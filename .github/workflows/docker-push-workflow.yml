@@ -131,6 +131,7 @@ jobs:
           --request GET "${{ steps.dinamic-env.outputs.webhook_migration_url }}" \
           --header "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}")
 
+          echo $RESPONSE
           DEPLOYMENT_UUID=$(echo "$RESPONSE" | jq -r ".deployment_uuid")
           echo "deployment_uuid=$DEPLOYMENT_UUID" >> $GITHUB_OUTPUT
     
