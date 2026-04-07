@@ -105,6 +105,9 @@ export const toProtoParticipant = (p: any) => ({
   userId: p.userId,
   projectId: p.projectId,
   studentCode: p.studentCode, 
+  firstName: p.firstName ?? undefined,
+  lastName: p.lastName ?? undefined,
+  email: p.email ?? undefined,
 });
 
 export const toProtoPendingParticipant = (p: any) => ({

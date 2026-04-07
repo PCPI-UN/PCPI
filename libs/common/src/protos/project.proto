@@ -107,6 +107,9 @@ message ProjectParticipant {
   int32 userId = 1;
   int32 projectId = 2;
   string studentCode = 3; 
+  optional string firstName = 4;
+  optional string lastName = 5;
+  optional string email = 6;
 }
 
 message PendingProjectParticipant {

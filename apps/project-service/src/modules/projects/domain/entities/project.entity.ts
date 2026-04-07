@@ -34,6 +34,15 @@ export interface ProjectParticipant {
   studentCode: string;
 }
 
+export interface ProjectParticipantWithUserInfo {
+  userId: number;
+  projectId: number;
+  studentCode: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+}
+
 export interface PendingProjectParticipant {
   projectId: number;
   firstName: string;
