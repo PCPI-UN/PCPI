@@ -1,5 +1,4 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { AuthServicePort, AUTH_SERVICE_PORT } from '../ports/auth-service.port';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { ProjectParticipantWithUserInfo } from '../../domain/entities/project.entity';
 import { ListDocumentsUC } from './list-documents.uc';
@@ -8,7 +7,6 @@ import { ListDocumentsUC } from './list-documents.uc';
 export class GetMyProjectByEventUC {
     constructor(
         @Inject('ProjectRepository') private readonly repo: ProjectRepository,
-        @Inject(AUTH_SERVICE_PORT) private readonly authService: AuthServicePort,
         private readonly listDocumentsUC: ListDocumentsUC,
     ) { }
 
@@ -18,27 +16,23 @@ export class GetMyProjectByEventUC {
             throw new NotFoundException('No project found for this user in the specified event');
         }
 
-        const [participants, documents] = await Promise.all([
-            this.repo.listParticipants(project.id),
+        const [pendingParticipants, documents] = await Promise.all([
+            this.repo.listPendingParticipants(project.id),
             this.listDocumentsUC.execute({ projectId: project.id }),
         ]);
 
-        const participantsWithUserInfo: ProjectParticipantWithUserInfo[] = await Promise.all(
-            participants.map(async (participant) => {
-                const user = await this.authService.getUserById(participant.userId);
-
-                return {
-                    ...participant,
-                    firstName: user?.firstName ?? null,
-                    lastName: user?.lastName ?? null,
-                    email: user?.email ?? null,
-                };
-            }),
-        );
+        const participants: ProjectParticipantWithUserInfo[] = pendingParticipants.map((participant: any) => ({
+            userId: 0,
+            projectId: participant.projectId,
+            studentCode: participant.studentCode,
+            firstName: participant.firstName ?? null,
+            lastName: participant.lastName ?? null,
+            email: participant.email ?? null,
+        }));
 
         return {
             ...project,
-            participants: participantsWithUserInfo,
+            participants,
             documents,
         };
     }
