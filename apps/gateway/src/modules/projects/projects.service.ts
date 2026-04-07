@@ -195,6 +195,8 @@ export class ProjectsService implements OnModuleInit {
             lastName: p.lastName,
             email: p.email,
             studentCode: p.studentCode,
+            semester: p.semester,
+            career: p.career,
           })),
           documents: [], // We'll add documents after upload
         }),
@@ -276,6 +278,8 @@ export class ProjectsService implements OnModuleInit {
           lastName: p.lastName,
           email: p.email,
           studentCode: p.studentCode,
+          semester: p.semester,
+          career: p.career,
         })) ?? [],
         documents: dto.documents?.map((d) => ({
           url: d.url,
