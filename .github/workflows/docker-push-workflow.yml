@@ -88,10 +88,10 @@ jobs:
       - name: post dinamic env value
         id: dinamic-env
         run: |
-          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".webhook_app_url")
-          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".app_uuid")
-          WEBHOOK_MIGRATION_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".webhook_migration_url")
-          MIGRATION_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".migration_uuid")
+          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".webhook_app_url")
+          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".app_uuid")
+          WEBHOOK_MIGRATION_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".webhook_migration_url")
+          MIGRATION_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".migration_uuid")
 
           echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
           echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
@@ -228,8 +228,8 @@ jobs:
       - name: post dinamic env value
         id: dinamic-env
         run: |
-          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".webhook_app_url")
-          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.ref_name }}\".\"${{ matrix.services }}\".app_uuid")
+          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".webhook_app_url")
+          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".app_uuid")
 
           echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
           echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
