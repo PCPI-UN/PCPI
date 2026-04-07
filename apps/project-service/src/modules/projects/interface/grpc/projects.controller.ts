@@ -221,6 +221,8 @@ async addPendingParticipantRpc(req: any) {
     lastName: req.lastName ?? undefined,
     email: req.email,
     studentCode: req.studentCode ?? undefined,
+    semester: req.semester,
+    career: req.career,
     status: protoToStatus(req.status),
   });
   return { participant: toProtoPendingParticipant(pendingParticipant) };
@@ -267,6 +269,8 @@ async createProjectWithPendingParticipantsRpc(req: any) {
             lastName: p.lastName ?? undefined,
             email: p.email,
             studentCode: p.studentCode,
+            semester: p.semester,
+            career: p.career,
             status: 'PENDING',
           });
           pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
