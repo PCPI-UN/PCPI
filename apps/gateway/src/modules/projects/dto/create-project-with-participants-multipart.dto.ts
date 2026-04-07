@@ -69,6 +69,8 @@ export class CreateProjectWithParticipantsMultipartDto {
         lastName: 'Pérez',
         email: 'juan@example.com',
         studentCode: '200178910',
+        semester: '6',
+        career: 'ing_sistemas',
       },
     ]),
     required: false,

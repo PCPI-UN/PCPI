@@ -49,5 +49,7 @@ export interface PendingProjectParticipant {
   lastName?: string | null;
   email: string;
   studentCode: string;
+  semester: string;
+  career: string;
   status: StudentStatus;
 }

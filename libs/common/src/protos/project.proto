@@ -121,11 +121,13 @@ message PendingProjectParticipant {
   string lastName = 4;
   string email = 5;
   string studentCode = 6;
-  string status = 7;
-  string invitedAt = 8;
-  string joinedAt = 9;
-  string createdAt = 10;
-  string updatedAt = 11;
+  string semester = 7;
+  string career = 8;
+  string status = 9;
+  string invitedAt = 10;
+  string joinedAt = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
 }
 
 message PendingParticipantInput {
@@ -133,7 +135,9 @@ message PendingParticipantInput {
   optional string lastName = 2;
   string email = 3;
   string studentCode = 4;
-  optional string status = 5; // PENDING (default), INVITED, JOINED - optional for public registration
+  string semester = 5;
+  string career = 6;
+  optional string status = 7; // PENDING (default), INVITED, JOINED - optional for public registration
 }
 
 message ProjectDocumentInput {
@@ -246,7 +250,9 @@ message AddPendingParticipantRequest {
   optional string lastName = 3;
   string email = 4;
   string studentCode = 5;
-  string status = 6;
+  string semester = 6;
+  string career = 7;
+  string status = 8;
 }
 message AddPendingParticipantResponse {
   PendingProjectParticipant participant = 1;

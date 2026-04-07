@@ -20,6 +20,8 @@ type AddPendingParticipantInput = {
   lastName?: string | null;
   email: string;
   studentCode: string;
+  semester: string;
+  career: string;
   status: 'PENDING' | 'INVITED' | 'JOINED';
 };
 
@@ -254,6 +256,8 @@ export class PrismaProjectRepository implements ProjectRepository {
           firstName: input.firstName,
           lastName: input.lastName ?? null,
           studentCode: input.studentCode,
+          semester: input.semester,
+          career: input.career,
           status: input.status,
         },
       });
@@ -266,6 +270,8 @@ export class PrismaProjectRepository implements ProjectRepository {
           lastName: input.lastName ?? null,
           email: input.email,
           studentCode: input.studentCode ?? null,
+          semester: input.semester,
+          career: input.career,
           status: input.status,
         },
       });
