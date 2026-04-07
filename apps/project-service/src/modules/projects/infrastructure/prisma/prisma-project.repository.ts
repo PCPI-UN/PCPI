@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../common/prisma/prisma.service';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
 import { PendingProjectParticipant, Project, TypedDocument } from '../../domain/entities/project.entity';
-import { ProjectDocument, ProjectState, JurorKey, ProjectParticipant, ProjectParticipantWithUserInfo } from '../../domain/entities/project.entity';
+import { ProjectDocument, ProjectState, JurorKey, ProjectParticipant } from '../../domain/entities/project.entity';
 
 
 type CreateProjectInput = {
@@ -24,15 +24,6 @@ type AddPendingParticipantInput = {
 };
 
 type ListOpts = { courseId?: number; q?: string; currentPage?: number; itemsPerPage?: number; state?: ProjectState };
-
-type ProjectParticipantRow = {
-  userId: number;
-  projectId: number;
-  studentCode: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-};
 
 @Injectable()
 export class PrismaProjectRepository implements ProjectRepository {
@@ -244,24 +235,6 @@ export class PrismaProjectRepository implements ProjectRepository {
       orderBy: { userId: 'asc' },
       select: { userId: true, projectId: true, studentCode: true },
     })) as unknown as ProjectParticipant[];
-  }
-
-  async listParticipantsWithUserInfo(projectId: number): Promise<ProjectParticipantWithUserInfo[]> {
-    const participants = await this.prisma.$queryRaw<ProjectParticipantRow[]>`
-      SELECT
-        pp.user_id AS "userId",
-        pp.project_id AS "projectId",
-        pp.student_code AS "studentCode",
-        u.first_name AS "firstName",
-        u.last_name AS "lastName",
-        u.email AS "email"
-      FROM "project_participants" pp
-      LEFT JOIN "public"."users" u ON u.id = pp.user_id
-      WHERE pp.project_id = ${projectId}
-      ORDER BY pp.user_id ASC
-    `;
-
-    return participants as ProjectParticipantWithUserInfo[];
   }
 
   async addPendingParticipant(input: AddPendingParticipantInput): Promise<PendingProjectParticipant> {

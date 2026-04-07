@@ -20,8 +20,11 @@ import { ListParticipantsUC } from './application/use-cases/list-participants.uc
 import { AddPendingParticipantUC } from './application/use-cases/add-pending-participant.us';
 import { ListPendingParticipantsUC } from './application/use-cases/list-pending-participants.uc';
 import { InvitationClientModule } from './invitation-client.module';
+import { AuthServiceModule } from './auth-service.module';
 import { EventServiceModule } from './event-service.module';
 import { EventServiceAdapter } from './infrastructure/grpc-client/event-service.adapter';
+import { AuthServiceAdapter } from './infrastructure/grpc-client/auth-service.adapter';
+import { AUTH_SERVICE_PORT } from './application/ports/auth-service.port';
 import { EVENT_SERVICE_PORT } from './application/ports/event-service.port';
 import { ListProjectsAssignedToJurorUC } from './application/use-cases/list-projects-assigned-to-juror.uc';
 import { NotificationServiceModule } from './notification-service.module';
@@ -33,12 +36,16 @@ import { UpdateProjectDocumentUC } from './application/use-cases/update-document
 
 @Module({
   controllers: [ProjectsController],
-  imports: [InvitationClientModule, EventServiceModule, NotificationServiceModule],
+  imports: [InvitationClientModule, AuthServiceModule, EventServiceModule, NotificationServiceModule],
   providers: [
     PrismaService,
     { provide: 'ProjectRepository', useClass: PrismaProjectRepository },
 
     CreateProjectUC,
+    {
+      provide: AUTH_SERVICE_PORT,
+      useExisting: AuthServiceAdapter,
+    },
     {
       provide: EVENT_SERVICE_PORT,
       useExisting: EventServiceAdapter,
