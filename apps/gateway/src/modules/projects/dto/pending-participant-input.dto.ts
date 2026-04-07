@@ -37,7 +37,7 @@ export class PendingParticipantInputDto {
 
   @ApiProperty({
     description: 'Current semester of the participant',
-    example: '6',
+    example: '6to Semestre',
   })
   @IsString()
   @IsNotEmpty()
