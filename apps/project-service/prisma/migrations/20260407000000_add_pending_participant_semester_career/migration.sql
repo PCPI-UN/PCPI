@@ -8,5 +8,3 @@ SET
   "career" = COALESCE(NULLIF("career", ''), 'Sin especificar');
 
 ALTER TABLE "public"."pending_project_participants"
-ALTER COLUMN "semester" SET NOT NULL,
-ALTER COLUMN "career" SET NOT NULL;
