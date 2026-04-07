@@ -256,7 +256,7 @@ export class PrismaProjectRepository implements ProjectRepository {
         u.last_name AS "lastName",
         u.email AS "email"
       FROM "project_participants" pp
-      LEFT JOIN "users" u ON u.id = pp.user_id
+      LEFT JOIN "public"."users" u ON u.id = pp.user_id
       WHERE pp.project_id = ${projectId}
       ORDER BY pp.user_id ASC
     `;
