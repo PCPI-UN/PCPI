@@ -1,14 +1,12 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
-import { ListParticipantsUC } from './list-participants.uc';
+import { ProjectParticipantWithUserInfo } from '../../domain/entities/project.entity';
 import { ListDocumentsUC } from './list-documents.uc';
-// Importa el caso de uso para Jurados si es necesario
 
 @Injectable()
 export class GetMyProjectByEventUC {
     constructor(
         @Inject('ProjectRepository') private readonly repo: ProjectRepository,
-        private readonly listParticipantsUC: ListParticipantsUC,
         private readonly listDocumentsUC: ListDocumentsUC,
     ) { }
 
@@ -18,18 +16,24 @@ export class GetMyProjectByEventUC {
             throw new NotFoundException('No project found for this user in the specified event');
         }
 
-        const [participants, documents] = await Promise.all([
-            this.listParticipantsUC.execute({ projectId: project.id }),
-            this.listDocumentsUC.execute({ projectId: project.id })
-            // Si necesitas los jurados asignados, también puedes ejecutar el caso de uso correspondiente aquí
+        const [pendingParticipants, documents] = await Promise.all([
+            this.repo.listPendingParticipants(project.id),
+            this.listDocumentsUC.execute({ projectId: project.id }),
         ]);
+
+        const participants: ProjectParticipantWithUserInfo[] = pendingParticipants.map((participant: any) => ({
+            userId: 0,
+            projectId: participant.projectId,
+            studentCode: participant.studentCode,
+            firstName: participant.firstName ?? null,
+            lastName: participant.lastName ?? null,
+            email: participant.email ?? null,
+        }));
 
         return {
             ...project,
             participants,
-            documents
-            // Incluye los jurados asignados si es necesario
-        }
-    };
-
+            documents,
+        };
+    }
 }

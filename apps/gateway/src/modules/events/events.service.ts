@@ -642,8 +642,22 @@ export class EventService implements OnModuleInit {
             this.projectsService.getMyProjectByEvent(userId, eventId),
             this.get({ id: eventId }),
         ]);
+
+        const project = projectResponse.project
+            ? {
+                ...projectResponse.project,
+                participants: (projectResponse.project.participants ?? []).map(
+                    ({ studentCode, ...participant }) => ({
+                        ...participant,
+                        ParticipantCode: studentCode,
+                    }),
+                ),
+            }
+            : undefined;
+
         return {
-            project: projectResponse.project, event: eventResponse.event,
+            project,
+            event: eventResponse.event,
         }
     }
 }
