@@ -70,7 +70,7 @@ export class CreateProjectWithParticipantsMultipartDto {
         email: 'juan@example.com',
         studentCode: '200178910',
         semester: '6',
-        career: 'Ingenieria de Sistemas',
+        career: 'ing_sistemas',
       },
     ]),
     required: false,

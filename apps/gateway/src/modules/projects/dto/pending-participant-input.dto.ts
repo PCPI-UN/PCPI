@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsNumberString, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class PendingParticipantInputDto {
@@ -37,15 +37,15 @@ export class PendingParticipantInputDto {
 
   @ApiProperty({
     description: 'Current semester of the participant',
-    example: '6to Semestre',
+    example: '6',
   })
-  @IsString()
+  @IsNumberString()
   @IsNotEmpty()
   semester: string;
 
   @ApiProperty({
     description: 'Academic career or program of the participant',
-    example: 'Ingenieria de Sistemas',
+    example: 'ing_sistemas',
   })
   @IsString()
   @IsNotEmpty()
