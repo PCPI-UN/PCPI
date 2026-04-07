@@ -44,10 +44,12 @@ jobs:
     runs-on: ubuntu-24.04
     needs: search-individual-migration-service-changes
     if: ${{ 
-        needs.search-individual-migration-service-changes.outputs.services != '[]' &&
-        !contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'notification-service') &&
-        !contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'gateway')
-        }}
+      contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'auth-service') ||
+      contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'evaluation-service') ||
+      contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'event-service') ||
+      contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'invitation-service') ||
+      contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'project-service')
+      }}
 
     strategy:
       fail-fast: false
