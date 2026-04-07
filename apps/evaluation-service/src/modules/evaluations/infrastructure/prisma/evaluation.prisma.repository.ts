@@ -233,9 +233,11 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
         // Get all evaluation details with criterion info (including category and weight)
         const evaluationDetails = await this.prisma.evaluationDetail.findMany({
             where: {
-                evaluation: {
-                    projectId,
-                },
+                projectId,
+                comments: { not: null },
+            },
+            select: {
+                comments: true,
             },
             include: {
                 criterion: {

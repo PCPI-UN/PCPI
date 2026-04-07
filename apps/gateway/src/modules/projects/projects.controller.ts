@@ -9,8 +9,10 @@ import {
   UploadedFiles,
   UseInterceptors,
   Get,
-  Query
+  Query,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,

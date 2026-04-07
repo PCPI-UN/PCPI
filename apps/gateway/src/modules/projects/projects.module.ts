@@ -9,6 +9,17 @@ import {
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
+import { ExcelExportService } from './excel-export.service';
+
+import {
+  EVENT_SERVICE_NAME,
+  protobufPackage as eventProtobufPackage,
+} from '@app/common/generated/event';
+
+import {
+  EVALUATION_SERVICE_NAME,
+  protobufPackage as evaluationProtobufPackage,
+} from '@app/common/generated/evaluation';
 
 import {
   EVENT_SERVICE_NAME,
@@ -99,7 +110,7 @@ import {
     ]),
   ],
   controllers: [ProjectsController],
-  providers: [ProjectsService, AzureBlobUploadService],
+  providers: [ProjectsService, AzureBlobUploadService, ExcelExportService],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}
