@@ -44,7 +44,7 @@ jobs:
         id: obtain-coolify-url-token
         run: |
           COOLIFY_URL=$(echo "$COOLIFY_URLS_TOKENS_JSON" | jq -r ".\"${{ github.base_ref }}\".url")
-          COOLIFY_TOKEN=$(echo "$CCOOLIFY_URLS_TOKENS_JSON" | jq -r ".\"${{ github.base_ref }}\".token")
+          COOLIFY_TOKEN=$(echo "$COOLIFY_URLS_TOKENS_JSON" | jq -r ".\"${{ github.base_ref }}\".token")
           echo "coolify_url=$COOLIFY_URL" >> $GITHUB_OUTPUT
           echo "coolify_token=$COOLIFY_TOKEN" >> $GITHUB_OUTPUT
         
