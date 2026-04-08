@@ -31,7 +31,6 @@ import { ApproveProjectDto } from './dto/approve-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
 import { TypedDocument, ProjectDocumentInputDto } from './dto/project-document-input.dto';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
-import { ExcelExportService } from './excel-export.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
 import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
 import { UpdateProjectDocumentDto, DocumentStatusFilter } from './dto/update-project-document.dto';
