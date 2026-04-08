@@ -1,5 +1,5 @@
-import { Controller } from '@nestjs/common';
-import { GrpcMethod } from '@nestjs/microservices';
+import { Controller, Inject, Injectable } from '@nestjs/common';
+import { GrpcMethod, RpcException } from '@nestjs/microservices';
 import { CreateProjectUC } from '../../application/use-cases/create-project.uc';
 import { ListProjectsByEventUC } from '../../application/use-cases/list-projects-by-event.uc';
 import { GetProjectUC } from '../../application/use-cases/get-project.uc';
@@ -22,9 +22,32 @@ import { RejectProjectUC } from '../../application/use-cases/reject-project.uc';
 import { ListProjectsForReviewUC } from '../../application/use-cases/list-projects-for-review.uc';
 import { ListProjectsByFilterDTO } from '../../application/dto/list-projects.dto';
 import { UpdateProjectDocumentUC } from '../../application/use-cases/update-document.uc';
+import { RequestChangesProjectUC } from '../../application/use-cases/request-changes-project.uc';
+import { GetMyProjectByEventUC } from '../../application/use-cases/get-my-project-by-event.uc';
+import { CheckActiveSubmissionByEmailsUC } from '../../application/use-cases/check-active-submission-by-emails.uc';
+import { ClientGrpc } from '@nestjs/microservices';
+import { INVITATION_SERVICE_NAME } from '@app/common/generated/invitation';
+import { lastValueFrom } from 'rxjs';
+import { status } from '@grpc/grpc-js';
 
+interface InvitationGrpcService {
+  CreateInvitation(data: {
+    email: string;
+    eventType: string;
+    targetType: string;
+    targetId: number;
+    invitedByUserId: number;
+    roleIds: number[];
+    firstName?: string;
+    lastName?: string;
+  }): any;
+}
+
+@Injectable()
 @Controller()
 export class ProjectsController {
+  private invitationService: InvitationGrpcService;
+
   constructor(
     private readonly createProject: CreateProjectUC,
     private readonly getProject: GetProjectUC,
@@ -35,6 +58,7 @@ export class ProjectsController {
     private readonly updateProjectUC: UpdateProjectUC,
     private readonly approveProjectUC: ApproveProjectUC,
     private readonly rejectProjectUC: RejectProjectUC,
+    private readonly requestChangesProjectUC: RequestChangesProjectUC,
     private readonly assignJurorBulkUC: AssignJurorBulkUC,
     private readonly reassignProjectJurorUC: ReassignProjectJurorUC,
     private readonly listProjectJurorsUC: ListProjectJurorsUC, 
@@ -46,8 +70,15 @@ export class ProjectsController {
     private readonly notificateStudentUC: NotificateStudentUC,  
     private readonly listProjectsForReviewUC: ListProjectsForReviewUC,  
     private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
-
+    private readonly getMyProjectByEventUC: GetMyProjectByEventUC,
+    private readonly checkActiveSubmissionByEmailsUC: CheckActiveSubmissionByEmailsUC,
+    @Inject(INVITATION_SERVICE_NAME) private readonly client: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.invitationService =
+      this.client.getService<InvitationGrpcService>('InvitationService');
+  }
 
   @GrpcMethod('ProjectsService', 'CreateProject')
   async createProjectRpc(req: any) {
@@ -129,6 +160,16 @@ export class ProjectsController {
     return { project: toProtoProject(updated) };
   }
 
+  @GrpcMethod('ProjectsService', 'RequestChangesProject')
+  async requestChangesProject(req: {id: number; actingUserId: number; reason?: string}) {
+    const updated = await this.requestChangesProjectUC.execute({
+      id: req.id,
+      actingUserId: req.actingUserId,
+      reason: req.reason
+    })
+    return { project: toProtoProject(updated) }
+  }
+
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')
   async assignJurorToProjectsRpc(req: any) {
     console.log('[ProjectsService] AssignJurorToProjects RPC input:', req);
@@ -180,6 +221,8 @@ async addPendingParticipantRpc(req: any) {
     lastName: req.lastName ?? undefined,
     email: req.email,
     studentCode: req.studentCode ?? undefined,
+    semester: req.semester,
+    career: req.career,
     status: protoToStatus(req.status),
   });
   return { participant: toProtoPendingParticipant(pendingParticipant) };
@@ -194,6 +237,14 @@ async listPendingParticipantsRpc(req: { projectId: number }) {
 
 @GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
 async createProjectWithPendingParticipantsRpc(req: any) {
+  if (req.participants && req.participants.length > 0) {
+    const emails = req.participants.map((p: any) => p.email);
+    const { hasConflict, conflictEmails } = await this.checkActiveSubmissionByEmailsUC.execute({ eventId: req.eventId, emails });
+    if (hasConflict) {
+      throw new RpcException({ code: status.ALREADY_EXISTS, message: `Conflicting active submissions found for emails: ${conflictEmails.join(', ')}` });
+    }
+  }
+
   try {
     const project = await this.createProject.execute({
       eventId: req.eventId,
@@ -211,31 +262,43 @@ async createProjectWithPendingParticipantsRpc(req: any) {
      
     if (req.participants && req.participants.length > 0) {
       try {
-      for (const p of req.participants) {
-        const pendingParticipant = await this.addPendingParticipantUC.execute({
-          projectId: project.id,
-          firstName: p.firstName,
-          lastName: p.lastName ?? undefined,
-          email: p.email,
-          studentCode: p.studentCode,
-          status: 'PENDING',
-        });
-        pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
-      }
+        for (const p of req.participants) {
+          const pendingParticipant = await this.addPendingParticipantUC.execute({
+            projectId: project.id,
+            firstName: p.firstName,
+            lastName: p.lastName ?? undefined,
+            email: p.email,
+            studentCode: p.studentCode,
+            semester: p.semester,
+            career: p.career,
+            status: 'PENDING',
+          });
+          pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
+        }
+
       } catch (error) {
         // Si hay un error al agregar participantes, eliminamos el proyecto creado
         console.error('❌ Error adding pending participants, deleting project:', error);
         await this.deleteProjectUC.execute({ id: project.id! });
-      throw error;
-    }
-      //notificamos al primer participante
-      const firstParticipant = req.participants[0];
-      await this.notificateStudentUC.execute({
-        firstName: firstParticipant.firstName,
-        lastName: firstParticipant.lastName ?? '',
-        email: firstParticipant.email,
-        projectName: project.name,
-      });
+        throw error;
+      }
+      console.log('eventType=', req.eventType, JSON.stringify(req));
+      for (const pending of pendingParticipants) {
+        const obs$ = this.invitationService.CreateInvitation({
+          email: pending.email,            // ajusta al nombre real
+          eventType: req.eventType,
+          targetType: 'PROJECT',
+          targetId: project.id!,
+          invitedByUserId: 1, // AJUSTA: quién envía la invitación
+          roleIds: [5], // AJUSTA: roles si es necesario
+          firstName: pending.firstName,
+          lastName: pending.lastName ?? '',
+        });
+        //console.log('Sending invitation to:', pending.email);
+        //console.log('Invitation observable:', obs$);
+
+        await lastValueFrom(obs$);
+      }
     }
 
     // Manejo de documentos del proyecto
@@ -314,4 +377,11 @@ async updateProjectDocumentRpc(req: any) {
   return { document: toProtoDocument(updatedDoc) };
 
 }
+
+@GrpcMethod('ProjectsService', 'GetMyProjectByEvent')
+async getMyProjectByEventRpc(req: { eventId: number; userId: number }) {
+  const project = await this.getMyProjectByEventUC.execute({ eventId: req.eventId, userId: req.userId });
+  return { project: toProtoProjectComplete(project)};
+}
+
 }

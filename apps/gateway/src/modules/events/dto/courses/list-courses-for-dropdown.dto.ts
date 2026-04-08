@@ -6,10 +6,11 @@ export class ListCoursesForDropdownDTO {
   @ApiProperty({
     description: 'ID of the event to get courses for',
     example: 1,
+    required: false,
   })
-  @IsInt() @IsPositive()
+  @IsInt() @IsOptional() @IsPositive()
   @Type(() => Number)
-  eventId: number;
+  eventId?: number;
 
   @ApiProperty({
     description: 'Filter to only include active courses',

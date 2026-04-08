@@ -23,7 +23,7 @@ export class UserMapper {
       lastName: domainUser.lastName,
       email: domainUser.email,
       password: domainUser.password ?? null,
-      phone: domainUser.phone,
+      phone: domainUser.phone ?? null,
       active: domainUser.active,
       status: domainUser.status as PrismaUserStatus,
       oid: domainUser.oid ?? null,

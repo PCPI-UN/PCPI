@@ -9,6 +9,8 @@ service AuthService {
   // ---- AUTH MODULE ----
   // Sends a login request
   rpc Login (LoginRequest) returns (LoginResponse) {}
+  // Sends a signup request
+  rpc Signup (SignupRequest) returns (SignupResponse) {}
   // Refreshes the session of a user
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
   // Sets the password for a user account
@@ -37,6 +39,8 @@ service AuthService {
   rpc ActivateUser(ActivateUserRequest) returns (ActivateUserResponse);
   // Activates a user by linking their Microsoft account
   rpc ActivateUserWithMicrosoft(ActivateUserWithMicrosoftRequest) returns (ActivateUserResponse);
+  // Activates a user using their token
+  rpc ActivateUserWithToken(ActivateUserWithTokenRequest) returns (ActivateUserResponse);
 
   // Retrieves a user by their ID
   rpc GetUser (GetUserRequest) returns (User) {}
@@ -82,6 +86,24 @@ message LoginResponse {
   string refreshToken = 2;
 }
 
+// The request message containing the user's information.
+message SignupRequest {
+  string email = 1;
+  string password = 2;
+  string firstName = 3;
+  string lastName = 4;
+}
+
+message SignupResponse {
+  int32 id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string phone = 5;
+  bool active = 6;
+  string status = 7;
+}
+
 // The request message for refreshing a token.
 message RefreshRequest {
   string refreshToken = 1;
@@ -121,6 +143,10 @@ message ActivateUserRequest {
 message ActivateUserWithMicrosoftRequest {
   int32 userId = 1;
   string token = 2;
+}
+
+message ActivateUserWithTokenRequest {
+  string token = 1;
 }
 
 message ActivateUserResponse {

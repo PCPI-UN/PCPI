@@ -16,6 +16,12 @@ export class AddPendingParticipantUC {
     if (!input.studentCode || input.studentCode.trim().length === 0) {
       throw new ValidationError('studentCode is required');
     }
+    if (!input.semester || input.semester.trim().length === 0) {
+      throw new ValidationError('semester is required');
+    }
+    if (!input.career || input.career.trim().length === 0) {
+      throw new ValidationError('career is required');
+    }
     const p = await this.repo.findById(input.projectId);
     if (!p) throw new NotFoundError('Project not found');
     
@@ -26,6 +32,8 @@ export class AddPendingParticipantUC {
         lastName: input.lastName,
         email: input.email,
         studentCode: input.studentCode,
+        semester: input.semester.trim(),
+        career: input.career.trim(),
         status: input.status || 'PENDING',
     });
   }

@@ -25,11 +25,13 @@ service ProjectsService {
 
   rpc UpdateProject (UpdateProjectRequest) returns (ProjectResponse);      
   rpc ApproveProject (ApproveProjectRequest) returns (ProjectResponse);
-  rpc RejectProject (RejectProjectRequest) returns (ProjectResponse);     
+  rpc RejectProject (RejectProjectRequest) returns (ProjectResponse);
+  rpc RequestChangesProject (RequestChangesProjectRequest) returns (ProjectResponse);
   rpc AssignJurorToProjects (AssignJurorToProjectsRequest) returns (AssignJurorToProjectsResponse); 
   rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
   rpc ListAssignedProjects(ListAssignedProjectsRequest) returns (ListAssignedProjectsResponse);
+  rpc GetMyProjectByEvent (GetMyProjectByEventRequest) returns (GetMyProjectByEventResponse);
 
   rpc ListProjectsForReview(ListProjectsForReviewRequest) returns (ListProjectsForReviewResponse);
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
@@ -41,6 +43,7 @@ enum ProjectState {
   UNDER_REVIEW = 1;
   APPROVED = 2;
   REJECTED = 3;
+  REQUEST_CHANGES = 4;
 }
 
 enum TypedDocument {
@@ -73,7 +76,7 @@ message Project {
   string updatedAt = 7; 
   int32 courseId = 8;
   ProjectState state = 9;
-  optional string rejectionReason = 10;
+  optional string reason = 10;
 }
 
 message ProjectComplete {
@@ -86,7 +89,7 @@ message ProjectComplete {
   string updatedAt = 7; 
   int32 courseId = 8;
   ProjectState state = 9;
-  optional string rejectionReason = 10;
+  optional string reason = 10;
   repeated ProjectParticipant participants = 11;
   repeated ProjectDocument documents = 12;
   repeated PendingProjectParticipant pendingParticipants = 13;
@@ -106,6 +109,9 @@ message ProjectParticipant {
   int32 userId = 1;
   int32 projectId = 2;
   string studentCode = 3; 
+  optional string firstName = 4;
+  optional string lastName = 5;
+  optional string email = 6;
 }
 
 message PendingProjectParticipant {
@@ -115,11 +121,13 @@ message PendingProjectParticipant {
   string lastName = 4;
   string email = 5;
   string studentCode = 6;
-  string status = 7;
-  string invitedAt = 8;
-  string joinedAt = 9;
-  string createdAt = 10;
-  string updatedAt = 11;
+  string semester = 7;
+  string career = 8;
+  string status = 9;
+  string invitedAt = 10;
+  string joinedAt = 11;
+  string createdAt = 12;
+  string updatedAt = 13;
 }
 
 message PendingParticipantInput {
@@ -127,7 +135,9 @@ message PendingParticipantInput {
   optional string lastName = 2;
   string email = 3;
   string studentCode = 4;
-  optional string status = 5; // PENDING (default), INVITED, JOINED - optional for public registration
+  string semester = 5;
+  string career = 6;
+  optional string status = 7; // PENDING (default), INVITED, JOINED - optional for public registration
 }
 
 message ProjectDocumentInput {
@@ -183,6 +193,12 @@ message RejectProjectRequest {
   optional string reason = 3; // Reason for rejection (stored in database)
 }
 
+message RequestChangesProjectRequest {
+  int32 id = 1;
+  int32 actingUserId = 2;
+  string reason = 3;
+}
+
 // Service will:
 // 1. Validate all projects exist and belong to the same event
 // 2. Call event-service to verify userId is a juror in that event
@@ -234,7 +250,9 @@ message AddPendingParticipantRequest {
   optional string lastName = 3;
   string email = 4;
   string studentCode = 5;
-  string status = 6;
+  string semester = 6;
+  string career = 7;
+  string status = 8;
 }
 message AddPendingParticipantResponse {
   PendingProjectParticipant participant = 1;
@@ -252,6 +270,7 @@ message CreateProjectWithParticipantsRequest {
   optional ProjectState state = 6; // Optional - backend defaults to UNDER_REVIEW for public submissions
   repeated PendingParticipantInput participants = 7;
   repeated ProjectDocumentInput documents = 8;
+  string eventType = 9;
 }
 
 message CreateProjectWithParticipantsResponse {
@@ -297,4 +316,13 @@ message UpdateProjectDocumentRequest {
   optional string url = 2;         // si viene vacío, no lo cambias
   optional TypedDocument type = 3;  // si viene DOCUMENT_TYPE_UNSPECIFIED, no lo cambias
   optional DocumentStatus state = 4; // igual idea
+}
+
+message GetMyProjectByEventRequest {
+  int32 eventId = 1;
+  int32 userId = 2;
+}
+
+message GetMyProjectByEventResponse {
+  ProjectComplete project = 1;
 }

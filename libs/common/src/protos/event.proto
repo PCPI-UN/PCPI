@@ -12,9 +12,7 @@ service EventService {
   rpc GetEvent (GetEventRequest) returns (GetEventResponse) {}
   rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse) {}
   rpc ListMyEvents (ListMyEventsRequest) returns (ListMyEventsResponse) {}
-  // Public endpoint for listing all events - used for public event browsing and admin event management
   rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
-  // Get event status mappings for gateway caching
   rpc GetEventStatuses (GetEventStatusesRequest) returns (GetEventStatusesResponse) {}
 
   // ---- EVENT MEMBERS ----
@@ -23,34 +21,91 @@ service EventService {
   rpc GetEventMember (GetEventMemberRequest) returns (GetEventMemberResponse) {}
   rpc ListEventMembers (ListEventMembersRequest) returns (ListEventMembersResponse) {}
 
-  // ---- COURSES ----
+  // ---- LEGACY COURSES ----
   rpc CreateCourse (CreateCourseRequest) returns (CreateCourseResponse) {}
   rpc UpdateCourse (UpdateCourseRequest) returns (UpdateCourseResponse) {}
   rpc GetCourse (GetCourseRequest) returns (GetCourseResponse) {}
   rpc ListCourses (ListCoursesRequest) returns (ListCoursesResponse) {}
   rpc DeleteCourse (DeleteCourseRequest) returns (DeleteCourseResponse) {}
-  rpc ListCoursesByEvent (ListCoursesByEventRequest) returns (ListCoursesResponse);
+  rpc ListCoursesByEvent (ListCoursesByEventRequest) returns (ListCoursesResponse) {}
   rpc ListCoursesForDropdown (ListCoursesForDropdownRequest) returns (ListCoursesForDropdownResponse) {}
+
+  // ---- CATEGORIES ----
+  rpc CreateCategory (CreateCategoryRequest) returns (CreateCategoryResponse) {}
+  rpc UpdateCategory (UpdateCategoryRequest) returns (UpdateCategoryResponse) {}
+  rpc GetCategory (GetCategoryRequest) returns (GetCategoryResponse) {}
+  rpc ListCategories (ListCategoriesRequest) returns (ListCategoriesResponse) {}
+  rpc DeleteCategory (DeleteCategoryRequest) returns (DeleteCategoryResponse) {}
+  rpc ListCategoriesByEvent (ListCategoriesByEventRequest) returns (ListCategoriesResponse) {}
+
+  // ---- CATEGORY AWARDS ----
+  rpc CreateCategoryAward (CreateCategoryAwardRequest) returns (CreateCategoryAwardResponse) {}
+  rpc UpdateCategoryAward (UpdateCategoryAwardRequest) returns (UpdateCategoryAwardResponse) {}
+  rpc GetCategoryAward (GetCategoryAwardRequest) returns (GetCategoryAwardResponse) {}
+  rpc ListCategoryAwards (ListCategoryAwardsRequest) returns (ListCategoryAwardsResponse) {}
+  rpc DeleteCategoryAward (DeleteCategoryAwardRequest) returns (DeleteCategoryAwardResponse) {}
+
+  // ---- AWARD WINNERS ----
+  rpc CreateAwardWinner (CreateAwardWinnerRequest) returns (CreateAwardWinnerResponse) {}
+  rpc UpdateAwardWinner (UpdateAwardWinnerRequest) returns (UpdateAwardWinnerResponse) {}
+  rpc GetAwardWinner (GetAwardWinnerRequest) returns (GetAwardWinnerResponse) {}
+  rpc ListAwardWinners (ListAwardWinnersRequest) returns (ListAwardWinnersResponse) {}
+  rpc DeleteAwardWinner (DeleteAwardWinnerRequest) returns (DeleteAwardWinnerResponse) {}
+
+  // ---- EVENT INSCRIPTION DETAILS ----
+  rpc CreateEventInscriptionDetail (CreateEventInscriptionDetailRequest) returns (CreateEventInscriptionDetailResponse) {}
+  rpc UpdateEventInscriptionDetail (UpdateEventInscriptionDetailRequest) returns (UpdateEventInscriptionDetailResponse) {}
+  rpc GetEventInscriptionDetail (GetEventInscriptionDetailRequest) returns (GetEventInscriptionDetailResponse) {}
+  rpc ListEventInscriptionDetails (ListEventInscriptionDetailsRequest) returns (ListEventInscriptionDetailsResponse) {}
+  rpc DeleteEventInscriptionDetail (DeleteEventInscriptionDetailRequest) returns (DeleteEventInscriptionDetailResponse) {}
+
+  // ---- EVENT RECAPS ----
+  rpc CreateEventRecap (CreateEventRecapRequest) returns (CreateEventRecapResponse) {}
+  rpc UpdateEventRecap (UpdateEventRecapRequest) returns (UpdateEventRecapResponse) {}
+  rpc GetEventRecap (GetEventRecapRequest) returns (GetEventRecapResponse) {}
+  rpc ListEventRecaps (ListEventRecapsRequest) returns (ListEventRecapsResponse) {}
+  rpc DeleteEventRecap (DeleteEventRecapRequest) returns (DeleteEventRecapResponse) {}
 }
 
 // =====================
-//        MODELS
+//        ENUMS
 // =====================
-message Course {
-  int32 id = 1;
-  int32 eventId = 2;      // relación 1:N (un evento tiene muchos cursos)
-  string code = 3;        // ej: "SYSENG", "MECHENG", "INDENG"
-  string description = 4; // opcional
-  bool active = 5;
-  string createdAt = 6;
-  string updatedAt = 7;
+enum EventStatus {
+  UNSPECIFIED = 0;
+  UPCOMING = 1;
+  REGISTRATION_CLOSED = 2;
+  AVAILABLE = 3;
+  CLOSED = 4;
 }
+
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EXPO = 1;
+  COMPETENCIA = 2;
+}
+
+enum EvaluationType {
+  EVALUATION_TYPE_UNSPECIFIED = 0;
+  ZERO_TO_FIVE = 1;
+  ZERO_TO_HUNDRED = 2;
+}
+
+// =====================
+//        SHARED
+// =====================
+message PaginationMetadata {
+  int32 total = 1;
+  int32 itemsOnCurrentPage = 2;
+  int32 itemsPerPage = 3;
+  int32 currentPage = 4;
+  int32 totalPages = 5;
+}
+
+message Empty {}
 
 // =====================
 //      EVENTS MODULE
 // =====================
-
-// Event Proto - standard event representation
 message EventProto {
   int32 id = 1;
   string name = 2;
@@ -66,6 +121,16 @@ message EventProto {
   string updatedAt = 12;
   string location = 13;
   EventStatus status = 14;
+  double inscriptionCost = 15;
+  string locationDetails = 16;
+  EventType eventType = 17;
+  repeated string collaborators = 18;
+  repeated string organizers = 19;
+  int32 createdByUserId = 20;
+  EvaluationType evaluationType = 21;
+  string inscriptionRequirements = 22;
+  int32 minimumTeamSize = 23;
+  string aboutOurAllies = 24;
 }
 
 message CreateEventRequest {
@@ -79,6 +144,15 @@ message CreateEventRequest {
   string description = 8;
   string location = 9;
   optional int32 createdByUserId = 10;
+  EventType eventType = 11;
+  optional double inscriptionCost = 12;
+  optional string locationDetails = 13;
+  repeated string collaborators = 14;
+  repeated string organizers = 15;
+  optional EvaluationType evaluationType = 16;
+  optional string inscriptionRequirements = 17;
+  optional int32 minimumTeamSize = 18;
+  optional string aboutOurAllies = 19;
 }
 
 message CreateEventResponse {
@@ -97,6 +171,15 @@ message UpdateEventRequest {
   string endDate = 9;
   bool active = 10;
   string location = 11;
+  EventType eventType = 12;
+  optional double inscriptionCost = 13;
+  optional string locationDetails = 14;
+  repeated string collaborators = 15;
+  repeated string organizers = 16;
+  optional EvaluationType evaluationType = 17;
+  optional string inscriptionRequirements = 18;
+  optional int32 minimumTeamSize = 19;
+  optional string aboutOurAllies = 20;
 }
 
 message UpdateEventResponse {
@@ -111,8 +194,6 @@ message GetEventResponse {
   EventProto event = 1;
 }
 
-
-
 message DeleteEventRequest {
   int32 id = 1;
 }
@@ -121,11 +202,10 @@ message DeleteEventResponse {
   bool ok = 1;
 }
 
-// New ListMyEvents messages
 message ListMyEventsRequest {
   int32 userId = 1;
-  optional int32 page = 2;    // default: 1
-  optional int32 limit = 3;   // default: 10, max: 50
+  optional int32 page = 2;
+  optional int32 limit = 3;
 }
 
 message EventWithRole {
@@ -143,22 +223,17 @@ message EventWithRole {
   string updatedAt = 12;
   string location = 13;
   EventStatus status = 14;
-  int32 roleId = 15;  // Role ID only - gateway will enrich with role details
-}
-
-message EventRole {
-  int32 id = 1;
-  string name = 2;
-  string scope = 3;        // "PLATFORM" or "EVENT"
-  string description = 4;
-}
-
-message PaginationMetadata {
-  int32 total = 1;
-  int32 itemsOnCurrentPage = 2;
-  int32 itemsPerPage = 3;
-  int32 currentPage = 4;
-  int32 totalPages = 5;
+  int32 roleId = 15;
+  double inscriptionCost = 16;
+  string locationDetails = 17;
+  EventType eventType = 18;
+  repeated string collaborators = 19;
+  repeated string organizers = 20;
+  int32 createdByUserId = 21;
+  EvaluationType evaluationType = 22;
+  string inscriptionRequirements = 23;
+  int32 minimumTeamSize = 24;
+  string aboutOurAllies = 25;
 }
 
 message ListMyEventsResponse {
@@ -166,13 +241,13 @@ message ListMyEventsResponse {
   PaginationMetadata meta = 2;
 }
 
-// Public listing of events - for browsing and admin management
 message ListEventsRequest {
-  optional int32 page = 1;       // default: 1
-  optional int32 limit = 2;      // default: 10
-  optional string q = 3;         // search query (name/description)
-  optional bool onlyActive = 4;  // default: true
-  optional EventStatus status = 5;  // filter by status (UPCOMING, AVAILABLE, CLOSED)
+  optional int32 page = 1;
+  optional int32 limit = 2;
+  optional string q = 3;
+  optional bool onlyActive = 4;
+  optional EventStatus status = 5;
+  repeated EventStatus statuses = 6;
 }
 
 message ListEventsResponse {
@@ -180,13 +255,12 @@ message ListEventsResponse {
   PaginationMetadata meta = 2;
 }
 
-// Get Event Statuses - for gateway caching
 message GetEventStatusesRequest {}
 
 message EventStatusMapping {
-  int32 value = 1;       // Numeric enum value (0, 1, 2, 3, 4)
-  string name = 2;       // String name (UNSPECIFIED, UPCOMING, REGISTRATION_CLOSED, AVAILABLE, CLOSED)
-  string description = 3; // Human-readable description
+  int32 value = 1;
+  string name = 2;
+  string description = 3;
 }
 
 message GetEventStatusesResponse {
@@ -196,7 +270,6 @@ message GetEventStatusesResponse {
 // =====================
 //  EVENT MEMBERS MODULE
 // =====================
-
 message CreateEventMemberRequest {
   int32 eventId = 1;
   int32 userId = 2;
@@ -253,14 +326,29 @@ message ListEventMembersResponse {
 }
 
 // =====================
-//     COURSES MODULE
+//   LEGACY COURSES
 // =====================
+message Course {
+  int32 id = 1;
+  int32 eventId = 2;
+  string code = 3;
+  string description = 4;
+  bool active = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+message CourseDropdown {
+  int32 id = 1;
+  string code = 2;
+  string description = 3;
+}
 
 message CreateCourseRequest {
-  int32 eventId = 1;       // obligatorio (a qué evento pertenece)
-  string code = 2;         // único dentro del evento
-  string description = 3;  // opcional
-  bool active = 4;
+  int32 eventId = 1;
+  string code = 2;
+  optional string description = 3;
+  optional bool active = 4;
 }
 
 message CreateCourseResponse {
@@ -270,9 +358,9 @@ message CreateCourseResponse {
 
 message UpdateCourseRequest {
   int32 id = 1;
-  string code = 2;
-  string description = 3;
-  bool active = 4;
+  optional string code = 2;
+  optional string description = 3;
+  optional bool active = 4;
 }
 
 message UpdateCourseResponse {
@@ -289,16 +377,33 @@ message GetCourseResponse {
 }
 
 message ListCoursesRequest {
-  optional int32 eventId = 1; // optional filter by event
+  optional int32 eventId = 1;
   optional bool onlyActive = 2;
   optional int32 page = 3;
   optional int32 limit = 4;
-  optional string q = 5; // search by code/description
+  optional string q = 5;
+}
+
+message ListCoursesByEventRequest {
+  int32 eventId = 1;
+  optional bool onlyActive = 2;
+  optional int32 page = 3;
+  optional int32 limit = 4;
+  optional string q = 5;
 }
 
 message ListCoursesResponse {
   repeated Course courses = 1;
   PaginationMetadata meta = 2;
+}
+
+message ListCoursesForDropdownRequest {
+  int32 eventId = 1;
+  optional bool onlyActive = 2;
+}
+
+message ListCoursesForDropdownResponse {
+  repeated CourseDropdown courses = 1;
 }
 
 message DeleteCourseRequest {
@@ -308,35 +413,334 @@ message DeleteCourseRequest {
 message DeleteCourseResponse {
   bool ok = 1;
 }
-message ListCoursesByEventRequest {
-  int32 eventId = 1;      // required
+
+// =====================
+//      CATEGORIES
+// =====================
+message CategoryProto {
+  int32 id = 1;
+  int32 eventId = 2;
+  string name = 3;
+  string description = 4;
+  bool active = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+message CreateCategoryRequest {
+  int32 eventId = 1;
+  string name = 2;
+  string description = 3;
+  bool active = 4;
+}
+
+message CreateCategoryResponse {
+  CategoryProto category = 1;
+}
+
+message UpdateCategoryRequest {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  bool active = 4;
+}
+
+message UpdateCategoryResponse {
+  CategoryProto category = 1;
+}
+
+message GetCategoryRequest {
+  int32 id = 1;
+}
+
+message GetCategoryResponse {
+  CategoryProto category = 1;
+}
+
+message ListCategoriesRequest {
+  optional int32 eventId = 1;
   optional bool onlyActive = 2;
   optional int32 page = 3;
   optional int32 limit = 4;
-  optional string q = 5; // search by code/description
+  optional string q = 5;
 }
 
-message CourseDropdown {
+message ListCategoriesByEventRequest {
+  int32 eventId = 1;
+  optional bool onlyActive = 2;
+  optional int32 page = 3;
+  optional int32 limit = 4;
+  optional string q = 5;
+}
+
+message ListCategoriesResponse {
+  repeated CategoryProto categories = 1;
+  PaginationMetadata meta = 2;
+}
+
+message DeleteCategoryRequest {
   int32 id = 1;
-  string code = 2;
+}
+
+message DeleteCategoryResponse {
+  bool ok = 1;
+}
+
+// =====================
+//   CATEGORY AWARDS
+// =====================
+message CategoryAwardProto {
+  int32 id = 1;
+  int32 categoryId = 2;
+  string title = 3;
+  string description = 4;
+  double value = 5;
+  int32 position = 6;
+  string createdAt = 7;
+  string updatedAt = 8;
+}
+
+message CreateCategoryAwardRequest {
+  int32 categoryId = 1;
+  string title = 2;
   string description = 3;
+  optional double value = 4;
+  optional int32 position = 5;
 }
 
-message ListCoursesForDropdownRequest {
-  int32 eventId = 1;      // required
-  optional bool onlyActive = 2; // default: true
+message CreateCategoryAwardResponse {
+  CategoryAwardProto award = 1;
 }
 
-message ListCoursesForDropdownResponse {
-  repeated CourseDropdown courses = 1;
+message UpdateCategoryAwardRequest {
+  int32 id = 1;
+  string title = 2;
+  string description = 3;
+  optional double value = 4;
+  optional int32 position = 5;
 }
 
-enum EventStatus {
-  UNSPECIFIED = 0;
-  UPCOMING   = 1;  // Event hasn't started, registrations still open
-  REGISTRATION_CLOSED = 2;  // Registrations closed, event hasn't started yet
-  AVAILABLE  = 3;  // Event is currently happening
-  CLOSED     = 4;  // Event has ended
+message UpdateCategoryAwardResponse {
+  CategoryAwardProto award = 1;
 }
 
-message Empty {}
+message GetCategoryAwardRequest {
+  int32 id = 1;
+}
+
+message GetCategoryAwardResponse {
+  CategoryAwardProto award = 1;
+}
+
+message ListCategoryAwardsRequest {
+  optional int32 categoryId = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+}
+
+message ListCategoryAwardsResponse {
+  repeated CategoryAwardProto awards = 1;
+  PaginationMetadata meta = 2;
+}
+
+message DeleteCategoryAwardRequest {
+  int32 id = 1;
+}
+
+message DeleteCategoryAwardResponse {
+  bool ok = 1;
+}
+
+// =====================
+//     AWARD WINNERS
+// =====================
+message AwardWinnerProto {
+  int32 id = 1;
+  int32 awardId = 2;
+  int32 projectId = 3;
+  double grade = 4;
+  string createdAt = 5;
+  int32 assignedByUserId = 6;
+}
+
+message CreateAwardWinnerRequest {
+  int32 awardId = 1;
+  int32 projectId = 2;
+  double grade = 3;
+  int32 assignedByUserId = 4;
+}
+
+message CreateAwardWinnerResponse {
+  AwardWinnerProto winner = 1;
+}
+
+message UpdateAwardWinnerRequest {
+  int32 id = 1;
+  int32 projectId = 2;
+  double grade = 3;
+  int32 assignedByUserId = 4;
+}
+
+message UpdateAwardWinnerResponse {
+  AwardWinnerProto winner = 1;
+}
+
+message GetAwardWinnerRequest {
+  int32 id = 1;
+}
+
+message GetAwardWinnerResponse {
+  AwardWinnerProto winner = 1;
+}
+
+message ListAwardWinnersRequest {
+  optional int32 awardId = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+}
+
+message ListAwardWinnersResponse {
+  repeated AwardWinnerProto winners = 1;
+  PaginationMetadata meta = 2;
+}
+
+message DeleteAwardWinnerRequest {
+  int32 id = 1;
+}
+
+message DeleteAwardWinnerResponse {
+  bool ok = 1;
+}
+
+// =====================
+// EVENT INSCRIPTION DETAILS
+// =====================
+message EventInscriptionDetailProto {
+  int32 id = 1;
+  int32 eventId = 2;
+  string title = 3;
+  string description = 4;
+  int32 value = 5;
+  bool isRequired = 6;
+  string createdAt = 7;
+  string updatedAt = 8;
+}
+
+message CreateEventInscriptionDetailRequest {
+  int32 eventId = 1;
+  string title = 2;
+  string description = 3;
+  optional int32 value = 4;
+  optional bool isRequired = 5;
+}
+
+message CreateEventInscriptionDetailResponse {
+  EventInscriptionDetailProto detail = 1;
+}
+
+message UpdateEventInscriptionDetailRequest {
+  int32 id = 1;
+  string title = 2;
+  string description = 3;
+  optional int32 value = 4;
+  optional bool isRequired = 5;
+}
+
+message UpdateEventInscriptionDetailResponse {
+  EventInscriptionDetailProto detail = 1;
+}
+
+message GetEventInscriptionDetailRequest {
+  int32 id = 1;
+}
+
+message GetEventInscriptionDetailResponse {
+  EventInscriptionDetailProto detail = 1;
+}
+
+message ListEventInscriptionDetailsRequest {
+  optional int32 eventId = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+}
+
+message ListEventInscriptionDetailsResponse {
+  repeated EventInscriptionDetailProto details = 1;
+  PaginationMetadata meta = 2;
+}
+
+message DeleteEventInscriptionDetailRequest {
+  int32 id = 1;
+}
+
+message DeleteEventInscriptionDetailResponse {
+  bool ok = 1;
+}
+
+// =====================
+//      EVENT RECAPS
+// =====================
+message EventRecapProto {
+  int32 id = 1;
+  int32 eventId = 2;
+  string headline = 3;
+  string summary = 4;
+  string closingMessage = 5;
+  string galeryUrl = 6;
+  bool published = 7;
+  string createdAt = 8;
+  string updatedAt = 9;
+}
+
+message CreateEventRecapRequest {
+  int32 eventId = 1;
+  string headline = 2;
+  string summary = 3;
+  string closingMessage = 4;
+  string galeryUrl = 5;
+  optional bool published = 6;
+}
+
+message CreateEventRecapResponse {
+  EventRecapProto recap = 1;
+}
+
+message UpdateEventRecapRequest {
+  int32 id = 1;
+  string headline = 2;
+  string summary = 3;
+  string closingMessage = 4;
+  string galeryUrl = 5;
+  optional bool published = 6;
+}
+
+message UpdateEventRecapResponse {
+  EventRecapProto recap = 1;
+}
+
+message GetEventRecapRequest {
+  int32 id = 1;
+}
+
+message GetEventRecapResponse {
+  EventRecapProto recap = 1;
+}
+
+message ListEventRecapsRequest {
+  optional int32 eventId = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+}
+
+message ListEventRecapsResponse {
+  repeated EventRecapProto recaps = 1;
+  PaginationMetadata meta = 2;
+}
+
+message DeleteEventRecapRequest {
+  int32 id = 1;
+}
+
+message DeleteEventRecapResponse {
+  bool ok = 1;
+}

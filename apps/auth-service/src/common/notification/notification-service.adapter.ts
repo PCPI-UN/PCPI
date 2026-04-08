@@ -69,4 +69,29 @@ export class NotificationServiceAdapter
       console.error('Failed to send password change confirmation:', error);
     }
   }
+
+  async sendSignupConfirmationEmail(params: {
+    to: string;
+    firstName: string;
+    lastName?: string;
+    invitationLink: string;
+  }): Promise<{ success: boolean }> {
+    try {
+      await firstValueFrom(
+        this.notificationService.sendEmail({
+          to: params.to,
+          template: EmailTemplate.SIGNUP_CONFIRMATION,
+          params: {
+            firstName: params.firstName,
+            lastName: params.lastName,
+            invitationLink: params.invitationLink,
+          },
+        }),
+      );
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to send signup confirmation email:', error);
+      return { success: false };
+    }
+  }
 }

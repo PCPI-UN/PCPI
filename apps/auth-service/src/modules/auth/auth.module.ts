@@ -12,6 +12,7 @@ import {
 
 // Application Layer
 import { LoginUseCase } from '@auth/application/use-cases/login.use-case';
+import { SignupUseCase } from '@auth/application/use-cases/signup.use-case';
 import { RefreshUseCase } from '@auth/application/use-cases/refresh.use-case';
 import { TokenServicePort } from '@auth/application/ports/token.service.port';
 import { PasswordHasherPort } from '@common/ports/password-hasher.port';
@@ -22,7 +23,7 @@ import { ForgotPasswordUseCase } from '@auth/application/use-cases/forgot-passwo
 import { ChangePasswordUseCase } from '@auth/application/use-cases/change-password.use-case';
 import { LoginWithMicrosoftUseCase } from '@auth/application/use-cases/login-with-microsoft.use-case';
 import { GenerateAccountSetupTokenUseCase } from '@auth/application/use-cases/generate-account-setup-token.use-case';
-
+import { ActivateUserWithTokenUseCase } from '@auth/application/use-cases/activate-user-with-token.use-case';
 
 // Infrastructure Layer
 import { JwtServiceAdapter } from '@auth/infrastructure/jwt/jwt.service.adapter';
@@ -62,6 +63,7 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
   controllers: [AuthController],
   providers: [
     LoginUseCase,
+    SignupUseCase,
     RefreshUseCase,
     SetPasswordUseCase,
     ValidateTokenUseCase,
@@ -69,6 +71,7 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
     ChangePasswordUseCase,
     LoginWithMicrosoftUseCase,
     GenerateAccountSetupTokenUseCase,
+    ActivateUserWithTokenUseCase,
 
     {
       provide: TokenServicePort,
@@ -85,7 +88,7 @@ import { AuthController } from '@auth/interface/grpc/auth.controller';
     {
       provide: EmailServicePort,
       useClass: NotificationServiceAdapter,
-    },
+    }
   ],
 })
 export class AuthModule { }

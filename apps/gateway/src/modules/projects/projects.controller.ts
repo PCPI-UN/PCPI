@@ -9,10 +9,8 @@ import {
   UploadedFiles,
   UseInterceptors,
   Get,
-  Query,
-  Res,
+  Query
 } from '@nestjs/common';
-import { Response } from 'express';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -38,6 +36,7 @@ import { DocumentStatusFilter, UpdateProjectDocumentDto } from './dto/update-pro
 import { TypedDocument } from './dto/project-document-input.dto';
 import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-juror.dto';
 import { AddProjectDocumentsMultipartDto} from './dto/add-project-files-multipart.dto';
+import { RequestChangesProjectDto } from './dto/request-changes-project.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -79,6 +78,10 @@ export class ProjectsController {
   @ApiResponse({
     status: 400,
     description: 'Invalid input data, file too large, or too many files',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'One or more of the project participants already have an existing project in this event.'
   })
   @ApiResponse({
     status: 413,
@@ -218,6 +221,41 @@ export class ProjectsController {
   ) {
     return this.projectsService.rejectProject({ id, ...rejectDto }, user.id);
   }
+
+  @Patch(':id/request-changes')
+  @ApiOperation({
+    summary: 'Request changes of a project',
+    description: 'Marks a project as request changes with a mandatory reason. Requires admin or event manager role.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Required changes succesfully'
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires platform permissions'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found'
+  })
+  requestChangesProject(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() requestChangesDto: RequestChangesProjectDto,
+    @GetUser() user: AppUser,
+  ) {
+    return this.projectsService.requestChangesProject({ id, ...requestChangesDto }, user.id)
+  }
+  
 
 
   @Get('by-event/:eventId')
@@ -417,59 +455,5 @@ export class ProjectsController {
     );
   }
 
-  @Get('export/excel/:eventId')
-  @ApiOperation({
-    summary: 'Export all projects from an event to Excel',
-    description:
-      'Generates an Excel workbook with projects grouped by course. ' +
-      'Each sheet contains project details, participants, evaluations, ' +
-      'grades by category, and comments. Requires authentication.',
-  })
-  @ApiParam({
-    name: 'eventId',
-    type: Number,
-    description: 'ID of the event to export',
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Excel file generated successfully',
-    content: {
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
-        schema: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid event ID',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'No projects found for the event',
-  })
-  async exportProjectsToExcel(
-    @Param('eventId', ParseIntPipe) eventId: number,
-    @Res() res: Response,
-  ): Promise<void> {
-    const buffer = await this.projectsService.exportProjectsToExcel(eventId);
-
-    // Set response headers for file download
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    );
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="projects_event_${eventId}_${Date.now()}.xlsx"`,
-    );
-    res.setHeader('Content-Length', buffer.length);
-
-    // Send buffer
-    res.send(buffer);
-  }
 
 }

@@ -21,6 +21,7 @@ import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { SignupDto } from './dto/signup.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -29,6 +30,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { InvitationsService } from '../invitations/invitations.service';
 import { AppUser } from './types/app-user.type';
+import { ActivateUserDto } from './dto/activate-user.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -82,11 +84,13 @@ export class AuthController {
   @Get('login/microsoft')
   @ApiOperation({ summary: 'Redirect to Microsoft Login' })
   @ApiQuery({ name: 'invitation_token', required: false, description: 'Invitation token' })
+  @ApiQuery({ name: 'redirect', required: false, description: 'Frontend redirect path after login (e.g., /public/projects/1)' })
   async loginWithMicrosoft(
     @Res() res: Response,
     @Query('invitation_token') invitationToken?: string,
+    @Query('redirect') redirectUrl?: string,
   ) {
-    const url = this.authService.getAuthorizeUrl(invitationToken);
+    const url = this.authService.getAuthorizeUrl(invitationToken, redirectUrl);
     return res.redirect(url);
   }
 
@@ -143,9 +147,37 @@ export class AuthController {
     });
 
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-    response.redirect(`${frontendUrl}/app`);
+    if (state && state.startsWith('redirect:')) {
+      const redirectPath = state.split(':')[1];
+      response.redirect(`${frontendUrl}${redirectPath}`);
+    } else {
+      response.redirect(`${frontendUrl}/app`);
+    }
   }
 
+  @Public()
+  @Post('signup')
+  @ApiOperation({ summary: 'Sign up for a new account' })
+  @ApiBody({ type: SignupDto })
+  @ApiResponse({ status: 201, description: 'Signup successful. Sends confirmation email.' })
+  @ApiResponse({ status: 400, description: 'Validation failed or user already exists' })
+  async signUp(
+    @Body() signupDto: SignupDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const user = await this.authService.signup(signupDto);    
+
+    return { success: true, message: 'Signup successful' };
+  }
+
+  @Public()
+  @Post('activate')
+  @ApiOperation({ summary: 'Activate user account' })
+  @ApiResponse({ status: 200, description: 'User account activated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid token or user already activated' })
+  async activateUser(@Body() activateUserDto: ActivateUserDto) {
+    return this.authService.activateUserWithToken(activateUserDto);
+  }
 
   @Post('logout')
   @ApiSecurity('JWT-auth')

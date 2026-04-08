@@ -9,7 +9,6 @@ import {
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
-import { ExcelExportService } from './excel-export.service';
 
 import {
   EVENT_SERVICE_NAME,
@@ -100,7 +99,7 @@ import {
     ]),
   ],
   controllers: [ProjectsController],
-  providers: [ProjectsService, AzureBlobUploadService, ExcelExportService],
+  providers: [ProjectsService, AzureBlobUploadService],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}

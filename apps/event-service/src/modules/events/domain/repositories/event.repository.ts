@@ -14,7 +14,7 @@ export abstract class EventRepository {
     limit: number;
     q?: string;
     onlyActive?: boolean;
-    status?: EventStatus;
+    statuses?: EventStatus[];
   }): Promise<{ items: DomainEvent[]; total: number }>;
 
 

@@ -3,10 +3,11 @@ import { TypedDocument ,ProjectState, ProjectDocument, Project, JurorKey, Status
 // Mapear enum de dominio a enum del proto (numérico)
 const stateToProto = (s: ProjectState): number => {
   switch (s) {
-    case 'UNDER_REVIEW': return 1;
-    case 'APPROVED':     return 2;
-    case 'REJECTED':     return 3;
-    default:             return 0; // UNSPECIFIED
+    case 'UNDER_REVIEW':    return 1;
+    case 'APPROVED':        return 2;
+    case 'REJECTED':        return 3;
+    case 'REQUEST_CHANGES': return 4;
+    default:                return 0; // UNSPECIFIED
   }
 };
 
@@ -16,6 +17,7 @@ export const protoToState = (n?: number): ProjectState => {
     case 1: return 'UNDER_REVIEW';
     case 2: return 'APPROVED';
     case 3: return 'REJECTED';
+    case 4: return 'REQUEST_CHANGES'
     default: return 'UNDER_REVIEW';
   }
 };
@@ -80,7 +82,7 @@ export const toProtoProject = (p: any) => ({
   description: p.description ?? undefined,
   eventNumber: p.eventNumber ?? p.event_number ?? undefined,
   state: stateToProto(p.state as ProjectState),
-  rejectionReason: p.rejectionReason ?? p.rejection_reason ?? undefined,      
+  reason: p.reason ?? p.reason ?? undefined,      
   createdAt: p.createdAt?.toISOString?.() ?? p.created_at,
   updatedAt: p.updatedAt?.toISOString?.() ?? p.updated_at,
 });
@@ -105,6 +107,9 @@ export const toProtoParticipant = (p: any) => ({
   userId: p.userId,
   projectId: p.projectId,
   studentCode: p.studentCode, 
+  firstName: p.firstName ?? undefined,
+  lastName: p.lastName ?? undefined,
+  email: p.email ?? undefined,
 });
 
 export const toProtoPendingParticipant = (p: any) => ({
@@ -113,9 +118,11 @@ export const toProtoPendingParticipant = (p: any) => ({
   firstName: p.firstName,
   lastName: p.lastName ?? '',
   email: p.email,
-  studentCode: p.studentCode, 
+  studentCode: p.studentCode,
+  semester: p.semester,
+  career: p.career,
   status: statusToProto(p.status),
-  invitedAT: p.invitedAt?.toISOString?.() ?? p.invited_at,
+  invitedAt: p.invitedAt?.toISOString?.() ?? p.invited_at,
   joinedAt: p.joinedAt?.toISOString?.() ?? p.joined_at,
   createdAt: p.createdAt?.toISOString?.() ?? p.created_at,
   updatedAt: p.updatedAt?.toISOString?.() ?? p.updated_at,

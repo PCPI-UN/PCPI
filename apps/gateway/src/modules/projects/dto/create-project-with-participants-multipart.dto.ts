@@ -27,6 +27,15 @@ export class CreateProjectWithParticipantsMultipartDto {
   eventId: string;
 
   @ApiProperty({
+    description: 'Event type (e.g., "Competition", "Exposition")',
+    example: 'Competition',
+    type: String,
+  })
+  @IsString()
+  @IsNotEmpty()
+  eventType: string;
+
+  @ApiProperty({
     description: 'Course ID associated with this project',
     example: '1',
     type: String,
@@ -60,6 +69,8 @@ export class CreateProjectWithParticipantsMultipartDto {
         lastName: 'Pérez',
         email: 'juan@example.com',
         studentCode: '200178910',
+        semester: '6',
+        career: 'ing_sistemas',
       },
     ]),
     required: false,

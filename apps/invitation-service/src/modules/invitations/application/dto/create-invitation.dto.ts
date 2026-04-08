@@ -6,6 +6,10 @@ export class CreateInvitationDto {
   @IsNotEmpty()
   email: string;
 
+  @IsString()
+  @IsNotEmpty()
+  eventType: string;
+
   @IsEnum(InvitationTargetType)
   @IsNotEmpty()
   targetType: InvitationTargetType;

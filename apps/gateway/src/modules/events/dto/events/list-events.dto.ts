@@ -1,7 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsBoolean, IsPositive, IsOptional, IsString, IsEnum, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsInt,
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsEnum,
+  Min,
+  IsArray,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { EventStatus } from '@app/common/generated/event';
+
+const normalizeStatuses = ({ value }: { value: unknown }): EventStatus[] | undefined => {
+  if (value === undefined || value === null || value === '') return undefined;
+
+  const values = Array.isArray(value) ? value : String(value).split(',');
+
+  return values
+    .map((entry) => Number(entry))
+    .filter((entry) => !Number.isNaN(entry));
+};
 
 export class ListEventsDTO {
   @ApiProperty({
@@ -59,4 +77,17 @@ export class ListEventsDTO {
   @IsEnum(EventStatus)
   @Type(() => Number)
   status?: EventStatus;
+
+  @ApiProperty({
+    description: 'Filter by multiple event statuses',
+    example: [EventStatus.UPCOMING, EventStatus.AVAILABLE],
+    enum: EventStatus,
+    isArray: true,
+    required: false,
+  })
+  @IsOptional()
+  @Transform(normalizeStatuses)
+  @IsArray()
+  @IsEnum(EventStatus, { each: true })
+  statuses?: EventStatus[];
 }

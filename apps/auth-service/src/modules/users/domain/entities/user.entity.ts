@@ -10,7 +10,7 @@ export class User {
     public lastName: string = '',
     public email: string,
     public password?: string,
-    public phone: string = '',
+    public phone?: string,
     public active: boolean = true,
     public status: UserStatus = UserStatus.PENDING,
     public oid?: string,

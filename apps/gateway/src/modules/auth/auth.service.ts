@@ -8,6 +8,8 @@ import {
   AuthServiceClient,
   AUTH_SERVICE_NAME,
   LoginRequest,
+  SignupRequest,
+  ActivateUserWithTokenRequest,
   RefreshRequest,
   GetUserRequest,
   ValidateTokenRequest,
@@ -16,15 +18,18 @@ import {
   SetPasswordRequest,
   ChangePasswordRequest,
   LoginResponse,
+  SignupResponse,
   RefreshResponse,
   ValidateTokenResponse,
   GetUserPermissionsResponse,
   ForgotPasswordResponse,
   SetPasswordResponse,
   ChangePasswordResponse,
+  ActivateUserResponse,
   User,
 } from '@app/common/generated/auth';
 import { LoginDto } from './dto/login.dto';
+import { ActivateUserDto } from './dto/activate-user.dto';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -57,6 +62,18 @@ export class AuthService implements OnModuleInit {
   async loginWithMicrosoft(token: string): Promise<LoginResponse> {
     return firstValueFrom(
       this.authService.loginWithMicrosoft({ token }),
+    );
+  }
+
+  async signup(signupDto: SignupRequest): Promise<SignupResponse> {
+    return firstValueFrom(
+      this.authService.signup(signupDto as SignupRequest),
+    );
+  }
+
+  async activateUserWithToken(activateUserDto: ActivateUserDto): Promise<ActivateUserResponse> {
+    return firstValueFrom(
+      this.authService.activateUserWithToken(activateUserDto as ActivateUserWithTokenRequest),
     );
   }
 
@@ -115,7 +132,7 @@ export class AuthService implements OnModuleInit {
     );
   }
 
-  getAuthorizeUrl(invitationToken?: string) {
+  getAuthorizeUrl(invitationToken?: string, redirectUrl?: string): string {
     // We use the 'state' parameter to pass the invitation token through the OAuth flow.
     // This ensures that when the user returns from Microsoft, we know they were trying to accept an invitation.
     const state = invitationToken ? `invitation:${invitationToken}` : 'login';
@@ -126,7 +143,7 @@ export class AuthService implements OnModuleInit {
       redirect_uri: this.redirectUri,
       response_mode: 'query',
       scope: 'openid profile email',
-      state: state,
+      state: redirectUrl || state,
       prompt: 'select_account',
     });
     return `https://login.microsoftonline.com/${this.tenantId}/oauth2/v2.0/authorize?${params.toString()}`;

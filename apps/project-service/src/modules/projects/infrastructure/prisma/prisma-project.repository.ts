@@ -11,7 +11,7 @@ type CreateProjectInput = {
   name: string;
   description?: string;
   eventNumber?: string;
-  state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+  state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGES';
 };
 
 type AddPendingParticipantInput = {
@@ -20,6 +20,8 @@ type AddPendingParticipantInput = {
   lastName?: string | null;
   email: string;
   studentCode: string;
+  semester: string;
+  career: string;
   status: 'PENDING' | 'INVITED' | 'JOINED';
 };
 
@@ -27,7 +29,7 @@ type ListOpts = { courseId?: number; q?: string; currentPage?: number; itemsPerP
 
 @Injectable()
 export class PrismaProjectRepository implements ProjectRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(data: CreateProjectInput): Promise<Project> {
     return this.prisma.project.create({
@@ -37,7 +39,7 @@ export class PrismaProjectRepository implements ProjectRepository {
         name: data.name,
         description: data.description ?? null,
         eventNumber: data.eventNumber ?? null,
-        state: data.state, 
+        state: data.state,
       },
     }) as unknown as Project;
   }
@@ -122,9 +124,9 @@ export class PrismaProjectRepository implements ProjectRepository {
   async setProjectStateWithReason(id: number, state: ProjectState, reason?: string): Promise<Project> {
     return (await this.prisma.project.update({
       where: { id },
-      data: { 
+      data: {
         state,
-        rejectionReason: reason,
+        reason: reason,
       },
     })) as unknown as Project;
   }
@@ -133,8 +135,8 @@ export class PrismaProjectRepository implements ProjectRepository {
     await this.prisma.project.delete({ where: { id } });
   }
 
-  async addDocument(projectId: number, url: string, type: TypedDocument ): Promise<ProjectDocument> {
-    
+  async addDocument(projectId: number, url: string, type: TypedDocument): Promise<ProjectDocument> {
+
     return (await this.prisma.projectDocument.create({
       data: { projectId, url, type },
     })) as unknown as ProjectDocument;
@@ -213,64 +215,68 @@ export class PrismaProjectRepository implements ProjectRepository {
   }
 
   async addParticipant(input: { projectId: number; userId: number; studentCode: string }): Promise<ProjectParticipant> {
-  // Idempotente: si ya existe (PK compuesta), actualiza solo studentCode cuando venga
-  return (await this.prisma.projectParticipant.upsert({
-    where: {
-      userId_projectId: { userId: input.userId, projectId: input.projectId }, // Prisma crea este where único por la PK compuesta
-    },
-    update: {
-      studentCode: input.studentCode,
-    },
-    create: {
-      userId: input.userId,
-      projectId: input.projectId,
-      studentCode: input.studentCode,
-    },
-  })) as unknown as ProjectParticipant;
-}
+    // Idempotente: si ya existe (PK compuesta), actualiza solo studentCode cuando venga
+    return (await this.prisma.projectParticipant.upsert({
+      where: {
+        userId_projectId: { userId: input.userId, projectId: input.projectId }, // Prisma crea este where único por la PK compuesta
+      },
+      update: {
+        studentCode: input.studentCode,
+      },
+      create: {
+        userId: input.userId,
+        projectId: input.projectId,
+        studentCode: input.studentCode,
+      },
+    })) as unknown as ProjectParticipant;
+  }
 
-async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
-  return (await this.prisma.projectParticipant.findMany({
-    where: { projectId },
-    orderBy: { userId: 'asc' },
-    select: { userId: true, projectId: true, studentCode: true },
-  })) as unknown as ProjectParticipant[];
-}
+  async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
+    return (await this.prisma.projectParticipant.findMany({
+      where: { projectId },
+      orderBy: { userId: 'asc' },
+      select: { userId: true, projectId: true, studentCode: true },
+    })) as unknown as ProjectParticipant[];
+  }
 
   async addPendingParticipant(input: AddPendingParticipantInput): Promise<PendingProjectParticipant> {
-  const existing = await this.prisma.pendingProjectParticipant.findFirst({
-    where: {
-      projectId: input.projectId,
-      email: input.email,
-    },
-  });
-  // console.log('Existing pending participant:', existing);
-  // console.log('Input data:', input);
-  if (existing) {
-    // Actualizar
-    return this.prisma.pendingProjectParticipant.update({
-      where: { pendingId: existing.pendingId },
-      data: {
-        firstName: input.firstName,
-        lastName: input.lastName ?? null,
-        studentCode: input.studentCode,
-        status: input.status,
-      },
-    });
-  } else {
-    // Crear
-    return this.prisma.pendingProjectParticipant.create({
-      data: {
+    const existing = await this.prisma.pendingProjectParticipant.findFirst({
+      where: {
         projectId: input.projectId,
-        firstName: input.firstName,
-        lastName: input.lastName ?? null,
         email: input.email,
-        studentCode: input.studentCode ?? null,
-        status: input.status,
       },
     });
+    // console.log('Existing pending participant:', existing);
+    // console.log('Input data:', input);
+    if (existing) {
+      // Actualizar
+      return this.prisma.pendingProjectParticipant.update({
+        where: { pendingId: existing.pendingId },
+        data: {
+          firstName: input.firstName,
+          lastName: input.lastName ?? null,
+          studentCode: input.studentCode,
+          semester: input.semester,
+          career: input.career,
+          status: input.status,
+        },
+      });
+    } else {
+      // Crear
+      return this.prisma.pendingProjectParticipant.create({
+        data: {
+          projectId: input.projectId,
+          firstName: input.firstName,
+          lastName: input.lastName ?? null,
+          email: input.email,
+          studentCode: input.studentCode ?? null,
+          semester: input.semester,
+          career: input.career,
+          status: input.status,
+        },
+      });
+    }
   }
-}
 
   async listPendingParticipants(projectId: number): Promise<PendingProjectParticipant[]> {
     return (await this.prisma.pendingProjectParticipant.findMany({
@@ -297,47 +303,47 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
   async listAssignedToJuror(juror: JurorKey, opts?: { page?: number; pageSize?: number }
   ): Promise<{ items: Project[]; total: number }> {
     const page = opts?.page ?? 1;
-  const pageSize = opts?.pageSize ?? 10;
+    const pageSize = opts?.pageSize ?? 10;
 
-  const skip = (page - 1) * pageSize;
+    const skip = (page - 1) * pageSize;
 
-  const [items, total] = await Promise.all([
-    this.prisma.project.findMany({
-      where: {
-        jurorsAssigned: {
-          some: {
-            memberUserId: juror.memberUserId,
-            memberEventId: juror.memberEventId,
-            memberRoleId: juror.memberRoleId,
+    const [items, total] = await Promise.all([
+      this.prisma.project.findMany({
+        where: {
+          jurorsAssigned: {
+            some: {
+              memberUserId: juror.memberUserId,
+              memberEventId: juror.memberEventId,
+              memberRoleId: juror.memberRoleId,
+            },
           },
         },
-      },
-      include: {
-        participants: true,
-        documents: true,
-        pendingParticipants: true,
-      },
-      skip,
-      take: pageSize,
-      orderBy: { id: 'asc' },
-    }),
-    this.prisma.project.count({
-      where: {
-        jurorsAssigned: {
-          some: {
-            memberUserId: juror.memberUserId,
-            memberEventId: juror.memberEventId,
-            memberRoleId: juror.memberRoleId,
+        include: {
+          participants: true,
+          documents: true,
+          pendingParticipants: true,
+        },
+        skip,
+        take: pageSize,
+        orderBy: { id: 'asc' },
+      }),
+      this.prisma.project.count({
+        where: {
+          jurorsAssigned: {
+            some: {
+              memberUserId: juror.memberUserId,
+              memberEventId: juror.memberEventId,
+              memberRoleId: juror.memberRoleId,
+            },
           },
         },
-      },
-    }),
-  ]);
+      }),
+    ]);
 
-  return { items, total };
-}
+    return { items, total };
+  }
 
- async markPendingJoined(projectId: number, studentCode: string, joinedAt: Date): Promise<boolean> {
+  async markPendingJoined(projectId: number, studentCode: string, joinedAt: Date): Promise<boolean> {
     const res = await this.prisma.pendingProjectParticipant.updateMany({
       where: {
         projectId,
@@ -370,6 +376,20 @@ async listParticipants(projectId: number): Promise<ProjectParticipant[]> {
       where: { id: input.id },
       data,
     })) as unknown as ProjectDocument;
+  }
+
+  async findByEventIdAndUserId(eventId: number, userId: number): Promise<Project | null> {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        eventId,
+        participants: {
+          some: {
+            userId,
+          },
+        },
+      },
+    });
+    return project as unknown as Project | null;
   }
 
 }

@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prepare": "husky",
     "proto:generate": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true --ts_proto_opt=useDate=true --ts_proto_opt=esModuleInterop=true ./libs/common/src/protos/*.proto",
     "proto:generate:win": "for %f in (libs/common/src/protos/*.proto) do protoc -I ./libs/common/src/protos --ts_proto_out=./libs/common/src/generated --ts_proto_opt=nestJs=true,esModuleInterop=true %f",
     "build": "nest build",
@@ -22,8 +23,8 @@
     "test:e2e": "jest --config ./apps/gateway/test/jest-e2e.json"
   },
   "dependencies": {
+    "@azure/communication-email": "^1.1.0",
     "@azure/storage-blob": "^12.29.1",
-    "@emailjs/nodejs": "^5.0.2",
     "@grpc/grpc-js": "^1.14.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -40,8 +41,9 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
-    "exceljs": "^4.4.0",
     "express": "^5.1.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
     "luxon": "^3.7.2",
     "nest": "^0.1.6",
     "passport": "^0.7.0",
@@ -54,6 +56,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^19.8.1",
     "@commitlint/types": "^19.8.1",
     "@eslint/eslintrc": "^3.2.0",
@@ -76,6 +79,7 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "mkdirp": "^3.0.1",
     "prettier": "^3.4.2",
@@ -91,6 +95,6 @@
     "typescript-eslint": "^8.20.0"
   },
   "prisma": {
-    "seed": "node dist/apps/auth-service/prisma/seed.js 2>/dev/null || ts-node apps/auth-service/prisma/seed.ts"
+    "seed": "ts-node apps/auth-service/prisma/seed.ts"
   }
 }

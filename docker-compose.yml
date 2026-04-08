@@ -18,7 +18,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh:ro
     networks:
-      - dokploy-network
+      - coolify
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -42,7 +42,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - dokploy-network
+      - coolify
     command: >
       sh -c "prisma migrate deploy --schema=./apps/auth-service/prisma/schema.prisma &&
              node dist/apps/auth-service/prisma/seed.js"
@@ -73,7 +73,7 @@ services:
       auth-migration:
         condition: service_completed_successfully
     networks:
-      - dokploy-network
+      - coolify
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50051}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -98,7 +98,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - dokploy-network
+      - coolify
     command: prisma migrate deploy --schema=./apps/evaluation-service/prisma/schema.prisma
     restart: "no"
 
@@ -121,7 +121,7 @@ services:
       evaluation-migration:
         condition: service_completed_successfully
     networks:
-      - dokploy-network
+      - coolify
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50052}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -146,7 +146,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - dokploy-network
+      - coolify
     command: prisma migrate deploy --schema=./apps/event-service/prisma/schema.prisma
     restart: "no"
 
@@ -168,7 +168,7 @@ services:
       event-migration:
         condition: service_completed_successfully
     networks:
-      - dokploy-network
+      - coolify
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50053}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -193,7 +193,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - dokploy-network
+      - coolify
     command: prisma migrate deploy --schema=./apps/invitation-service/prisma/schema.prisma
     restart: "no"
 
@@ -218,7 +218,7 @@ services:
       invitation-migration:
         condition: service_completed_successfully
     networks:
-      - dokploy-network
+      - coolify
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50054}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -243,7 +243,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - dokploy-network
+      - coolify
     command: prisma migrate deploy --schema=./apps/project-service/prisma/schema.prisma
     restart: "no"
 
@@ -267,7 +267,7 @@ services:
       project-migration:
         condition: service_completed_successfully
     networks:
-      - dokploy-network
+      - coolify
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50055}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -284,64 +284,64 @@ services:
    ## dockploy. We are deploying the gateway as a separate service from the ones here
    ## in the compose. However, they all have access to each other through the same network!
    
-  # gateway:
-  #   build:
-  #     context: .
-  #     dockerfile: apps/gateway/Dockerfile
-  #     target: production
-  #   environment:
-  #     - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
-  #     - EVALUATION_SERVICE_URL=${EVALUATION_SERVICE_URL:-evaluation-service:50052}
-  #     - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
-  #     - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service:50054}
-  #     - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
-  #     - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
-  #     - NODE_ENV=${NODE_ENV:-production}
-  #     - ALLOW_INSECURE_COOKIES=${ALLOW_INSECURE_COOKIES:-false}
-  #     - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
-  #     - COOKIE_DOMAIN=${COOKIE_DOMAIN}
-  #     - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
-  #     - JWT_REFRESH_PUBLIC_KEY=${JWT_REFRESH_PUBLIC_KEY}
-  #     - JWT_ACCESS_TOKEN_EXPIRATION=${JWT_ACCESS_TOKEN_EXPIRATION:-15m}
-  #     - JWT_REFRESH_TOKEN_EXPIRATION=${JWT_REFRESH_TOKEN_EXPIRATION:-7d}
-  #     - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
-  #     - AZURE_BLOB_SAS_URL=${AZURE_BLOB_SAS_URL}
-  #     - AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}
-  #     - AZURE_ACCOUNT_KEY=${AZURE_ACCOUNT_KEY}
-  #     - AZURE_CONTAINER=${AZURE_CONTAINER}
-  #     - AZURE_TENANT_ID=${AZURE_TENANT_ID}
-  #     - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
-  #     - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
-  #     - REDIRECT_URI=${REDIRECT_URI}
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
-  #     - REDIS_PASSWORD=${REDIS_PASSWORD}
-  #   expose:
-  #     - 3000
-  #   restart: always
-  #   depends_on:
-  #     auth-service:
-  #       condition: service_healthy
-  #     evaluation-service:
-  #       condition: service_healthy
-  #     event-service:
-  #       condition: service_healthy
-  #     invitation-service:
-  #       condition: service_healthy
-  #     project-service:
-  #       condition: service_healthy
-  #     notification-service:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   networks:
-  #     - dokploy-network
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #     start_period: 40s
+  gateway:
+     build:
+       context: .
+       dockerfile: apps/gateway/Dockerfile
+       target: production
+     environment:
+       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL:-auth-service:50051}
+       - EVALUATION_SERVICE_URL=${EVALUATION_SERVICE_URL:-evaluation-service:50052}
+       - EVENT_SERVICE_URL=${EVENT_SERVICE_URL:-event-service:50053}
+       - INVITATION_SERVICE_URL=${INVITATION_SERVICE_URL:-invitation-service:50054}
+       - PROJECT_SERVICE_URL=${PROJECT_SERVICE_URL:-project-service:50055}
+       - NOTIFICATION_SERVICE_URL=${NOTIFICATION_SERVICE_URL:-notification-service:50056}
+       - NODE_ENV=${NODE_ENV:-production}
+       - ALLOW_INSECURE_COOKIES=${ALLOW_INSECURE_COOKIES:-false}
+       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
+       - COOKIE_DOMAIN=${COOKIE_DOMAIN}
+       - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+       - JWT_REFRESH_PUBLIC_KEY=${JWT_REFRESH_PUBLIC_KEY}
+       - JWT_ACCESS_TOKEN_EXPIRATION=${JWT_ACCESS_TOKEN_EXPIRATION:-15m}
+       - JWT_REFRESH_TOKEN_EXPIRATION=${JWT_REFRESH_TOKEN_EXPIRATION:-7d}
+       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+       - AZURE_BLOB_SAS_URL=${AZURE_BLOB_SAS_URL}
+       - AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}
+       - AZURE_ACCOUNT_KEY=${AZURE_ACCOUNT_KEY}
+       - AZURE_CONTAINER=${AZURE_CONTAINER}
+       - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+       - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+       - REDIRECT_URI=${REDIRECT_URI}
+       - REDIS_HOST=redis
+       - REDIS_PORT=6379
+       - REDIS_PASSWORD=${REDIS_PASSWORD}
+     expose:
+       - 3000
+     restart: always
+     depends_on:
+       auth-service:
+         condition: service_healthy
+       evaluation-service:
+         condition: service_healthy
+       event-service:
+         condition: service_healthy
+       invitation-service:
+         condition: service_healthy
+       project-service:
+         condition: service_healthy
+       notification-service:
+         condition: service_healthy
+       redis:
+         condition: service_healthy
+     networks:
+       - coolify
+     healthcheck:
+       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"]
+       interval: 30s
+       timeout: 10s
+       retries: 3
+       start_period: 40s
 
   # ==================================================================
   # NOTIFICATION SERVICE
@@ -356,18 +356,10 @@ services:
       - NODE_ENV=production
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50056}
-      - EMAILJS_SERVICE_ID=${EMAILJS_SERVICE_ID}
-      - EMAILJS_PUBLIC_KEY=${EMAILJS_PUBLIC_KEY}
-      - EMAILJS_PRIVATE_KEY=${EMAILJS_PRIVATE_KEY}
-      - EMAILJS_TEMPLATE_PROJECT_SUBMITTED_ID=${EMAILJS_TEMPLATE_PROJECT_SUBMITTED_ID}
-      - EMAILJS_TEMPLATE_PROJECT_APPROVED_ID=${EMAILJS_TEMPLATE_PROJECT_APPROVED_ID}
-      - EMAILJS_TEMPLATE_PROJECT_REJECTED_ID=${EMAILJS_TEMPLATE_PROJECT_REJECTED_ID}
-      - EMAILJS_TEMPLATE_JUROR_INVITATION_ID=${EMAILJS_TEMPLATE_JUROR_INVITATION_ID}
-      - EMAILJS_TEMPLATE_PASSWORD_CHANGED_ID=${EMAILJS_TEMPLATE_PASSWORD_CHANGED_ID}
-      - EMAILJS_TEMPLATE_PASSWORD_RESET_ID=${EMAILJS_TEMPLATE_PASSWORD_RESET_ID}
-      - EMAILJS_TEMPLATE_PLATFORM_INVITATION_ID=${EMAILJS_TEMPLATE_PLATFORM_INVITATION_ID}
+      - ACS_CONNECTION_STRING=${ACS_CONNECTION_STRING}
+      - ACS_SENDER_ADDRESS=${ACS_SENDER_ADDRESS}
     networks:
-      - dokploy-network
+      - coolify
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('net').createConnection({port:50056}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))\""]
@@ -386,7 +378,7 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - dokploy-network
+      - coolify
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
@@ -395,7 +387,7 @@ services:
       retries: 10
 
 networks:
-  dokploy-network:
+  coolify:
     external: true
 
 volumes:

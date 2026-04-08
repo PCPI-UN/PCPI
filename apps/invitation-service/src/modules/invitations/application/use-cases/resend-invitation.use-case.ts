@@ -148,7 +148,7 @@ export class ResendInvitationUseCase {
         if (user.status === 'PENDING')
             invitationLink = `${frontendUrl}/auth/chg-password?token=${token}`;
         else // The user already exists and therefore they can accept invitations in the dashboard
-            invitationLink = `${frontendUrl}/dashboard/invitations`;
+            invitationLink = `${frontendUrl}/app/invitations`;
 
         await this.sendInvitationEmail({
             targetType: invitation.targetType,
@@ -166,6 +166,7 @@ export class ResendInvitationUseCase {
 
     private async sendInvitationEmail(params: {
         targetType: InvitationTargetType;
+        eventType?: string;
         to: string;
         firstName: string;
         lastName?: string;
@@ -202,8 +203,9 @@ export class ResendInvitationUseCase {
             }
 
             case InvitationTargetType.PROJECT: {
-                await this.notificationService.sendProjectApprovedInvitationEmail({
+                await this.notificationService.sendProjectSubmittedInvitationEmail({
                     to: params.to,
+                    eventType: params.eventData?.eventType || 'Exposition',
                     firstName: params.firstName,
                     lastName: params.lastName,
                     invitationLink: params.invitationLink,

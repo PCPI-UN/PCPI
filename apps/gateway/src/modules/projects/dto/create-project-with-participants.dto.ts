@@ -31,6 +31,14 @@ export class CreateProjectWithParticipantsDto {
   eventId: number;
 
   @ApiProperty({
+    description: 'Event type for the project',
+    example: 'Competition',
+  })
+  @IsString()
+  @IsNotEmpty()
+  eventType: string;
+  
+  @ApiProperty({
     description: 'Course ID associated with this project',
     example: 1,
     minimum: 1,

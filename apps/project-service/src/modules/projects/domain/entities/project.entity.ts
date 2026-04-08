@@ -1,4 +1,4 @@
-export type ProjectState = 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+export type ProjectState = 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGES';
 export type StudentStatus = 'PENDING' | 'INVITED' | 'JOINED';
 export type TypedDocument = 'LOGO' | 'POSTER' | 'SUPPORTING_DOCUMENT';
 export type Status = 'ACTIVE' | 'INACTIVE';
@@ -11,7 +11,7 @@ export interface Project {
   description?: string | null;
   eventNumber?: string | null;
   state: ProjectState;
-  rejectionReason?: string | null;
+  reason?: string | null;
 }
 
 export interface ProjectDocument {
@@ -34,11 +34,22 @@ export interface ProjectParticipant {
   studentCode: string;
 }
 
+export interface ProjectParticipantWithUserInfo {
+  userId: number;
+  projectId: number;
+  studentCode: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+}
+
 export interface PendingProjectParticipant {
   projectId: number;
   firstName: string;
   lastName?: string | null;
   email: string;
   studentCode: string;
+  semester: string;
+  career: string;
   status: StudentStatus;
 }

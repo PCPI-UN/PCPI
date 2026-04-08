@@ -230,25 +230,6 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
             _count: true,
         });
 
-        // Get all evaluation comments for this project
-        const evaluationsWithComments = await this.prisma.evaluation.findMany({
-            where: {
-                projectId,
-                comments: { not: null },
-            },
-            select: {
-                comments: true,
-            },
-            orderBy: {
-                date: 'asc',
-            },
-        });
-
-        // Extract comments array, filter out nulls and empty strings
-        const comments = evaluationsWithComments
-            .map((e: { comments: string | null }) => e.comments)
-            .filter((comment: string | null): comment is string => !!comment && comment.trim() !== '');
-
         // Get all evaluation details with criterion info (including category and weight)
         const evaluationDetails = await this.prisma.evaluationDetail.findMany({
             where: {
@@ -312,7 +293,6 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
             averageGrade: gradeStats._avg.grade || 0,
             evaluationCount: gradeStats._count,
             categoryStats,
-            comments,
         };
     }
 
