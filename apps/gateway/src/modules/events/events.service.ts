@@ -181,6 +181,55 @@ export class EventService implements OnModuleInit {
         return currentPage < totalPages ? String(currentPage + 1) : '';
     }
 
+    private async getEventCatalogData(eventId: number) {
+        const [categoriesResponse, detailsResponse] = await Promise.all([
+            this.listCategoriesByEvent(eventId, {
+                eventId,
+                page: 1,
+                limit: 1000,
+            }),
+            this.listEventInscriptionDetails({
+                eventId,
+                page: 1,
+                limit: 1000,
+            }),
+        ]);
+
+        const categories = categoriesResponse.categories ?? [];
+        const awardsByCategory = await Promise.all(
+            categories.map((category) =>
+                this.listCategoryAwards({
+                    categoryId: category.id,
+                    page: 1,
+                    limit: 1000,
+                }),
+            ),
+        );
+
+        return {
+            category: categories[0] ?? null,
+            categories,
+            awards: awardsByCategory.flatMap((item) => item.awards ?? []),
+            specificInscriptionDetails: detailsResponse.details ?? [],
+        };
+    }
+
+    private async enrichEventWithCatalogData<T extends { id: number }>(event: T) {
+        const catalogData = await this.getEventCatalogData(event.id);
+        return {
+            ...event,
+            ...catalogData,
+        };
+    }
+
+    private async enrichEventsWithCatalogData<T extends { id: number }>(events: T[]) {
+        if (!events || events.length === 0) {
+            return [];
+        }
+
+        return Promise.all(events.map((event) => this.enrichEventWithCatalogData(event)));
+    }
+
     async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
         const {
             category,
@@ -266,7 +315,8 @@ export class EventService implements OnModuleInit {
         if (response.event) {
             const statuses = await this.getAndCacheStatuses();
             const enrichedEvent = this.enrichSingleEventWithStatus(response.event, statuses);
-            return { event: enrichedEvent as EventProto };
+            const enrichedEventWithCatalog = await this.enrichEventWithCatalogData(enrichedEvent);
+            return { event: enrichedEventWithCatalog as any };
         }
 
         return response;
@@ -613,9 +663,11 @@ export class EventService implements OnModuleInit {
             };
         });
 
+        const enrichedEventsWithCatalog = await this.enrichEventsWithCatalogData(enrichedEvents);
+
         return {
             ...response,
-            events: enrichedEvents as any,
+            events: enrichedEventsWithCatalog as any,
         };
     }
 
@@ -630,10 +682,11 @@ export class EventService implements OnModuleInit {
 
         const statuses = await this.getAndCacheStatuses();
         const enrichedEvents = this.enrichEventsWithStatus(response.events, statuses);
+        const enrichedEventsWithCatalog = await this.enrichEventsWithCatalogData(enrichedEvents);
 
         return {
             ...response,
-            events: enrichedEvents as EventProto[],
+            events: enrichedEventsWithCatalog as any,
         };
     }
 
