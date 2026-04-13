@@ -4,6 +4,14 @@ on:
   pull_request:
     branches: [ "dev", "prod" ]
   workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch target (dev or prod)'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
 
 jobs:
 
@@ -13,6 +21,7 @@ jobs:
       services: ${{ steps.filter.outputs.changes }}
       coolify-url: ${{ steps.obtain-coolify-url-token.outputs.coolify_url }}
       coolify-token: ${{ steps.obtain-coolify-url-token.outputs.coolify_token }}
+      branch: ${{ steps.obtain-coolify-url-token.outputs.branch }}
 
     steps:
       - uses: actions/checkout@v3
@@ -43,10 +52,14 @@ jobs:
       - name: Obtain Coolify Url and Token
         id: obtain-coolify-url-token
         run: |
-          COOLIFY_URL=$(echo "$COOLIFY_URLS_TOKENS_JSON" | jq -r ".\"${{ github.base_ref }}\".url")
-          COOLIFY_TOKEN=$(echo "$COOLIFY_URLS_TOKENS_JSON" | jq -r ".\"${{ github.base_ref }}\".token")
+          BRANCH="${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.base_ref }}"
+          echo "branch: $BRANCH"
+          COOLIFY_URL=$(echo "$COOLIFY_URLS_TOKENS_JSON" | jq -r ".\"$BRANCH\".url")
+          COOLIFY_TOKEN=$(echo "$COOLIFY_URLS_TOKENS_JSON" | jq -r ".\"$BRANCH\".token")
+
           echo "coolify_url=$COOLIFY_URL" >> $GITHUB_OUTPUT
           echo "coolify_token=$COOLIFY_TOKEN" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
         
         env:
           COOLIFY_URLS_TOKENS_JSON: ${{ secrets.COOLIFY_URLS_TOKENS_JSON }}
@@ -101,10 +114,10 @@ jobs:
       - name: post dinamic env value
         id: dinamic-env
         run: |
-          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".webhook_app_url")
-          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".app_uuid")
-          WEBHOOK_MIGRATION_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".webhook_migration_url")
-          MIGRATION_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".migration_uuid")
+          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ needs.search-individual-migration-service-changes.outputs.branch }}\".\"${{ matrix.services }}\".webhook_app_url")
+          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ needs.search-individual-migration-service-changes.outputs.branch }}\".\"${{ matrix.services }}\".app_uuid")
+          WEBHOOK_MIGRATION_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ needs.search-individual-migration-service-changes.outputs.branch }}\".\"${{ matrix.services }}\".webhook_migration_url")
+          MIGRATION_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ needs.search-individual-migration-service-changes.outputs.branch }}\".\"${{ matrix.services }}\".migration_uuid")
 
           echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
           echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
@@ -242,8 +255,8 @@ jobs:
       - name: post dinamic env value
         id: dinamic-env
         run: |
-          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".webhook_app_url")
-          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ github.base_ref }}\".\"${{ matrix.services }}\".app_uuid")
+          WEBHOOK_APP_URL=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ needs.search-individual-migration-service-changes.outputs.branch }}\".\"${{ matrix.services }}\".webhook_app_url")
+          APP_UUID=$(echo "$COOLIFY_WEBHOOKS_JSON" | jq -r ".\"${{ needs.search-individual-migration-service-changes.outputs.branch }}\".\"${{ matrix.services }}\".app_uuid")
 
           echo "webhook_app_url=$WEBHOOK_APP_URL" >> $GITHUB_OUTPUT
           echo "app_uuid=$APP_UUID" >> $GITHUB_OUTPUT
