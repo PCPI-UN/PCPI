@@ -14,6 +14,8 @@ export interface ProjectRepository {
   findManyByIds(ids: number[]): Promise<Project[]>;
   findProject(eventId: number, courseId: number, name: string): Promise<Project | null>;
 
+  countAll(): Promise<number>;
+
   listByFilter(
     eventId: number,
     opts?: { courseId?: number; q?: string; currentPage?: number; itemsPerPage?: number; state?: ProjectState } 

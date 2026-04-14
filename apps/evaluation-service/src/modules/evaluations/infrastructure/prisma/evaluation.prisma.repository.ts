@@ -93,6 +93,10 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
         ));
     }
 
+    async countAll(): Promise<number> {
+        return this.prisma.evaluation.count();
+    }
+
     async findByProjectId(projectId: number, page: number, limit: number): Promise<PaginatedEvaluations> {
         const skip = (page - 1) * limit;
 

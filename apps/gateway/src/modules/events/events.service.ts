@@ -370,6 +370,10 @@ export class EventService implements OnModuleInit {
         return firstValueFrom(this.eventService.deleteCategory({ id } as DeleteCategoryRequest));
     }
 
+    async getDashboardStats() {
+        return firstValueFrom(this.eventService.getDashboardStats({}));
+    }
+
     async createCourse(dto: CreateCourseDTO): Promise<CreateCourseResponse> {
         await this.createCategory({
             eventId: dto.eventId,

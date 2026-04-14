@@ -395,6 +395,10 @@ export class ProjectsService implements OnModuleInit {
     );
   }
 
+  async getDashboardStats() {
+    return firstValueFrom(this.projectsService.getDashboardStats({}));
+  }
+
   async getProjectById(id: number): Promise<ProjectComplete> {
     const request: GetProjectRequest = { id };
 

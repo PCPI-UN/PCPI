@@ -51,5 +51,6 @@ import {
   ],
   controllers: [EventsController],
   providers: [EventService],
+  exports: [EventService],
 })
 export class EventsModule { }

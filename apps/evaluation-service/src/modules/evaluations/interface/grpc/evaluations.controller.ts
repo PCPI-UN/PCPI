@@ -13,14 +13,15 @@ import { FindEvaluationsByEvaluatorDto } from '@evaluations/application/dto/find
 import { GetProjectStatsDto } from '@evaluations/application/dto/get-project-stats.dto';
 import { CheckEvaluationStatusDto } from '@evaluations/application/dto/check-evaluation-status.dto';
 import { GetTopProjectsByCourseDto } from '@evaluations/application/dto/get-top-projects-by-course.dto';
+import { GetDashboardStatsUC } from '../../application/use-cases/get-dashboard-stats.use-case';
 import {
-  EVALUATION_SERVICE_NAME,
-  EvaluationProto,
-  FindEvaluationsByEvaluatorResponse,
-  GetProjectStatsResponse,
-  CheckEvaluationStatusResponse,
-  GetTopProjectsByCourseRequest,
-  GetTopProjectsByCourseResponse,
+    EVALUATION_SERVICE_NAME,
+    EvaluationProto,
+    FindEvaluationsByEvaluatorResponse,
+    GetProjectStatsResponse,
+    CheckEvaluationStatusResponse,
+    GetTopProjectsByCourseRequest,
+    GetTopProjectsByCourseResponse,
 } from '@app/common/generated/evaluation';
 import { EvaluationMapper } from '@evaluations/application/mappers/evaluation.mapper';
 
@@ -33,7 +34,8 @@ export class EvaluationsController {
         private readonly getProjectStatsUseCase: GetProjectStatsUseCase,
         private readonly checkEvaluationStatusUseCase: CheckEvaluationStatusUseCase,
         private readonly getTopProjectsByCourseUseCase: GetTopProjectsByCourseUseCase,
-    ) {}
+        private readonly getDashboardStatsUC: GetDashboardStatsUC,
+    ) { }
 
     @GrpcMethod(EVALUATION_SERVICE_NAME, 'EvaluateProject')
     async evaluateProject(request: EvaluateProjectDto): Promise<EvaluationProto> {
@@ -82,6 +84,11 @@ export class EvaluationsController {
         const topProjects = await this.getTopProjectsByCourseUseCase.execute(dto);
 
         return EvaluationMapper.toGetTopProjectsByCourseResponse(topProjects);
+    }
+
+    @GrpcMethod(EVALUATION_SERVICE_NAME, 'GetDashboardStats')
+    async getDashboardStats() {
+        return this.getDashboardStatsUC.execute();
     }
 
 }

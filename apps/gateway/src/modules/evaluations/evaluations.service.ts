@@ -131,6 +131,12 @@ export class EvaluationsService implements OnModuleInit {
         );
     }
 
+    async getDashboardStats() {
+        return lastValueFrom(
+            this.evaluationService.getDashboardStats({}),
+        );
+    }
+
     async evaluateProject(
         projectId: number,
         userId: number,
