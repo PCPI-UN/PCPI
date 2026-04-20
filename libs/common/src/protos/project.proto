@@ -7,6 +7,7 @@ service ProjectsService {
   rpc GetProject    (GetProjectRequest)      returns (ProjectResponse);
   rpc GetProjectComplete    (GetProjectRequest)      returns (ProjectCompleteResponse);
   rpc ListProjectsByEvent (ListProjectsByEventRequest) returns (ListProjectsResponse);
+  rpc GetDashboardStats (GetProjectDashboardStatsRequest) returns (GetProjectDashboardStatsResponse);
 
   rpc CreateProjectWithPendingParticipants(CreateProjectWithParticipantsRequest)
       returns (CreateProjectWithParticipantsResponse);
@@ -176,6 +177,14 @@ message ListProjectsResponse {
   int32 itemsPerPage = 5;          // items per page
   int32 totalPages = 6;     // total number of pages
 }
+
+message GetProjectDashboardStatsRequest {}
+
+message GetProjectDashboardStatsResponse {
+  int32 totalProjects = 1;
+}
+
+
 message UpdateProjectRequest {
   int32 id = 1;
   optional string name = 2;

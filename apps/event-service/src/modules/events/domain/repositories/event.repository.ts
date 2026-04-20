@@ -8,6 +8,7 @@ export abstract class EventRepository {
   abstract findAll(): Promise<DomainEvent[]>;
   abstract update(id: number, input: any): Promise<DomainEvent>;
   abstract delete(id: number): Promise<void>; // Soft delete - sets active = false
+  abstract countActive(): Promise<number>;
 
   abstract findPaginated(params: {
     page: number;

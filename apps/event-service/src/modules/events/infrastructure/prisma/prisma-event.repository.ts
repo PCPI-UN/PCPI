@@ -313,73 +313,73 @@ export class PrismaEventRepository extends EventRepository {
 
   // 👉 SOLO EVENTOS DONDE EL USER ES MEMBER (StaffEventMember)
   async findPaginatedByMember(params: {
-  page: number;
-  limit: number;
-  q?: string;
-  onlyActive?: boolean;
-  userId: number;
-}): Promise<{ items: DomainEvent[]; total: number }> {
-  const { page, limit, q, onlyActive, userId } = params;
+    page: number;
+    limit: number;
+    q?: string;
+    onlyActive?: boolean;
+    userId: number;
+  }): Promise<{ items: DomainEvent[]; total: number }> {
+    const { page, limit, q, onlyActive, userId } = params;
 
-  const baseWhere = this.buildWhere({ q, onlyActive });
-  const skip = (page - 1) * limit;
+    const baseWhere = this.buildWhere({ q, onlyActive });
+    const skip = (page - 1) * limit;
 
-  // ==========================================================
-  // 🔎 LOG 1: Ver todos los EventMembers del usuario
-  // ==========================================================
-  const userMemberships = await (this.prisma as any).staffEventMember.findMany({
-    where: { userId },
-  });
+    // ==========================================================
+    // 🔎 LOG 1: Ver todos los EventMembers del usuario
+    // ==========================================================
+    const userMemberships = await (this.prisma as any).staffEventMember.findMany({
+      where: { userId },
+    });
 
-  console.log("🔎 [EventMember] Registros encontrados para userId:", userId);
-  console.log(JSON.stringify(userMemberships, null, 2));
+    console.log("🔎 [EventMember] Registros encontrados para userId:", userId);
+    console.log(JSON.stringify(userMemberships, null, 2));
 
-  // ==========================================================
-  // 🔎 LOG 2: Ver el filtro completo que enviamos a Prisma
-  // ==========================================================
-  const where = {
-    ...baseWhere,
-    participants: {
-      some: {
-        userId: userId,
-        active: true,
+    // ==========================================================
+    // 🔎 LOG 2: Ver el filtro completo que enviamos a Prisma
+    // ==========================================================
+    const where = {
+      ...baseWhere,
+      participants: {
+        some: {
+          userId: userId,
+          active: true,
+        },
       },
-    },
-  };
+    };
 
-  console.log("🧩 [QueryWhere] Filtro de búsqueda construido:");
-  console.log(JSON.stringify(where, null, 2));
+    console.log("🧩 [QueryWhere] Filtro de búsqueda construido:");
+    console.log(JSON.stringify(where, null, 2));
 
-  // ==========================================================
-  // 🔎 LOG 3: Ejecutar la query
-  // ==========================================================
-  const rows = await this.prisma.event.findMany({
-    where,
-    skip,
-    take: limit,
-    orderBy: { createdAt: 'desc' },
-  });
+    // ==========================================================
+    // 🔎 LOG 3: Ejecutar la query
+    // ==========================================================
+    const rows = await this.prisma.event.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
 
-  console.log("📦 [Eventos encontrados]:");
-  console.log(JSON.stringify(rows.map(r => ({ id: r.id, name: r.name })), null, 2));
+    console.log("📦 [Eventos encontrados]:");
+    console.log(JSON.stringify(rows.map(r => ({ id: r.id, name: r.name })), null, 2));
 
-  const total = await this.prisma.event.count({ where });
+    const total = await this.prisma.event.count({ where });
 
-  // ==========================================================
-  // 🔎 LOG 4: Mostrar el total
-  // ==========================================================
-  console.log(`📊 [Total]: ${total} eventos permitidos para userId ${userId}`);
+    // ==========================================================
+    // 🔎 LOG 4: Mostrar el total
+    // ==========================================================
+    console.log(`📊 [Total]: ${total} eventos permitidos para userId ${userId}`);
 
-  // ==========================================================
-  // FIN LOGS - Mapear a Domain
-  // ==========================================================
-  const items = rows.map(toDomainEvent);
+    // ==========================================================
+    // FIN LOGS - Mapear a Domain
+    // ==========================================================
+    const items = rows.map(toDomainEvent);
 
-  return {
-    items,
-    total,
-  };
-}
+    return {
+      items,
+      total,
+    };
+  }
 
   // 👉 LIST MY EVENTS - Platform staff sees all, regular users see only their events with role info
   async findMyEvents(params: {
@@ -452,5 +452,12 @@ export class PrismaEventRepository extends EventRepository {
       };
     }
   }
+
+  async countActive(): Promise<number> {
+    return this.prisma.event.count({
+      where: { active: true },
+    });
+  }
+
 
 }

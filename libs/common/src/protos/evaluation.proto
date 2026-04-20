@@ -10,6 +10,8 @@ service EvaluationService {
   rpc GetProjectStats(GetProjectStatsRequest) returns (GetProjectStatsResponse);
   rpc CheckEvaluationStatus(CheckEvaluationStatusRequest) returns (CheckEvaluationStatusResponse);
   rpc GetTopProjectsByCourse(GetTopProjectsByCourseRequest) returns (GetTopProjectsByCourseResponse);
+  rpc GetDashboardStats(GetEvaluationDashboardStatsRequest) returns (GetEvaluationDashboardStatsResponse);
+
 }
 
 // ===== CRITERIONS SERVICE =====
@@ -228,3 +230,8 @@ message GetTopProjectsByCourseResponse {
   repeated TopProjectProto topProjects = 1;
 }
 
+message GetEvaluationDashboardStatsRequest {}
+
+message GetEvaluationDashboardStatsResponse {
+  int32 evaluations = 1;
+}
