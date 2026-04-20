@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { EvaluationType, EventType } from '@app/common/generated/event';
 import {
   IsArray,
@@ -7,7 +7,6 @@ import {
   IsBoolean,
   IsOptional,
   IsString,
-  IsNotEmpty,
   IsDateString,
   IsEnum,
   IsNumber,
@@ -15,21 +14,120 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  ValidateNested,
 } from 'class-validator';
 import {
   transformEvaluationType,
   transformEventType,
 } from './event-type-transformer';
 
-export class UpdateEventDTO {
+class UpdateEventCategoryDTO {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  id?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  eventId?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+}
+
+class UpdateEventAwardDTO {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  id?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  categoryId?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  value?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  position?: number;
+}
+
+class UpdateEventSpecificInscriptionDetailDTO {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  id?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  eventId?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  value?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  isRequired?: boolean;
+}
+
+export class UpdateEventPayloadDTO {
   @ApiProperty({
     description: 'ID of the event to update',
     example: 123,
+    required: false,
   })
+  @IsOptional()
   @IsInt()
   @Min(1)
-  @IsNotEmpty()
-  id: number;
+  id?: number;
 
   @ApiProperty({
     description: 'New name of the event',
@@ -218,5 +316,51 @@ export class UpdateEventDTO {
   @IsArray()
   @IsString({ each: true })
   organizers?: string[];
+
+  @ApiProperty({
+    description: 'Updated event categories',
+    required: false,
+    type: [UpdateEventCategoryDTO],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateEventCategoryDTO)
+  categories?: UpdateEventCategoryDTO[];
+
+  @ApiProperty({
+    description: 'Updated category awards',
+    required: false,
+    type: [UpdateEventAwardDTO],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateEventAwardDTO)
+  awards?: UpdateEventAwardDTO[];
+
+  @ApiProperty({
+    description: 'Updated specific inscription details',
+    required: false,
+    type: [UpdateEventSpecificInscriptionDetailDTO],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateEventSpecificInscriptionDetailDTO)
+  specificInscriptionDetails?: UpdateEventSpecificInscriptionDetailDTO[];
+
+}
+
+export class UpdateEventDTO extends UpdateEventPayloadDTO {
+  @ApiProperty({
+    description: 'Event payload wrapper accepted by the update endpoint',
+    required: false,
+    type: UpdateEventPayloadDTO,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => UpdateEventPayloadDTO)
+  event?: UpdateEventPayloadDTO;
 }
 
