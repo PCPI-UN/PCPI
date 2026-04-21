@@ -1,6 +1,6 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { ProjectRepository } from '../../domain/repositories/project.repository';
-import { ProjectParticipantWithUserInfo } from '../../domain/entities/project.entity';
+import { PendingProjectParticipant, ProjectParticipantWithUserInfo } from '../../domain/entities/project.entity';
 import { ListDocumentsUC } from './list-documents.uc';
 
 @Injectable()
@@ -21,13 +21,15 @@ export class GetMyProjectByEventUC {
             this.listDocumentsUC.execute({ projectId: project.id }),
         ]);
 
-        const participants: ProjectParticipantWithUserInfo[] = pendingParticipants.map((participant: any) => ({
+        const participants: ProjectParticipantWithUserInfo[] = pendingParticipants.map((participant: PendingProjectParticipant) => ({
             userId: 0,
             projectId: participant.projectId,
             studentCode: participant.studentCode,
             firstName: participant.firstName ?? null,
             lastName: participant.lastName ?? null,
             email: participant.email ?? null,
+            semester: participant.semester ?? null,
+            career: participant.career ?? null,
         }));
 
         return {
