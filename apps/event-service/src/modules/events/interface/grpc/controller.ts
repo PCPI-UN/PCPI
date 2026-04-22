@@ -15,6 +15,7 @@ import { GetEventDTO } from '@events/application/dto/get-event.dto';
 import { DeleteEventDTO } from '@events/application/dto/delete-event.dto';
 import { ListMyEventsDto } from '@events/application/dto/list-my-events.dto';
 import { ListEventsDTO } from '@events/application/dto/list-events.dto';
+import { GetEventDashboardStatsUC } from '../../application/use-cases/get-dashboard-stats.uc';
 
 @Controller()
 export class EventsController {
@@ -26,7 +27,8 @@ export class EventsController {
     private readonly listMyEventsUC: ListMyEventsUseCase,
     private readonly listEventsUC: ListEventsUC,
     private readonly getEventStatusesUC: GetEventStatusesUC,
-  ) {}
+    private readonly getDashboardStatsUC: GetEventDashboardStatsUC,
+  ) { }
 
   @GrpcMethod(EVENT_SERVICE_NAME, 'CreateEvent')
   async createEvent(request: CreateEventDTO) {
@@ -68,4 +70,10 @@ export class EventsController {
   async getEventStatuses(request: GetEventStatusesRequest) {
     return this.getEventStatusesUC.execute();
   }
+
+  @GrpcMethod(EVENT_SERVICE_NAME, 'GetDashboardStats')
+  async getDashboardStats() {
+    return this.getDashboardStatsUC.execute();
+  }
+
 }

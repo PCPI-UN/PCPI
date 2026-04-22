@@ -14,6 +14,7 @@ service EventService {
   rpc ListMyEvents (ListMyEventsRequest) returns (ListMyEventsResponse) {}
   rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
   rpc GetEventStatuses (GetEventStatusesRequest) returns (GetEventStatusesResponse) {}
+  rpc GetDashboardStats (GetEventDashboardStatsRequest) returns (GetEventDashboardStatsResponse) {}
 
   // ---- EVENT MEMBERS ----
   rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
@@ -265,6 +266,12 @@ message EventStatusMapping {
 
 message GetEventStatusesResponse {
   repeated EventStatusMapping statuses = 1;
+}
+
+message GetEventDashboardStatsRequest {}
+
+message GetEventDashboardStatsResponse {
+  int32 activeEvents = 1;
 }
 
 // =====================

@@ -16,6 +16,7 @@ import { EventServicePort } from './infrastructure/ports/event.service.port';
 import { EventServiceAdapter } from './infrastructure/adapters/event.service.adapter';
 import { AuthServicePort } from './infrastructure/ports/auth.service.port';
 import { AuthServiceAdapter } from './infrastructure/adapters/auth.service.adapter';
+import { GetDashboardStatsUC } from './application/use-cases/get-dashboard-stats.use-case';
 
 @Module({
     imports: [PrismaModule, CriterionsModule],
@@ -43,6 +44,7 @@ import { AuthServiceAdapter } from './infrastructure/adapters/auth.service.adapt
         GetProjectStatsUseCase,
         CheckEvaluationStatusUseCase,
         GetTopProjectsByCourseUseCase,
+        GetDashboardStatsUC,
     ],
     exports: [
         EvaluateProjectUseCase,
@@ -51,6 +53,7 @@ import { AuthServiceAdapter } from './infrastructure/adapters/auth.service.adapt
         GetProjectStatsUseCase,
         CheckEvaluationStatusUseCase,
         GetTopProjectsByCourseUseCase,
+        GetDashboardStatsUC,
     ],
 })
-export class EvaluationsModule {}
+export class EvaluationsModule { }

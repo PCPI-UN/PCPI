@@ -8,6 +8,7 @@ import {
   Patch,
   Query,
   ParseIntPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -30,6 +31,7 @@ import { CreateEventDTO } from './dto/events/create-event.dto';
 import { UpdateEventDTO } from './dto/events/update-event.dto';
 import { ListEventsDTO } from './dto/events/list-events.dto';
 import { ListMyEventsDTO } from './dto/events/list-my-events.dto';
+import { ListEventsDropdownDTO } from './dto/events/list-events-dropdown.dto';
 
 // Event Member DTOs
 import { CreateEventMemberDTO } from './dto/event-members/create-event-member.dto';
@@ -124,6 +126,41 @@ export class EventsController {
     @Query() query: ListMyEventsDTO,
   ) {
     return this.eventsService.listMyEvents(userId, query);
+  }
+
+  @RequirePermission('manage:events')
+  @Get('dropdown')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List events for dropdown' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns events for dropdown',
+    schema: {
+      example: {
+        events: [{ id: 1, name: 'Nombre del evento' }],
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Authentication required' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
+  async listEventsDropdown(
+    @Query() query: ListEventsDropdownDTO,
+    @GetUser() user: AppUser,
+  ) {
+    const isAdmin = user.platformRoles?.some((role) => role.name === 'Admin');
+
+    if (!isAdmin) {
+      throw new ForbiddenException('Only Admin users can access events dropdown');
+    }
+
+    const response = await this.eventsService.listEvents(query);
+
+    return {
+      events: (response.events ?? []).map((event) => ({
+        id: event.id,
+        name: event.name,
+      })),
+    };
   }
 
   /**

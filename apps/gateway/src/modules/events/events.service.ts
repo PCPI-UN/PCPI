@@ -1,4 +1,4 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -181,6 +181,203 @@ export class EventService implements OnModuleInit {
         return currentPage < totalPages ? String(currentPage + 1) : '';
     }
 
+    private async getEventCatalogData(eventId: number) {
+        const [categoriesResponse, detailsResponse] = await Promise.all([
+            this.listCategoriesByEvent(eventId, {
+                eventId,
+                page: 1,
+                limit: 1000,
+            }),
+            this.listEventInscriptionDetails({
+                eventId,
+                page: 1,
+                limit: 1000,
+            }),
+        ]);
+
+        const categories = categoriesResponse.categories ?? [];
+        const awardsByCategory = await Promise.all(
+            categories.map((category) =>
+                this.listCategoryAwards({
+                    categoryId: category.id,
+                    page: 1,
+                    limit: 1000,
+                }),
+            ),
+        );
+
+        return {
+            category: categories[0] ?? null,
+            categories,
+            awards: awardsByCategory.flatMap((item) => item.awards ?? []),
+            specificInscriptionDetails: detailsResponse.details ?? [],
+        };
+    }
+
+    private async enrichEventWithCatalogData<T extends { id: number }>(event: T) {
+        const catalogData = await this.getEventCatalogData(event.id);
+        return {
+            ...event,
+            ...catalogData,
+        };
+    }
+
+    private async enrichEventsWithCatalogData<T extends { id: number }>(events: T[]) {
+        if (!events || events.length === 0) {
+            return [];
+        }
+
+        return Promise.all(events.map((event) => this.enrichEventWithCatalogData(event)));
+    }
+
+    private normalizeUpdateEventDTO(updateEventDTO: UpdateEventDTO): any {
+        const payload = updateEventDTO as any;
+
+        if (payload.event) {
+            return {
+                ...payload.event,
+                id: payload.id ?? payload.event.id,
+            };
+        }
+
+        return payload;
+    }
+
+    private async upsertEventCategories(
+        eventId: number,
+        categories?: Array<Partial<CreateCategoryDTO & UpdateCategoryDTO>>,
+    ): Promise<number[]> {
+        if (!categories) {
+            return [];
+        }
+
+        const categoryIds: number[] = [];
+
+        for (const category of categories) {
+            if (category.id) {
+                await this.updateCategory({
+                    id: category.id,
+                    name: category.name,
+                    description: category.description,
+                    active: category.active,
+                });
+                categoryIds.push(category.id);
+                continue;
+            }
+
+            const response = await this.createCategory({
+                eventId: category.eventId ?? eventId,
+                name: category.name?.trim() || String(eventId),
+                description: category.description,
+                active: category.active ?? true,
+            });
+
+            if (response.category?.id) {
+                categoryIds.push(response.category.id);
+            }
+        }
+
+        return categoryIds;
+    }
+
+    private async getDefaultCategoryId(eventId: number, categoryIds: number[]): Promise<number | undefined> {
+        if (categoryIds.length > 0) {
+            return categoryIds[0];
+        }
+
+        const response = await this.listCategoriesByEvent(eventId, {
+            eventId,
+            page: 1,
+            limit: 1,
+        });
+
+        return response.categories?.[0]?.id;
+    }
+
+    private async upsertEventAwards(
+        eventId: number,
+        categoryIds: number[],
+        awards?: Array<Partial<CreateCategoryAwardDTO & UpdateCategoryAwardDTO>>,
+    ) {
+        if (!awards) {
+            return;
+        }
+
+        const defaultCategoryId = await this.getDefaultCategoryId(eventId, categoryIds);
+
+        await Promise.all(
+            awards.map((award) => {
+                if (award.id) {
+                    return this.updateCategoryAward({
+                        id: award.id,
+                        title: award.title,
+                        description: award.description,
+                        value: award.value,
+                        position: award.position,
+                    });
+                }
+
+                const categoryId = award.categoryId ?? defaultCategoryId;
+                if (!categoryId) {
+                    throw new BadRequestException('categoryId is required to create an award');
+                }
+
+                return this.createCategoryAward({
+                    categoryId,
+                    title: award.title ?? '',
+                    description: award.description,
+                    value: award.value,
+                    position: award.position ?? 0,
+                });
+            }),
+        );
+    }
+
+    private async upsertEventInscriptionDetails(
+        eventId: number,
+        details?: Array<Partial<CreateEventInscriptionDetailDTO & UpdateEventInscriptionDetailDTO>>,
+    ) {
+        if (!details) {
+            return;
+        }
+
+        await Promise.all(
+            details.map((detail) => {
+                if (detail.id) {
+                    return this.updateEventInscriptionDetail({
+                        id: detail.id,
+                        title: detail.title,
+                        description: detail.description,
+                        value: detail.value,
+                        isRequired: detail.isRequired,
+                    });
+                }
+
+                return this.createEventInscriptionDetail({
+                    eventId: detail.eventId ?? eventId,
+                    title: detail.title ?? '',
+                    description: detail.description,
+                    value: detail.value ?? 0,
+                    isRequired: detail.isRequired ?? true,
+                });
+            }),
+        );
+    }
+
+    private async updateEventCatalogData(
+        eventId: number,
+        categories?: Array<Partial<CreateCategoryDTO & UpdateCategoryDTO>>,
+        awards?: Array<Partial<CreateCategoryAwardDTO & UpdateCategoryAwardDTO>>,
+        details?: Array<Partial<CreateEventInscriptionDetailDTO & UpdateEventInscriptionDetailDTO>>,
+    ) {
+        const categoryIds = await this.upsertEventCategories(eventId, categories);
+
+        await Promise.all([
+            this.upsertEventAwards(eventId, categoryIds, awards),
+            this.upsertEventInscriptionDetails(eventId, details),
+        ]);
+    }
+
     async create(createEventDTO: CreateEventDTO): Promise<CreateEventResponse> {
         const {
             category,
@@ -266,19 +463,44 @@ export class EventService implements OnModuleInit {
         if (response.event) {
             const statuses = await this.getAndCacheStatuses();
             const enrichedEvent = this.enrichSingleEventWithStatus(response.event, statuses);
-            return { event: enrichedEvent as EventProto };
+            const enrichedEventWithCatalog = await this.enrichEventWithCatalogData(enrichedEvent);
+            return { event: enrichedEventWithCatalog as any };
         }
 
         return response;
     }
 
     async update(updateEventDTO: UpdateEventDTO): Promise<UpdateEventResponse> {
-        const response = await firstValueFrom(this.eventService.updateEvent(updateEventDTO as UpdateEventRequest));
+        const normalizedDTO = this.normalizeUpdateEventDTO(updateEventDTO);
+        const {
+            categories,
+            awards,
+            specificInscriptionDetails,
+            event,
+            createdAt,
+            updatedAt,
+            status,
+            statusName,
+            statusDescription,
+            createdByUserId,
+            category,
+            ...eventPayload
+        } = normalizedDTO;
+
+        const response = await firstValueFrom(this.eventService.updateEvent(eventPayload as UpdateEventRequest));
+
+        await this.updateEventCatalogData(
+            eventPayload.id,
+            categories,
+            awards,
+            specificInscriptionDetails,
+        );
 
         if (response.event) {
             const statuses = await this.getAndCacheStatuses();
             const enrichedEvent = this.enrichSingleEventWithStatus(response.event, statuses);
-            return { event: enrichedEvent as EventProto };
+            const enrichedEventWithCatalog = await this.enrichEventWithCatalogData(enrichedEvent);
+            return { event: enrichedEventWithCatalog as any };
         }
 
         return response;
@@ -318,6 +540,10 @@ export class EventService implements OnModuleInit {
 
     async deleteCategory(id: number): Promise<DeleteCategoryResponse> {
         return firstValueFrom(this.eventService.deleteCategory({ id } as DeleteCategoryRequest));
+    }
+
+    async getDashboardStats() {
+        return firstValueFrom(this.eventService.getDashboardStats({}));
     }
 
     async createCourse(dto: CreateCourseDTO): Promise<CreateCourseResponse> {
@@ -613,9 +839,11 @@ export class EventService implements OnModuleInit {
             };
         });
 
+        const enrichedEventsWithCatalog = await this.enrichEventsWithCatalogData(enrichedEvents);
+
         return {
             ...response,
-            events: enrichedEvents as any,
+            events: enrichedEventsWithCatalog as any,
         };
     }
 
@@ -630,10 +858,11 @@ export class EventService implements OnModuleInit {
 
         const statuses = await this.getAndCacheStatuses();
         const enrichedEvents = this.enrichEventsWithStatus(response.events, statuses);
+        const enrichedEventsWithCatalog = await this.enrichEventsWithCatalogData(enrichedEvents);
 
         return {
             ...response,
-            events: enrichedEvents as EventProto[],
+            events: enrichedEventsWithCatalog as any,
         };
     }
 

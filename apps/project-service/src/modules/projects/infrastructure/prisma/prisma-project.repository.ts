@@ -93,6 +93,10 @@ export class PrismaProjectRepository implements ProjectRepository {
     return { items: items as unknown as Project[], total, currentPage, itemsPerPage };
   }
 
+  async countAll(): Promise<number> {
+    return this.prisma.project.count();
+  }
+
   async updateProject(input: {
     id: number;
     name?: string;

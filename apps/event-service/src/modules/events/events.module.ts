@@ -24,6 +24,8 @@ import { EventRepository } from '@events/domain/repositories/event.repository';
 import { EventMemberRepository } from '@events/domain/repositories/event-member.repository';
 import { AUTH_SERVICE_NAME, protobufPackage } from '@app/common/generated/auth';
 import { EventCatalogService } from '@events/application/event-catalog.service';
+import { GetEventDashboardStatsUC } from '@events/application/use-cases/get-dashboard-stats.uc';
+
 
 @Module({
   imports: [
@@ -63,6 +65,7 @@ import { EventCatalogService } from '@events/application/event-catalog.service';
     DeleteEventUC,
     ListMyEventsUseCase,
     GetEventStatusesUC,
+    GetEventDashboardStatsUC,
     // Event-member use cases
     CreateEventMemberUseCase,
     DeleteEventMemberUseCase,

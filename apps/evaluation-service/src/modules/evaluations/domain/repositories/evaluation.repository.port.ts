@@ -45,6 +45,7 @@ export abstract class EvaluationRepositoryPort {
     abstract existsByProjectAndEvaluator(projectId: number, memberUserId: number, memberEventId: number): Promise<boolean>;
     abstract findEvaluationDetails(evaluationId: number): Promise<EvaluationDetail[]>;
     abstract getProjectStats(projectId: number): Promise<ProjectStats>;
+    abstract countAll(): Promise<number>;
     abstract findByProjectIdsAndEvaluator(
         projectIds: number[],
         userId: number,
