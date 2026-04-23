@@ -113,6 +113,8 @@ message ProjectParticipant {
   optional string firstName = 4;
   optional string lastName = 5;
   optional string email = 6;
+  optional string semester = 7;
+  optional string career = 8;
 }
 
 message PendingProjectParticipant {

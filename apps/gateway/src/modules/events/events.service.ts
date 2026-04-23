@@ -876,9 +876,11 @@ export class EventService implements OnModuleInit {
             ? {
                 ...projectResponse.project,
                 participants: (projectResponse.project.participants ?? []).map(
-                    ({ studentCode, ...participant }) => ({
+                    ({ studentCode, semester, career, ...participant }) => ({
                         ...participant,
                         ParticipantCode: studentCode,
+                        semester,
+                        career,
                     }),
                 ),
             }
