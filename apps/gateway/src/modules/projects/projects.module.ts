@@ -19,9 +19,11 @@ import {
   EVALUATION_SERVICE_NAME,
   protobufPackage as evaluationProtobufPackage,
 } from '@app/common/generated/evaluation';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     ClientsModule.registerAsync([
       {
         name: PROJECTS_SERVICE_NAME,
@@ -103,4 +105,3 @@ import {
   exports: [ProjectsService],
 })
 export class ProjectsModule {}
-
