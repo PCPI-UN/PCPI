@@ -349,6 +349,15 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
+  async changeToUnderReviewProject(projectId: number, actingUserId: number) {
+    return firstValueFrom(
+      this.projectsService.changeToUnderReviewProject({
+        id: projectId,
+        actingUserId: actingUserId,
+      })
+    );
+  }
+
   // Helper method to convert DTO TypedDocument to Proto TypedDocument
   private mapDocumentTypeToProto(type: TypedDocument): ProtoTypedDocument {
     const mapping = {

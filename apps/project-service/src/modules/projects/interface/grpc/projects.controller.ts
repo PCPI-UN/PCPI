@@ -9,6 +9,7 @@ import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
 import { toProtoProject, toProtoDocument, protoToState, protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument, toProtoProjectComplete, protoToDocumentStatus } from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
+import { ChangeToUnderReviewProjectUC } from '../../application/use-cases/change-to-under-review-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
 import { ReassignProjectJurorUC } from '../../application/use-cases/reassign-project-juror.uc';
 import { ListProjectJurorsUC } from '../../application/use-cases/list-project-jurors.uc';
@@ -74,6 +75,7 @@ export class ProjectsController {
     private readonly updateProjectDocumentUC: UpdateProjectDocumentUC,
     private readonly getMyProjectByEventUC: GetMyProjectByEventUC,
     private readonly checkActiveSubmissionByEmailsUC: CheckActiveSubmissionByEmailsUC,
+    private readonly changeToUnderReviewProjectUC: ChangeToUnderReviewProjectUC,
     @Inject(INVITATION_SERVICE_NAME) private readonly client: ClientGrpc,
   ) { }
 
@@ -170,6 +172,15 @@ export class ProjectsController {
       reason: req.reason
     })
     return { project: toProtoProject(updated) }
+  }
+
+  @GrpcMethod('ProjectsService', 'ChangeToUnderReviewProject')
+  async changeToUnderReviewProjectRpc(req: { id: number; actingUserId: number }) {
+    const updated = await this.changeToUnderReviewProjectUC.execute({
+      projectId: req.id,
+      activeUserId: req.actingUserId
+    });
+    return { project: toProtoProject(updated) };
   }
 
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')

@@ -13,6 +13,7 @@ import { UpdateProjectUC } from './application/use-cases/update-project.uc';
 import { ApproveProjectUC } from './application/use-cases/approve-project.uc';
 import { RejectProjectUC } from './application/use-cases/reject-project.uc';
 import { RequestChangesProjectUC } from './application/use-cases/request-changes-project.uc';
+import { ChangeToUnderReviewProjectUC } from './application/use-cases/change-to-under-review-project.uc';
 import { AssignJurorBulkUC } from './application/use-cases/assign-juror-bulk.uc';
 import { ReassignProjectJurorUC } from './application/use-cases/reassign-project-juror.uc';
 import { ListProjectJurorsUC } from './application/use-cases/list-project-jurors.uc';
@@ -53,6 +54,7 @@ import { CheckActiveSubmissionByEmailsUC } from './application/use-cases/check-a
     ListParticipantsUC, AddPendingParticipantUC, ListPendingParticipantsUC,
     ListProjectsAssignedToJurorUC, ListProjectsForReviewUC,
     NotificateStudentUC, UpdateProjectDocumentUC, RequestChangesProjectUC, CheckActiveSubmissionByEmailsUC,
+    ChangeToUnderReviewProjectUC,
     {
       provide: NOTIFICATION_SERVICE_PORT,
       useExisting: NotificationServiceAdapter,
