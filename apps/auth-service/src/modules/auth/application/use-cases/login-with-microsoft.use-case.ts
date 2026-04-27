@@ -35,6 +35,8 @@ export class LoginWithMicrosoftUseCase {
         if (user) {
             if (!user.oid) {
                 user.oid = oid;
+                user.password = undefined;
+                user.status = UserStatus.CONFIRMED;
                 await this.userRepository.save(user);
             } else if (user.oid !== oid) {
                 throw new RpcException({

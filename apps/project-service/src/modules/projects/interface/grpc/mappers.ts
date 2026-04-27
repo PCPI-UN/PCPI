@@ -110,6 +110,8 @@ export const toProtoParticipant = (p: any) => ({
   firstName: p.firstName ?? undefined,
   lastName: p.lastName ?? undefined,
   email: p.email ?? undefined,
+  semester: p.semester ?? undefined,
+  career: p.career ?? undefined,
 });
 
 export const toProtoPendingParticipant = (p: any) => ({
