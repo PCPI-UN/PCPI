@@ -35,7 +35,7 @@ export class LoginWithMicrosoftUseCase {
         if (user) {
             if (!user.oid) {
                 user.oid = oid;
-                user.pasword = null;
+                user.password = null;
                 user.status = UserStatus.CONFIRMED;
                 await this.userRepository.save(user);
             } else if (user.oid !== oid) {
