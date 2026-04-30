@@ -25,6 +25,7 @@ import { ProjectsService } from './projects.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AppUser } from '../auth/types/app-user.type';
+import { AddPendingParticipantDto } from './dto/add-pending-participant.dto';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
 import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
@@ -99,6 +100,20 @@ export class ProjectsController {
       body,
       uploadedFiles.files || [],
     );
+  }
+
+  // TODO: Add platform permission guard - only admins/team leaders can add/update pending participants
+  @Post('add-update-participants')
+  @ApiOperation({
+    summary: 'Add a pending participant to a project or update an existing one',
+    description:
+      'Adds a new pending participant to a project or updates an existing pending participant if the email already exists for that project. '
+  })
+  @ApiResponse({ status: 201, description: 'Participant created/updated successfully' })
+  addPendingParticipant(
+    @Body() body: AddPendingParticipantDto,
+  ) {
+    return this.projectsService.addPendingParticipant(body);
   }
 
   // TODO: Add platform permission guard - only admins/event managers can assign jurors
