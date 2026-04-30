@@ -25,6 +25,18 @@ Defines the allowed event types in the system.
 - `Expo`: exhibition-style event.
 - `Competencia`: competition-style event.
 
+### `EvaluationType`
+
+Defines the evaluation scale configured for an event and shared through `libs/common/src/protos/event.proto`.
+
+- `FINAL_PROJECTS`: current final-project rubric. Evaluation service validates raw scores `1` through `4` and maps them to `25`, `55`, `75`, and `90`.
+- `ZERO_TO_FIVE`: reserved for a future `0` through `5` evaluation scale.
+- `ZERO_TO_HUNDRED`: reserved for a future `0` through `100` evaluation scale.
+
+The event is the source of truth for `evaluationType`. Evaluation requests do not send this value; `evaluation-service` resolves it from `projectId -> project.eventId -> event.evaluationType`.
+
+Current persistence note: existing events without a stored `evaluationType` are exposed through the service as `FINAL_PROJECTS` so existing final-project evaluations continue to work. Database migration for persisted `FINAL_PROJECTS` values is handled separately.
+
 ## Models
 
 ### `Event`
@@ -47,7 +59,7 @@ This is the main entity in the service. It represents an event created by a user
 - `createdByUserId`: identifier of the user who created the event.
 - `location`: main event location.
 - `locationDetails`: additional location details. Optional.
-- `evaluationType`: evaluation mode configured for the event based on the `EvaluationType` enum. Optional.
+- `evaluationType`: evaluation mode configured for the event based on the shared `EvaluationType` enum. Optional in persistence during the transition period; service responses default missing values to `FINAL_PROJECTS`.
 - `inscriptionRequirements`: additional inscription requirements or conditions for participants. Optional.
 - `minimumTeamSize`: minimum number of members required per team. Optional.
 - `aboutOurAllies`: descriptive information about the event allies or partners. Optional.
@@ -235,3 +247,4 @@ The main schema relationships are:
 - `collaborators` and `organizers` are stored as `String[]`, which simplifies the schema but limits normalization and relational querying.
 - `Category.name` is marked as `@unique`, so the same category name cannot currently be reused across different events.
 - `StaffEventMember` does not have a standalone `id`; its uniqueness depends on the `userId + eventId` composite key.
+- `evaluationType` drives downstream score validation and mapping in `evaluation-service`; changing it changes accepted score ranges once the corresponding evaluation type is implemented.
