@@ -42,6 +42,10 @@ export function transformEvaluationType({ value }: TransformFnParams) {
   if (typeof value === 'string') {
     const normalized = value.trim();
 
+    if (normalized === 'FINAL_PROJECTS') {
+      return EvaluationType.FINAL_PROJECTS;
+    }
+
     if (normalized === 'ZERO_TO_FIVE') {
       return EvaluationType.ZERO_TO_FIVE;
     }

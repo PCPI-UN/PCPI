@@ -1,4 +1,4 @@
-import { IsInt, IsPositive, IsOptional, IsString, IsArray, ArrayMinSize, ValidateNested, Min, Max } from 'class-validator';
+import { IsInt, IsPositive, IsOptional, IsString, IsArray, ArrayMinSize, ValidateNested, IsNumber, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class EvaluateProjectDto {
@@ -27,7 +27,7 @@ export class EvaluationScoreDto {
   criterionId: number;
 
   @IsInt()
-  @Min(1)
-  @Max(4)
+  @IsNumber()
+  @IsNotEmpty()
   score: number;
 }

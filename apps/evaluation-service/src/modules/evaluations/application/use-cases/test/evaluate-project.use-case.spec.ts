@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EvaluateProjectUseCase } from './evaluate-project.use-case';
-import { EvaluationRepositoryPort } from '../../domain/repositories/evaluation.repository.port';
-import { ProjectServicePort } from '../../infrastructure/ports/project.service.port';
-import { EventServicePort } from '../../infrastructure/ports/event.service.port';
-import { AuthServicePort } from '../../infrastructure/ports/auth.service.port';
-import { CriterionRepositoryPort } from '../../../criterions/domain/repositories/criterion.repository.port';
+import { EvaluateProjectUseCase } from '../evaluate-project.use-case';
+import { EvaluationRepositoryPort } from '../../../domain/repositories/evaluation.repository.port';
+import { ProjectServicePort } from '../../../infrastructure/ports/project.service.port';
+import { EventServicePort } from '../../../infrastructure/ports/event.service.port';
+import { AuthServicePort } from '../../../infrastructure/ports/auth.service.port';
+import { CriterionRepositoryPort } from '../../../../criterions/domain/repositories/criterion.repository.port';
+import { EvaluationType } from '../../../../../common/constants/evaluation-type.constants';
 import { RpcException } from '@nestjs/microservices';
-import { EvaluateProjectRequest } from '@app/common/generated/evaluation';
 
 describe('EvaluateProjectUseCase', () => {
     let useCase: EvaluateProjectUseCase;
@@ -105,7 +105,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -144,6 +145,76 @@ describe('EvaluateProjectUseCase', () => {
         expect(mockEvaluationRepository.save).toHaveBeenCalled();
     });
 
+    it('should get evaluationType from event and validate FINAL_PROJECTS scores', async () => {
+        mockEventService.getEvent.mockResolvedValue({
+            id: 1,
+            evaluationsOpened: true,
+            startDate: new Date(Date.now() - 10000).toISOString(),
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
+        });
+
+        mockProjectService.isJurorAssigned.mockResolvedValue(true);
+        mockEvaluationRepository.existsByProjectAndEvaluator.mockResolvedValue(false);
+        mockCriterionRepository.findById.mockResolvedValue({ id: 1, weight: 1 });
+        mockEvaluationRepository.save.mockImplementation((evalObj) =>
+            Promise.resolve({ ...evalObj, id: 1 })
+        );
+
+        const result = await useCase.execute({
+            projectId: 1,
+            userId: 1,
+            scores: [{ criterionId: 1, score: 4 }],
+        });
+
+        expect(mockProjectService.getProject).toHaveBeenCalledWith(1);
+        expect(mockEventService.getEvent).toHaveBeenCalledWith(1);
+        expect(result.evaluation.grade).toBe(90);
+    });
+
+    it('should reject invalid FINAL_PROJECTS score with descriptive error', async () => {
+        mockEventService.getEvent.mockResolvedValue({
+            id: 1,
+            evaluationsOpened: true,
+            startDate: new Date(Date.now() - 10000).toISOString(),
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
+        });
+
+        mockProjectService.isJurorAssigned.mockResolvedValue(true);
+        mockEvaluationRepository.existsByProjectAndEvaluator.mockResolvedValue(false);
+        mockCriterionRepository.findById.mockResolvedValue({ id: 1, weight: 1 });
+
+        await expect(
+            useCase.execute({
+                projectId: 1,
+                userId: 1,
+                scores: [{ criterionId: 1, score: 5 }],
+            }),
+        ).rejects.toThrow('Invalid score for FINAL_PROJECTS');
+    });
+
+    it('should reject UNKNOWN evaluationType with clear error', async () => {
+        mockEventService.getEvent.mockResolvedValue({
+            id: 1,
+            evaluationsOpened: true,
+            startDate: new Date(Date.now() - 10000).toISOString(),
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: 'UNKNOWN',
+        });
+
+        mockProjectService.isJurorAssigned.mockResolvedValue(true);
+        mockEvaluationRepository.existsByProjectAndEvaluator.mockResolvedValue(false);
+
+        await expect(
+            useCase.execute({
+                projectId: 1,
+                userId: 1,
+                scores: [{ criterionId: 1, score: 4 }],
+            }),
+        ).rejects.toThrow('Unsupported evaluation type: UNKNOWN');
+    });
+
     it('should calculate grade correctly with real-world rubric data (15 criterions, 3 categories)', async () => {
         mockProjectService.getProject.mockResolvedValue({
             id: 1,
@@ -155,7 +226,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -248,7 +320,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -295,7 +368,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -341,7 +415,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -375,7 +450,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -410,7 +486,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -445,7 +522,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -480,7 +558,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([
@@ -513,7 +592,8 @@ describe('EvaluateProjectUseCase', () => {
             id: 1,
             evaluationsOpened: true,
             startDate: new Date(Date.now() - 10000).toISOString(),
-            endDate: new Date(Date.now() + 10000).toISOString()
+            endDate: new Date(Date.now() + 10000).toISOString(),
+            evaluationType: EvaluationType.FINAL_PROJECTS,
         });
 
         mockAuthService.getRoles.mockResolvedValue([

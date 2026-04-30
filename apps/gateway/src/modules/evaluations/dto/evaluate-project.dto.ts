@@ -8,8 +8,8 @@ import {
   IsArray,
   ArrayMinSize,
   ValidateNested,
-  Min,
-  Max,
+  IsNumber,
+  IsNotEmpty,
 } from 'class-validator';
 
 export class EvaluationScoreDto {
@@ -23,14 +23,12 @@ export class EvaluationScoreDto {
 
   @ApiProperty({
     description:
-      'Score value: 4 = Excelente, 3 = Bueno, 2 = Aceptable, 1 = Insuficiente',
+      'Score value. Valid range depends on the evaluation type configured for the event and is validated server-side.',
     example: 4,
-    minimum: 1,
-    maximum: 4,
   })
   @IsInt()
-  @Min(1)
-  @Max(4)
+  @IsNumber()
+  @IsNotEmpty()
   score: number;
 }
 

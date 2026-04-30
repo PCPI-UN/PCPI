@@ -10,6 +10,8 @@ export default {
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: './coverage',
   moduleNameMapper: {
+    '^@app/common$': '<rootDir>/libs/common/src',
+    '^@app/common/(.*)$': '<rootDir>/libs/common/src/$1',
     '^@app/(.*)$': '<rootDir>/libs/$1',
   },
 };
