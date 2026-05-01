@@ -282,10 +282,11 @@ export class InvitationsService implements OnModuleInit {
         limit,
       }),
     );
-
+    
+    const invitations = response?.invitations ?? []
     // Enrich invitations with roles and target details
     const enrichedInvitations = await Promise.all(
-      response.invitations.map(async (invitation) => {
+      invitations.map(async (invitation) => {
         const roles: Role[] = [];
         if (invitation.roleIds && invitation.roleIds.length > 0) {
           const rolesResponse = await firstValueFrom(
