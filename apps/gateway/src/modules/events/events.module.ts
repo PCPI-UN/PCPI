@@ -13,6 +13,10 @@ import {
   AUTH_SERVICE_NAME,
   protobufPackage as authProtobufPackage,
 } from '@app/common/generated/auth';
+import {
+  INVITATION_SERVICE_NAME,
+  protobufPackage as invitationProtobufPackage,
+} from '@app/common/generated/invitation';
 
 @Module({
   imports: [
@@ -24,7 +28,10 @@ import {
           transport: Transport.GRPC,
           options: {
             package: eventProtobufPackage,
-            protoPath: join(process.cwd(), 'libs/common/src/protos/event.proto'),
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/event.proto',
+            ),
             url: configService.get<string>('EVENT_SERVICE_URL'),
           },
         }),
@@ -37,11 +44,24 @@ import {
           transport: Transport.GRPC,
           options: {
             package: authProtobufPackage,
+            protoPath: join(process.cwd(), 'libs/common/src/protos/auth.proto'),
+            url: configService.get<string>('AUTH_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: INVITATION_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: invitationProtobufPackage,
             protoPath: join(
               process.cwd(),
-              'libs/common/src/protos/auth.proto',
+              'libs/common/src/protos/invitation.proto',
             ),
-            url: configService.get<string>('AUTH_SERVICE_URL'),
+            url: configService.get<string>('INVITATION_SERVICE_URL'),
           },
         }),
         inject: [ConfigService],
@@ -53,4 +73,4 @@ import {
   providers: [EventService],
   exports: [EventService],
 })
-export class EventsModule { }
+export class EventsModule {}

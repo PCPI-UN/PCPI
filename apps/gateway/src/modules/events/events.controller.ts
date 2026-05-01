@@ -64,7 +64,7 @@ import {
 @ApiSecurity('JWT-auth')
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventService) { }
+  constructor(private readonly eventsService: EventService) {}
 
   // =====================
   // EVENT LISTING ENDPOINTS
@@ -79,15 +79,23 @@ export class EventsController {
   @Get('public')
   @ApiOperation({
     summary: 'List upcoming public events',
-    description: 'Get a paginated list of upcoming events. No authentication required. Status is always UPCOMING.',
+    description:
+      'Get a paginated list of upcoming events. No authentication required. Status is always UPCOMING.',
   })
-  @ApiResponse({ status: 200, description: 'Returns list of upcoming events with pagination' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of upcoming events with pagination',
+  })
   async listPublicEvents(@Query() query: ListEventsDTO) {
     // Hardcode statuses to UPCOMING and onlyActive to true
     return this.eventsService.listEvents({
       ...query,
       status: undefined,
-      statuses: [EventStatus.UPCOMING, EventStatus.AVAILABLE, EventStatus.REGISTRATION_CLOSED],
+      statuses: [
+        EventStatus.UPCOMING,
+        EventStatus.AVAILABLE,
+        EventStatus.REGISTRATION_CLOSED,
+      ],
       onlyActive: true,
     });
   }
@@ -100,10 +108,17 @@ export class EventsController {
   @Get()
   @ApiOperation({
     summary: 'List all events (admin)',
-    description: 'Get a paginated list of all events in the system with optional filters. Requires manage:events permission.',
+    description:
+      'Get a paginated list of all events in the system with optional filters. Requires manage:events permission.',
   })
-  @ApiResponse({ status: 200, description: 'Returns list of events with pagination' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing manage:events permission' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of events with pagination',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing manage:events permission',
+  })
   async listEvents(@Query() query: ListEventsDTO) {
     return this.eventsService.listEvents(query);
   }
@@ -117,10 +132,17 @@ export class EventsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'List my events',
-    description: 'Get a paginated list of events where the authenticated user is a member. Includes role information.',
+    description:
+      'Get a paginated list of events where the authenticated user is a member. Includes role information.',
   })
-  @ApiResponse({ status: 200, description: 'Returns list of user events with roles and pagination' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Authentication required' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of user events with roles and pagination',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
   async listMyEvents(
     @GetUser('id') userId: number,
     @Query() query: ListMyEventsDTO,
@@ -141,7 +163,10 @@ export class EventsController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Authentication required' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
   async listEventsDropdown(
     @Query() query: ListEventsDropdownDTO,
@@ -150,7 +175,9 @@ export class EventsController {
     const isAdmin = user.platformRoles?.some((role) => role.name === 'Admin');
 
     if (!isAdmin) {
-      throw new ForbiddenException('Only Admin users can access events dropdown');
+      throw new ForbiddenException(
+        'Only Admin users can access events dropdown',
+      );
     }
 
     const response = await this.eventsService.listEvents(query);
@@ -171,7 +198,8 @@ export class EventsController {
   @Get('statuses')
   @ApiOperation({
     summary: 'Get event status mappings',
-    description: 'Get human-readable event status enum mappings (UPCOMING, REGISTRATION_CLOSED, AVAILABLE, CLOSED)',
+    description:
+      'Get human-readable event status enum mappings (UPCOMING, REGISTRATION_CLOSED, AVAILABLE, CLOSED)',
   })
   @ApiResponse({
     status: 200,
@@ -179,9 +207,21 @@ export class EventsController {
     schema: {
       example: {
         statuses: [
-          { value: 1, name: 'UPCOMING', description: 'Event hasn\'t started, registrations still open' },
-          { value: 2, name: 'REGISTRATION_CLOSED', description: 'Registrations closed, event hasn\'t started yet' },
-          { value: 3, name: 'AVAILABLE', description: 'Event is currently happening' },
+          {
+            value: 1,
+            name: 'UPCOMING',
+            description: "Event hasn't started, registrations still open",
+          },
+          {
+            value: 2,
+            name: 'REGISTRATION_CLOSED',
+            description: "Registrations closed, event hasn't started yet",
+          },
+          {
+            value: 3,
+            name: 'AVAILABLE',
+            description: 'Event is currently happening',
+          },
           { value: 4, name: 'CLOSED', description: 'Event has ended' },
         ],
       },
@@ -208,7 +248,10 @@ export class EventsController {
   @ApiOperation({ summary: 'Create a new event' })
   @ApiResponse({ status: 201, description: 'Event created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing manage:events permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing manage:events permission',
+  })
   async createEvent(
     @Body() createEventDTO: CreateEventDTO,
     @GetUser('id') userId: number,
@@ -239,7 +282,10 @@ export class EventsController {
   @ApiOperation({ summary: 'Get event by ID' })
   @ApiParam({ name: 'id', description: 'Event ID', type: Number })
   @ApiResponse({ status: 200, description: 'Returns event details' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing read:events permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing read:events permission',
+  })
   @ApiResponse({ status: 404, description: 'Event not found' })
   async getEvent(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.get({ id });
@@ -258,7 +304,10 @@ export class EventsController {
   @ApiParam({ name: 'id', description: 'Event ID', type: Number })
   @ApiResponse({ status: 200, description: 'Event updated successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing manage:events permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing manage:events permission',
+  })
   @ApiResponse({ status: 404, description: 'Event not found' })
   async updateEvent(
     @Param('id', ParseIntPipe) id: number,
@@ -279,7 +328,10 @@ export class EventsController {
   @ApiOperation({ summary: 'Delete an event' })
   @ApiParam({ name: 'id', description: 'Event ID', type: Number })
   @ApiResponse({ status: 200, description: 'Event deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing manage:events permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing manage:events permission',
+  })
   @ApiResponse({ status: 404, description: 'Event not found' })
   async deleteEvent(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.delete({ id });
@@ -293,9 +345,15 @@ export class EventsController {
   @RequirePermission('create:event-members')
   @Post('members')
   @ApiOperation({ summary: 'Create a new event member' })
-  @ApiResponse({ status: 201, description: 'Event member created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Event member created successfully',
+  })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing create:event-members permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing create:event-members permission',
+  })
   async createEventMember(@Body() createEventMemberDTO: CreateEventMemberDTO) {
     return this.eventsService.createMember(createEventMemberDTO);
   }
@@ -304,9 +362,15 @@ export class EventsController {
   @RequirePermission('delete:event-members')
   @Delete('members/delete')
   @ApiOperation({ summary: 'Delete event member' })
-  @ApiResponse({ status: 200, description: 'Event member deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Event member deleted successfully',
+  })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing delete:event-members permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing delete:event-members permission',
+  })
   @ApiResponse({ status: 404, description: 'Event member not found' })
   async deleteEventMember(@Body() deleteEventMemberDTO: DeleteEventMemberDTO) {
     return this.eventsService.deleteMember(deleteEventMemberDTO);
@@ -317,10 +381,35 @@ export class EventsController {
   @Get('members/:eventId')
   @ApiOperation({ summary: 'Get event members by event ID' })
   @ApiResponse({ status: 200, description: 'Returns list of event members' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Missing read:event-members permission' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing read:event-members permission',
+  })
   @ApiResponse({ status: 404, description: 'Event not found' })
   async listEventMembers(@Query() listEventMembers: ListEventMembersDTO) {
     return this.eventsService.listMembers(listEventMembers);
+  }
+
+  @RequirePermission('read:event-members')
+  @Get(':eventId/jurors')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get accepted jurors for an event',
+    description:
+      'Returns the accepted jurors of an event with their user profile data so the frontend can assign them to projects.',
+  })
+  @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns accepted jurors for the event',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Missing read:event-members permission',
+  })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async listEventJurors(@Param('eventId', ParseIntPipe) eventId: number) {
+    return this.eventsService.listJurorsByEvent(eventId);
   }
 
   @Post('courses')
@@ -347,7 +436,9 @@ export class EventsController {
   }
 
   @Get('courses/event/:eventId')
-  @ApiOperation({ summary: 'List course aliases by event backed by categories' })
+  @ApiOperation({
+    summary: 'List course aliases by event backed by categories',
+  })
   async listCoursesByEvent(
     @Param('eventId', ParseIntPipe) eventId: number,
     @Query() dto: ListCoursesByEventDTO,
@@ -356,7 +447,9 @@ export class EventsController {
   }
 
   @Get('courses/dropdown/:eventId')
-  @ApiOperation({ summary: 'List course aliases for dropdown backed by categories' })
+  @ApiOperation({
+    summary: 'List course aliases for dropdown backed by categories',
+  })
   async listCoursesForDropdown(
     @Param('eventId', ParseIntPipe) eventId: number,
     @Query() dto: ListCoursesForDropdownDTO,
@@ -495,13 +588,17 @@ export class EventsController {
 
   @Post('inscription-details')
   @ApiOperation({ summary: 'Create inscription detail' })
-  async createEventInscriptionDetail(@Body() dto: CreateEventInscriptionDetailDTO) {
+  async createEventInscriptionDetail(
+    @Body() dto: CreateEventInscriptionDetailDTO,
+  ) {
     return this.eventsService.createEventInscriptionDetail(dto);
   }
 
   @Get('inscription-details')
   @ApiOperation({ summary: 'List inscription details' })
-  async listEventInscriptionDetails(@Query() dto: ListEventInscriptionDetailsDTO) {
+  async listEventInscriptionDetails(
+    @Query() dto: ListEventInscriptionDetailsDTO,
+  ) {
     return this.eventsService.listEventInscriptionDetails(dto);
   }
 
@@ -561,8 +658,14 @@ export class EventsController {
 
   @Get(':id/my-project')
   @ApiOperation({ summary: 'Get my project for event' })
-  @ApiResponse({ status: 200, description: 'Returns user\'s project for the specified event' })
-  @ApiResponse({ status: 404, description: 'No project found for this user in the specified event' })
+  @ApiResponse({
+    status: 200,
+    description: "Returns user's project for the specified event",
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No project found for this user in the specified event',
+  })
   async getMyProjectForEvent(
     @Param('id', ParseIntPipe) eventId: number,
     @GetUser('id') userId: number,
