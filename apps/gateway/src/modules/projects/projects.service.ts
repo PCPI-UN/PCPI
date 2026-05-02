@@ -64,18 +64,14 @@ import {
 } from '@app/common/generated/evaluation';
 import { AuthService } from '../auth/auth.service';
 
-type ProjectWithJurors = ProjectComplete & {
-  jurors: JurorKey[];
-};
-
-interface JurorProfile {
+export interface JurorProfile {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
 }
 
-type ProjectWithEnrichedJurors = Omit<
+export type ProjectWithEnrichedJurors = Omit<
   ProjectComplete,
   'createdAt' | 'updatedAt'
 > & {
