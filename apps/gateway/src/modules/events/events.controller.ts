@@ -394,14 +394,14 @@ export class EventsController {
   @Get(':eventId/jurors')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get accepted jurors for an event',
+    summary: 'Get confirmed jurors for an event',
     description:
-      'Returns the accepted jurors of an event with their user profile data so the frontend can assign them to projects.',
+      'Returns the jurors who accepted their invitation to an event and their user information. Requires read:event-members permission.',
   })
   @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
   @ApiResponse({
     status: 200,
-    description: 'Returns accepted jurors for the event',
+    description: 'Returns confirmed jurors for the event',
   })
   @ApiResponse({
     status: 403,

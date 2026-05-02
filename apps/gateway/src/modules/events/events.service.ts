@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { CreateEventDTO } from './dto/events/create-event.dto';
 import { DeleteEventDTO } from './dto/events/delete-event.dto';
 import { GetEventDTO } from './dto/events/get-event.dto';
@@ -44,6 +44,24 @@ import {
   EventServiceClient,
   EventStatus,
 } from '@app/common/generated/event';
+
+type JurorUser = {
+  id: number;
+  firstName: string;
+  lastName?: string | null;
+  email: string;
+};
+
+type JurorAssignedProject = {
+  id: number;
+  evaluated: boolean;
+};
+
+type AuthServiceWithOptionalBulkUsers = AuthServiceClient & {
+  getUsersByIds?: (request: {
+    userIds: number[];
+  }) => Observable<{ users?: JurorUser[] }>;
+};
 import {
   AUTH_SERVICE_NAME,
   AuthServiceClient,
@@ -595,13 +613,109 @@ export class EventService implements OnModuleInit {
       firstName: string;
       lastName: string | null;
       email: string;
+      assignedProjects: JurorAssignedProject[];
     }>;
   }> {
+    const [members, acceptedInvitationUserIds] = await Promise.all([
+      this.fetchAllEventMembers(eventId),
+      this.fetchAcceptedInvitationUserIds(eventId),
+    ]);
+
+    if (
+      !members ||
+      members.length === 0 ||
+      acceptedInvitationUserIds.size === 0
+    ) {
+      return { jurors: [] };
+    }
+
+    const uniqueRoleIds = [...new Set(members.map((m) => m.roleId))];
+    const jurorRoleIds = await this.resolveJurorRoleIds(uniqueRoleIds);
+
+    const jurorMembers = members.filter(
+      (member) =>
+        member.active &&
+        jurorRoleIds.has(member.roleId) &&
+        acceptedInvitationUserIds.has(member.userId),
+    );
+
+    const userIds = [...new Set(jurorMembers.map((m) => m.userId))];
+    const users = await this.fetchUsersByIds(userIds);
+    const usersById = new Map(users.map((user) => [user.id, user]));
+
+    const jurors = (
+      await Promise.all(
+        jurorMembers.map(async (member) => {
+          const user = usersById.get(member.userId);
+          if (!user) return null;
+
+          const assignedProjects = await this.fetchAllAssignedProjectsByJuror(
+            member.userId,
+            eventId,
+          );
+
+          return {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName ?? null,
+            email: user.email,
+            assignedProjects,
+          };
+        }),
+      )
+    ).filter(
+      (
+        juror,
+      ): juror is {
+        id: number;
+        firstName: string;
+        lastName: string | null;
+        email: string;
+        assignedProjects: JurorAssignedProject[];
+      } => juror !== null,
+    );
+
+    console.log(JSON.stringify(jurors, null, 2));
+
+    return { jurors };
+  }
+
+  private async fetchAllAssignedProjectsByJuror(
+    jurorUserId: number,
+    eventId: number,
+  ): Promise<JurorAssignedProject[]> {
+    const pageSize = 20;
+    let page = 1;
+    let total = 0;
+    const assignedProjects: JurorAssignedProject[] = [];
+
+    do {
+      const response = await this.projectsService.listAssignedProjectsByJuror(
+        jurorUserId,
+        eventId,
+        page,
+        pageSize,
+      );
+
+      total = response.total ?? 0;
+      assignedProjects.push(
+        ...(response.items ?? []).map((project) => ({
+          id: project.id,
+          evaluated: Boolean(project.evaluated),
+        })),
+      );
+
+      page += 1;
+    } while ((page - 1) * pageSize < total);
+
+    return assignedProjects;
+  }
+
+  private async fetchAllEventMembers(eventId: number) {
     const pageSize = 20;
     let page = 1;
     let totalPages = 1;
     const members: NonNullable<ListEventMembersResponse['members']> = [];
-    const acceptedInvitationUserIds = new Set<number>();
 
     do {
       const response = await this.listMembers({
@@ -609,20 +723,25 @@ export class EventService implements OnModuleInit {
         page,
         limit: pageSize,
       });
-
       members.push(...(response.members ?? []));
       totalPages = response.meta?.totalPages ?? 1;
       page += 1;
     } while (page <= totalPages);
 
-    let invitationPage = 1;
-    let invitationTotalPages = 1;
+    return members;
+  }
+
+  private async fetchAcceptedInvitationUserIds(eventId: number) {
+    const pageSize = 20;
+    let page = 1;
+    let totalPages = 1;
+    const accepted = new Set<number>();
 
     do {
       const invitationResponse = await firstValueFrom(
         this.invitationService.getEventInvitations({
           eventId,
-          page: invitationPage,
+          page,
           limit: pageSize,
         }),
       );
@@ -632,23 +751,24 @@ export class EventService implements OnModuleInit {
           invitation.status === InvitationStatus.ACCEPTED &&
           invitation.invitedUserId > 0
         ) {
-          acceptedInvitationUserIds.add(invitation.invitedUserId);
+          accepted.add(invitation.invitedUserId);
         }
       }
 
-      invitationTotalPages = invitationResponse.meta?.totalPages ?? 1;
-      invitationPage += 1;
-    } while (invitationPage <= invitationTotalPages);
+      totalPages = invitationResponse.meta?.totalPages ?? 1;
+      page += 1;
+    } while (page <= totalPages);
 
-    if (members.length === 0 || acceptedInvitationUserIds.size === 0) {
-      return { jurors: [] };
-    }
+    return accepted;
+  }
 
-    const uniqueRoleIds = [...new Set(members.map((member) => member.roleId))];
+  private async resolveJurorRoleIds(roleIds: number[]) {
+    if (!roleIds || roleIds.length === 0) return new Set<number>();
+
     const rolesResponse = await firstValueFrom(
-      this.authService.getRolesByIds({ roleIds: uniqueRoleIds }),
+      this.authService.getRolesByIds({ roleIds }),
     );
-    const jurorRoleIds = new Set(
+    const jurorRoleIds = new Set<number>(
       (rolesResponse.roles ?? [])
         .filter(
           (role: Role) =>
@@ -657,28 +777,63 @@ export class EventService implements OnModuleInit {
         .map((role: Role) => role.id),
     );
 
-    const jurorMembers = members.filter(
-      (member) =>
-        member.active &&
-        jurorRoleIds.has(member.roleId) &&
-        acceptedInvitationUserIds.has(member.userId),
-    );
+    return jurorRoleIds;
+  }
 
-    const jurorUsers = await Promise.all(
-      jurorMembers.map(async (member) => {
-        const user = await firstValueFrom(
-          this.authService.getUser({ id: member.userId }),
-        );
-        return {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName ?? null,
-          email: user.email,
-        };
+  private async fetchUsersByIds(userIds: number[]): Promise<JurorUser[]> {
+    if (!userIds || userIds.length === 0) return [];
+
+    try {
+      const auth = this.authService as AuthServiceWithOptionalBulkUsers;
+      if (typeof auth.getUsersByIds === 'function') {
+        const resp = await firstValueFrom(auth.getUsersByIds({ userIds }));
+        return resp.users ?? [];
+      }
+    } catch (error) {
+      console.warn(
+        'Bulk users fetch failed, falling back to getUser by id',
+        error,
+      );
+    }
+
+    const users = await Promise.all(
+      userIds.map(async (id) => {
+        const response = await firstValueFrom(this.authService.getUser({ id }));
+        return this.extractJurorUser(response);
       }),
     );
 
-    return { jurors: jurorUsers };
+    return users.filter((user): user is JurorUser => user !== null);
+  }
+
+  private extractJurorUser(response: unknown): JurorUser | null {
+    if (!response || typeof response !== 'object') {
+      return null;
+    }
+
+    const responseRecord = response as Record<string, unknown>;
+    const candidate =
+      responseRecord.user && typeof responseRecord.user === 'object'
+        ? (responseRecord.user as Record<string, unknown>)
+        : responseRecord;
+
+    if (
+      typeof candidate.id === 'number' &&
+      typeof candidate.firstName === 'string' &&
+      typeof candidate.email === 'string'
+    ) {
+      return {
+        id: candidate.id,
+        firstName: candidate.firstName,
+        lastName:
+          typeof candidate.lastName === 'string' || candidate.lastName === null
+            ? candidate.lastName
+            : null,
+        email: candidate.email,
+      };
+    }
+
+    return null;
   }
 
   async createCategory(
