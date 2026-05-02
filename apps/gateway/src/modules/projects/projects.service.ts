@@ -46,6 +46,7 @@ import {
   CheckEvaluationStatusRequest,
   CheckEvaluationStatusResponse,
 } from '@app/common/generated/evaluation';
+import { ProjectForReviewResponseDto } from './dto/project-for-review-response.dto';
 
 
 @Injectable()
@@ -406,6 +407,24 @@ export class ProjectsService implements OnModuleInit {
 
   async getDashboardStats() {
     return firstValueFrom(this.projectsService.getDashboardStats({}));
+  }
+
+  async getProjectForReview(id: number): Promise<ProjectForReviewResponseDto> {
+    const project = await this.getProjectById(id);
+
+    const {
+      participants,
+      pendingParticipants,
+      documents,
+      ...projectInfo
+    } = project;
+
+    return {
+      confirmedParticipants: participants,
+      pendingParticipants,
+      project: projectInfo,
+      documents,
+    };
   }
 
   async getProjectById(id: number): Promise<ProjectComplete> {

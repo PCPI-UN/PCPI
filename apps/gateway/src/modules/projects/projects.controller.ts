@@ -328,6 +328,33 @@ export class ProjectsController {
     );
   }
 
+
+  @Get(':id/for-review')
+  @ApiOperation({
+    summary:'Get project details for review',
+    description:'Returns detailed information of a project for review purposes, including participants and documents. ' +
+      'This endpoint is intended for jurors to review assigned projects.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project details for review retrieved successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async getProjectForReview(
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.projectsService.getProjectForReview(id);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get project by id',
