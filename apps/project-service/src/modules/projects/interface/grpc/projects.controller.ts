@@ -6,11 +6,23 @@ import { GetProjectUC } from '../../application/use-cases/get-project.uc';
 import { AddProjectDocumentUC } from '../../application/use-cases/add-document.uc';
 import { ListDocumentsUC } from '../../application/use-cases/list-documents.uc';
 import { DeleteProjectUC } from '../../application/use-cases/delete-project.uc';
-import { toProtoProject, toProtoDocument, protoToState, protoToJurorKey, toProtoParticipant, protoToStatus, toProtoPendingParticipant, protoToTypedDocument, toProtoProjectComplete, protoToDocumentStatus } from './mappers';
+import {
+  toProtoProject,
+  toProtoDocument,
+  protoToState,
+  protoToJurorKey,
+  toProtoParticipant,
+  protoToStatus,
+  toProtoPendingParticipant,
+  protoToTypedDocument,
+  toProtoProjectComplete,
+  protoToDocumentStatus,
+} from './mappers';
 import { UpdateProjectUC } from '../../application/use-cases/update-project.uc';
 import { ApproveProjectUC } from '../../application/use-cases/approve-project.uc';
 import { AssignJurorBulkUC } from '../../application/use-cases/assign-juror-bulk.uc';
 import { ReassignProjectJurorUC } from '../../application/use-cases/reassign-project-juror.uc';
+import { RemoveJurorFromProjectUC } from '../../application/use-cases/remove-juror-from-project.uc';
 import { ListProjectJurorsUC } from '../../application/use-cases/list-project-jurors.uc';
 import { GetDashboardStatsUC } from '../../application/use-cases/get-dashboard-stats.uc';
 import { AddParticipantUC } from '../../application/use-cases/add-participant.uc';
@@ -62,6 +74,7 @@ export class ProjectsController {
     private readonly requestChangesProjectUC: RequestChangesProjectUC,
     private readonly assignJurorBulkUC: AssignJurorBulkUC,
     private readonly reassignProjectJurorUC: ReassignProjectJurorUC,
+    private readonly removeJurorFromProjectUC: RemoveJurorFromProjectUC,
     private readonly listProjectJurorsUC: ListProjectJurorsUC,
     private readonly getDashboardStatsUC: GetDashboardStatsUC,
     private readonly addParticipantUC: AddParticipantUC,
@@ -75,7 +88,7 @@ export class ProjectsController {
     private readonly getMyProjectByEventUC: GetMyProjectByEventUC,
     private readonly checkActiveSubmissionByEmailsUC: CheckActiveSubmissionByEmailsUC,
     @Inject(INVITATION_SERVICE_NAME) private readonly client: ClientGrpc,
-  ) { }
+  ) {}
 
   onModuleInit() {
     this.invitationService =
@@ -111,12 +124,23 @@ export class ProjectsController {
       req.state = protoToState(parseInt(req.state));
     }
     const res = await this.listByEvent.execute(req);
-    return { items: res.items.map(toProtoProjectComplete), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage, itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
+    return {
+      items: res.items.map(toProtoProjectComplete),
+      total: res.total,
+      currentPage: res.currentPage,
+      itemsOnCurrentPage: res.itemsOnCurrentPage,
+      itemsPerPage: res.itemsPerPage,
+      totalPages: res.totalPages,
+    };
   }
 
   @GrpcMethod('ProjectsService', 'AddProjectDocumentFromUrl')
   async addProjectDocumentFromUrl(req: any) {
-    const doc = await this.addDoc.execute({ projectId: req.projectId, url: req.url, type: protoToTypedDocument(req.type) });
+    const doc = await this.addDoc.execute({
+      projectId: req.projectId,
+      url: req.url,
+      type: protoToTypedDocument(req.type),
+    });
     return { document: toProtoDocument(doc) };
   }
 
@@ -132,7 +156,6 @@ export class ProjectsController {
     return { ok: true };
   }
 
-
   @GrpcMethod('ProjectsService', 'UpdateProject')
   async updateProjectRpc(req: any) {
     const updated = await this.updateProjectUC.execute({
@@ -147,29 +170,40 @@ export class ProjectsController {
   }
 
   @GrpcMethod('ProjectsService', 'ApproveProject')
-  async approveProjectRpc(req: { id: number, actingUserId: number }) {
-    const updated = await this.approveProjectUC.execute({ id: req.id, actingUserId: req.actingUserId });
+  async approveProjectRpc(req: { id: number; actingUserId: number }) {
+    const updated = await this.approveProjectUC.execute({
+      id: req.id,
+      actingUserId: req.actingUserId,
+    });
     return { project: toProtoProject(updated) };
   }
 
   @GrpcMethod('ProjectsService', 'RejectProject')
-  async rejectProjectRpc(req: { id: number; actingUserId: number; reason?: string }) {
+  async rejectProjectRpc(req: {
+    id: number;
+    actingUserId: number;
+    reason?: string;
+  }) {
     const updated = await this.rejectProjectUC.execute({
       id: req.id,
       actingUserId: req.actingUserId,
-      reason: req.reason
+      reason: req.reason,
     });
     return { project: toProtoProject(updated) };
   }
 
   @GrpcMethod('ProjectsService', 'RequestChangesProject')
-  async requestChangesProject(req: { id: number; actingUserId: number; reason?: string }) {
+  async requestChangesProject(req: {
+    id: number;
+    actingUserId: number;
+    reason?: string;
+  }) {
     const updated = await this.requestChangesProjectUC.execute({
       id: req.id,
       actingUserId: req.actingUserId,
-      reason: req.reason
-    })
-    return { project: toProtoProject(updated) }
+      reason: req.reason,
+    });
+    return { project: toProtoProject(updated) };
   }
 
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')
@@ -181,7 +215,6 @@ export class ProjectsController {
     });
     return { assigned: result.assigned, failures: result.failures };
   }
-
 
   @GrpcMethod('ProjectsService', 'ReassignProjectJuror')
   async reassignProjectJurorRpc(req: any) {
@@ -216,7 +249,9 @@ export class ProjectsController {
 
   @GrpcMethod('ProjectsService', 'ListParticipants')
   async listParticipantsRpc(req: { projectId: number }) {
-    const participants = await this.listParticipantsUC.execute({ projectId: req.projectId });
+    const participants = await this.listParticipantsUC.execute({
+      projectId: req.projectId,
+    });
     return { items: participants.map(toProtoParticipant) };
   }
 
@@ -237,18 +272,26 @@ export class ProjectsController {
 
   @GrpcMethod('ProjectsService', 'ListPendingParticipants')
   async listPendingParticipantsRpc(req: { projectId: number }) {
-    const pendingParticipants = await this.listPendingParticipantsUC.execute({ projectId: req.projectId });
+    const pendingParticipants = await this.listPendingParticipantsUC.execute({
+      projectId: req.projectId,
+    });
     return { items: pendingParticipants.map(toProtoPendingParticipant) };
-
   }
 
   @GrpcMethod('ProjectsService', 'CreateProjectWithPendingParticipants')
   async createProjectWithPendingParticipantsRpc(req: any) {
     if (req.participants && req.participants.length > 0) {
       const emails = req.participants.map((p: any) => p.email);
-      const { hasConflict, conflictEmails } = await this.checkActiveSubmissionByEmailsUC.execute({ eventId: req.eventId, emails });
+      const { hasConflict, conflictEmails } =
+        await this.checkActiveSubmissionByEmailsUC.execute({
+          eventId: req.eventId,
+          emails,
+        });
       if (hasConflict) {
-        throw new RpcException({ code: status.ALREADY_EXISTS, message: `Conflicting active submissions found for emails: ${conflictEmails.join(', ')}` });
+        throw new RpcException({
+          code: status.ALREADY_EXISTS,
+          message: `Conflicting active submissions found for emails: ${conflictEmails.join(', ')}`,
+        });
       }
     }
 
@@ -259,43 +302,45 @@ export class ProjectsController {
         name: req.name,
         description: req.description,
         eventNumber: req.eventNumber, // Optional - set during confirmation
-        state: 'UNDER_REVIEW'
+        state: 'UNDER_REVIEW',
       });
       console.log('Project created with ID:', project.id);
       const pendingParticipants = [];
 
-
-
-
       if (req.participants && req.participants.length > 0) {
         try {
           for (const p of req.participants) {
-            const pendingParticipant = await this.addPendingParticipantUC.execute({
-              projectId: project.id,
-              firstName: p.firstName,
-              lastName: p.lastName ?? undefined,
-              email: p.email,
-              studentCode: p.studentCode,
-              semester: p.semester,
-              career: p.career,
-              status: 'PENDING',
-            });
-            pendingParticipants.push(toProtoPendingParticipant(pendingParticipant));
+            const pendingParticipant =
+              await this.addPendingParticipantUC.execute({
+                projectId: project.id,
+                firstName: p.firstName,
+                lastName: p.lastName ?? undefined,
+                email: p.email,
+                studentCode: p.studentCode,
+                semester: p.semester,
+                career: p.career,
+                status: 'PENDING',
+              });
+            pendingParticipants.push(
+              toProtoPendingParticipant(pendingParticipant),
+            );
           }
-
         } catch (error) {
           // Si hay un error al agregar participantes, eliminamos el proyecto creado
-          console.error('❌ Error adding pending participants, deleting project:', error);
-          await this.deleteProjectUC.execute({ id: project.id! });
+          console.error(
+            '❌ Error adding pending participants, deleting project:',
+            error,
+          );
+          await this.deleteProjectUC.execute({ id: project.id });
           throw error;
         }
         console.log('eventType=', req.eventType, JSON.stringify(req));
         for (const pending of pendingParticipants) {
           const obs$ = this.invitationService.CreateInvitation({
-            email: pending.email,            // ajusta al nombre real
+            email: pending.email, // ajusta al nombre real
             eventType: req.eventType,
             targetType: 'PROJECT',
-            targetId: project.id!,
+            targetId: project.id,
             invitedByUserId: 1, // AJUSTA: quién envía la invitación
             roleIds: [5], // AJUSTA: roles si es necesario
             firstName: pending.firstName,
@@ -312,16 +357,26 @@ export class ProjectsController {
       const projectDocuments = [];
       if (req.documents && req.documents.length > 0) {
         for (const d of req.documents) {
-          const document = await this.addDoc.execute({ projectId: project.id, url: d.url, type: protoToTypedDocument(d.type) });
+          const document = await this.addDoc.execute({
+            projectId: project.id,
+            url: d.url,
+            type: protoToTypedDocument(d.type),
+          });
           projectDocuments.push(toProtoDocument(document));
         }
       }
-      return { project: toProtoProject(project), participants: pendingParticipants, documents: projectDocuments };
+      return {
+        project: toProtoProject(project),
+        participants: pendingParticipants,
+        documents: projectDocuments,
+      };
     } catch (err) {
-      console.error('❌ Error creating project with pending participants and documents:', err);
+      console.error(
+        '❌ Error creating project with pending participants and documents:',
+        err,
+      );
       throw err; // vuelve a lanzar el error original (para que NestJS lo registre bien)
     }
-
   }
 
   @GrpcMethod('ProjectsService', 'ListAssignedProjects')
@@ -339,20 +394,25 @@ export class ProjectsController {
       items: res.items.map(toProtoProjectComplete),
       total: res.total,
       page,
-      pageSize
+      pageSize,
     };
   }
 
   @GrpcMethod('ProjectsService', 'ListProjectsForReview')
   async listProjectsForReviewRpc(req: ListProjectsByFilterDTO) {
     const res = await this.listProjectsForReviewUC.execute(req);
-    return { items: res.items.map(toProtoProject), total: res.total, currentPage: res.currentPage, itemsOnCurrentPage: res.itemsOnCurrentPage, itemsPerPage: res.itemsPerPage, totalPages: res.totalPages };
-
+    return {
+      items: res.items.map(toProtoProject),
+      total: res.total,
+      currentPage: res.currentPage,
+      itemsOnCurrentPage: res.itemsOnCurrentPage,
+      itemsPerPage: res.itemsPerPage,
+      totalPages: res.totalPages,
+    };
   }
 
   @GrpcMethod('ProjectsService', 'GetProjectComplete')
   async getProjectCompleteRpc(req: { id: number }) {
-
     const project = await this.getProject.execute({ id: req.id });
 
     const [participants, documents, pending] = await Promise.all([
@@ -382,13 +442,26 @@ export class ProjectsController {
       state: req.state ? protoToDocumentStatus(req.state) : undefined,
     });
     return { document: toProtoDocument(updatedDoc) };
-
   }
 
   @GrpcMethod('ProjectsService', 'GetMyProjectByEvent')
   async getMyProjectByEventRpc(req: { eventId: number; userId: number }) {
-    const project = await this.getMyProjectByEventUC.execute({ eventId: req.eventId, userId: req.userId });
+    const project = await this.getMyProjectByEventUC.execute({
+      eventId: req.eventId,
+      userId: req.userId,
+    });
     return { project: toProtoProjectComplete(project) };
   }
 
+  @GrpcMethod('ProjectsService', 'RemoveJurorFromProject')
+  async removeJurorFromProjectRpc(req: {
+    projectId: number;
+    memberUserId: number;
+  }) {
+    const result = await this.removeJurorFromProjectUC.execute({
+      projectId: req.projectId,
+      memberUserId: req.memberUserId,
+    });
+    return { ok: result.ok, removed: result.removed };
+  }
 }
