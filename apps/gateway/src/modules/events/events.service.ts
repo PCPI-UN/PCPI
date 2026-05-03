@@ -675,8 +675,6 @@ export class EventService implements OnModuleInit {
       } => juror !== null,
     );
 
-    console.log(JSON.stringify(jurors, null, 2));
-
     return { jurors };
   }
 
