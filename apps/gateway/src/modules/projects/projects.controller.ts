@@ -38,6 +38,7 @@ import { TypedDocument } from './dto/project-document-input.dto';
 import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-juror.dto';
 import { AddProjectDocumentsMultipartDto} from './dto/add-project-files-multipart.dto';
 import { RequestChangesProjectDto } from './dto/request-changes-project.dto';
+import { UpdateProjectInfoDto } from './dto/update-project-info.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -386,6 +387,39 @@ export class ProjectsController {
       file,
     );
     return updated;
+  }
+
+  @Patch(':id/info')
+  @ApiOperation({
+    summary: 'Update project information',
+    description: 'Updates the name and/or description of a project.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiBody({
+    description: 'Project information to update',
+    type: UpdateProjectInfoDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project information updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async updateProjectInfo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProjectInfoDto: UpdateProjectInfoDto,
+  ) {
+    return  this.projectsService.updateProjectInfo(
+      id,
+      updateProjectInfoDto.name,
+      updateProjectInfoDto.description
+    );
   }
 
   @Get(':id/jurors')

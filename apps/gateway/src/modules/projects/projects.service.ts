@@ -476,6 +476,16 @@ export class ProjectsService implements OnModuleInit {
     return res.document;
   }
 
+  async updateProjectInfo(id: number, name?: string, description?: string): Promise<void> {
+    await firstValueFrom(
+      this.projectsService.updateProject({
+        id,
+        name,
+        description,
+      }),
+    );
+  }
+
   async listJurorsByProjectId(projectId: number) {
     const request: ListProjectJurorsRequest = { projectId };
 
