@@ -72,13 +72,14 @@ message Project {
   int32 id = 1;
   int32 eventId = 2;
   string name = 3;
-  optional string description = 4;
-  optional string eventNumber = 5;
-  string createdAt = 6; 
-  string updatedAt = 7; 
-  int32 courseId = 8;
-  ProjectState state = 9;
-  optional string reason = 10;
+  optional string projectCode = 4;
+  optional string description = 5;
+  optional string eventNumber = 6;
+  string createdAt = 7; 
+  string updatedAt = 8; 
+  int32 courseId = 9;
+  ProjectState state = 10;
+  optional string reason = 11;
 }
 
 message ProjectComplete {
@@ -95,6 +96,7 @@ message ProjectComplete {
   repeated ProjectParticipant participants = 11;
   repeated ProjectDocument documents = 12;
   repeated PendingProjectParticipant pendingParticipants = 13;
+  optional string projectCode = 14;
 }
 
 message ProjectDocument {
@@ -195,6 +197,7 @@ message UpdateProjectRequest {
   optional string eventNumber = 4;
   optional int32 courseId = 5;
   optional ProjectState state = 6;
+  optional string projectCode = 7;
 }
 
 message ApproveProjectRequest { 
@@ -292,6 +295,7 @@ message CreateProjectWithParticipantsRequest {
   repeated PendingParticipantInput participants = 7;
   repeated ProjectDocumentInput documents = 8;
   string eventType = 9;
+  optional string projectCode = 10;
 }
 
 message CreateProjectWithParticipantsResponse {

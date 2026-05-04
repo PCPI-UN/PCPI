@@ -43,6 +43,14 @@ export class ProjectForReviewResponseDto {
   @ApiProperty({ type: ProjectReviewInfoDto })
   project: ProjectReviewInfoDto;
 
+  @ApiProperty({
+    description: 'Código del proyecto',
+    required: false,
+    example: '202301',
+    nullable: true,
+  })
+  projectCode?: string | null;
+
   @ApiProperty({ type: [Object] })
   documents: ProjectDocument[];
 }
