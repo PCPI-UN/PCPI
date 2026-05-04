@@ -112,6 +112,7 @@ export class CriterionMapper {
       acc[category].push({
         id: criterion.id,
         name: criterion.name,
+        ...(criterion.description && { description: criterion.description }),
       });
       return acc;
     }, {} as Record<string, CriterionSummary[]>);

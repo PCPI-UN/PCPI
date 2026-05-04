@@ -149,6 +149,7 @@ message FindCriterionsByCourseRequest {
 message CriterionSummary {
   int32 id = 1;
   string name = 2;
+  optional string description = 3;
 }
 
 message CriterionCategoryProto {
