@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Param,
   ParseIntPipe,
   Patch,
@@ -161,45 +160,6 @@ export class ProjectsController {
   })
   reassignProjectJuror(@Body() reassignJurorDto: ReassignProjectJurorDto) {
     return this.projectsService.reassignProjectJuror(reassignJurorDto);
-  }
-
-  @Delete(':projectId/jurors/:memberUserId')
-  @ApiOperation({
-    summary: 'Remove a juror from a project',
-    description:
-      'Removes a juror (member_user_id) from a project. Requires admin or event manager role.',
-  })
-  @ApiParam({
-    name: 'projectId',
-    description: 'Project ID',
-    example: 1,
-  })
-  @ApiParam({
-    name: 'memberUserId',
-    description: 'Juror member_user_id to remove',
-    example: 5,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Juror removed successfully',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Requires platform permissions',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Project not found',
-  })
-  removeJurorFromProject(
-    @Param('projectId', ParseIntPipe) projectId: number,
-    @Param('memberUserId', ParseIntPipe) memberUserId: number,
-  ) {
-    return this.projectsService.removeJurorFromProject(projectId, memberUserId);
   }
 
   // TODO: Add platform permission guard - only admins/event managers can approve projects

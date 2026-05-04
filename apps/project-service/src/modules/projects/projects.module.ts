@@ -15,7 +15,6 @@ import { RejectProjectUC } from './application/use-cases/reject-project.uc';
 import { RequestChangesProjectUC } from './application/use-cases/request-changes-project.uc';
 import { AssignJurorBulkUC } from './application/use-cases/assign-juror-bulk.uc';
 import { ReassignProjectJurorUC } from './application/use-cases/reassign-project-juror.uc';
-import { RemoveJurorFromProjectUC } from './application/use-cases/remove-juror-from-project.uc';
 import { ListProjectJurorsUC } from './application/use-cases/list-project-jurors.uc';
 import { GetDashboardStatsUC } from './application/use-cases/get-dashboard-stats.uc';
 import { AddParticipantUC } from './application/use-cases/add-participant.uc';
@@ -26,9 +25,6 @@ import { InvitationClientModule } from './invitation-client.module';
 import { EventServiceModule } from './event-service.module';
 import { EventServiceAdapter } from './infrastructure/grpc-client/event-service.adapter';
 import { EVENT_SERVICE_PORT } from './application/ports/event-service.port';
-import { EvaluationServiceModule } from './evaluation-service.module';
-import { EVALUATION_SERVICE_PORT } from './application/ports/evaluation-service.port';
-import { EvaluationServiceAdapter } from './infrastructure/grpc-client/evaluation-service.adapter';
 import { ListProjectsAssignedToJurorUC } from './application/use-cases/list-projects-assigned-to-juror.uc';
 import { NotificationServiceModule } from './notification-service.module';
 import { NOTIFICATION_SERVICE_PORT } from './application/ports/notification-service.port';
@@ -40,12 +36,7 @@ import { CheckActiveSubmissionByEmailsUC } from './application/use-cases/check-a
 
 @Module({
   controllers: [ProjectsController],
-  imports: [
-    InvitationClientModule,
-    EventServiceModule,
-    NotificationServiceModule,
-    EvaluationServiceModule,
-  ],
+  imports: [InvitationClientModule, EventServiceModule, NotificationServiceModule],
   providers: [
     PrismaService,
     { provide: 'ProjectRepository', useClass: PrismaProjectRepository },
@@ -55,34 +46,13 @@ import { CheckActiveSubmissionByEmailsUC } from './application/use-cases/check-a
       provide: EVENT_SERVICE_PORT,
       useExisting: EventServiceAdapter,
     },
-    {
-      provide: EVALUATION_SERVICE_PORT,
-      useExisting: EvaluationServiceAdapter,
-    },
-    GetProjectUC,
-    ListProjectsByEventUC,
-    AddProjectDocumentUC,
-    ListDocumentsUC,
-    DeleteProjectUC,
-    GetMyProjectByEventUC,
-    UpdateProjectUC,
-    ApproveProjectUC,
-    RejectProjectUC,
-    AssignJurorBulkUC,
-    ReassignProjectJurorUC,
-    RemoveJurorFromProjectUC,
-    ListProjectJurorsUC,
-    GetDashboardStatsUC,
-    AddParticipantUC,
-    ListParticipantsUC,
-    AddPendingParticipantUC,
-    ListPendingParticipantsUC,
-    ListProjectsAssignedToJurorUC,
-    ListProjectsForReviewUC,
-    NotificateStudentUC,
-    UpdateProjectDocumentUC,
-    RequestChangesProjectUC,
-    CheckActiveSubmissionByEmailsUC,
+    GetProjectUC, ListProjectsByEventUC,
+    AddProjectDocumentUC, ListDocumentsUC, DeleteProjectUC, GetMyProjectByEventUC,
+    UpdateProjectUC, ApproveProjectUC, RejectProjectUC, AssignJurorBulkUC,
+    ReassignProjectJurorUC, ListProjectJurorsUC, GetDashboardStatsUC, AddParticipantUC,
+    ListParticipantsUC, AddPendingParticipantUC, ListPendingParticipantsUC,
+    ListProjectsAssignedToJurorUC, ListProjectsForReviewUC,
+    NotificateStudentUC, UpdateProjectDocumentUC, RequestChangesProjectUC, CheckActiveSubmissionByEmailsUC,
     {
       provide: NOTIFICATION_SERVICE_PORT,
       useExisting: NotificationServiceAdapter,
@@ -90,4 +60,4 @@ import { CheckActiveSubmissionByEmailsUC } from './application/use-cases/check-a
   ],
   exports: [ApproveProjectUC, CreateProjectUC, NotificateStudentUC],
 })
-export class ProjectsModule {}
+export class ProjectsModule { }

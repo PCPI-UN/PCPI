@@ -36,7 +36,6 @@ service ProjectsService {
 
   rpc ListProjectsForReview(ListProjectsForReviewRequest) returns (ListProjectsForReviewResponse);
   rpc DeleteProject (DeleteProjectRequest) returns (DeleteProjectResponse);
-  rpc RemoveJurorFromProject (RemoveJurorFromProjectRequest) returns (RemoveJurorFromProjectResponse);
   
 }
 
@@ -338,14 +337,3 @@ message GetMyProjectByEventRequest {
 message GetMyProjectByEventResponse {
   ProjectComplete project = 1;
 }
-
-message RemoveJurorFromProjectRequest {
-  int32 projectId = 1;
-  int32 memberUserId = 2;
-}
-
-message RemoveJurorFromProjectResponse {
-  bool ok = 1;
-  int32 removed = 2; // Number of assignments removed
-}
-

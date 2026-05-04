@@ -356,17 +356,6 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
-  async removeJurorFromProject(projectId: number, memberUserId: number) {
-    const response = await firstValueFrom(
-      this.projectsService.removeJurorFromProject({
-        projectId,
-        memberUserId,
-      }),
-    );
-
-    return response;
-  }
-
   async approveProject(dto: ApproveProjectDto, actingUserId: number) {
     const response = await firstValueFrom(
       this.projectsService.approveProject({
