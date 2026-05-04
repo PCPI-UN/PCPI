@@ -9,6 +9,7 @@ type CreateProjectInput = {
   eventId: number;
   courseId: number;
   name: string;
+  projectCode?: string;
   description?: string;
   eventNumber?: string;
   state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGES';
@@ -37,6 +38,7 @@ export class PrismaProjectRepository implements ProjectRepository {
         eventId: data.eventId,
         courseId: data.courseId,
         name: data.name,
+        projectCode: data.projectCode ?? null,
         description: data.description ?? null,
         eventNumber: data.eventNumber ?? null,
         state: data.state,

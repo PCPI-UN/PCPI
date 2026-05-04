@@ -79,6 +79,7 @@ export const toProtoProject = (p: any) => ({
   eventId: p.eventId ?? p.event_id,
   courseId: p.courseId ?? p.course_id,              
   name: p.name,
+  projectCode: p.projectCode ?? p.project_code ?? undefined,
   description: p.description ?? undefined,
   eventNumber: p.eventNumber ?? p.event_number ?? undefined,
   state: stateToProto(p.state as ProjectState),
