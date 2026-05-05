@@ -115,6 +115,7 @@ message ProjectParticipant {
   optional string email = 6;
   optional string semester = 7;
   optional string career = 8;
+  string status = 9;
 }
 
 message PendingProjectParticipant {
