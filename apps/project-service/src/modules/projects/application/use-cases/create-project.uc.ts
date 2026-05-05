@@ -65,6 +65,7 @@ export class CreateProjectUC {
       eventId: input.eventId,
       courseId: input.courseId,
       name: input.name.trim(),
+      projectCode: input.projectCode,
       description: input.description,
       eventNumber: input.eventNumber,
       state,
