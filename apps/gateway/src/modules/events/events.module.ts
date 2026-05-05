@@ -17,6 +17,10 @@ import {
   INVITATION_SERVICE_NAME,
   protobufPackage as invitationProtobufPackage,
 } from '@app/common/generated/invitation';
+import { FetchConfirmedJurorMembersUseCase } from './use-cases/fetch-confirmed-juror-members.use-case';
+import { FetchJurorUsersUseCase } from './use-cases/fetch-juror-users.use-case';
+import { FetchJurorAssignedProjectsUseCase } from './use-cases/fetch-juror-assigned-projects.use-case';
+import { ListConfirmedJurorsByEventUseCase } from './use-cases/list-confirmed-jurors-by-event.use-case';
 
 @Module({
   imports: [
@@ -70,7 +74,13 @@ import {
     ProjectsModule,
   ],
   controllers: [EventsController],
-  providers: [EventService],
+  providers: [
+    EventService,
+    FetchConfirmedJurorMembersUseCase,
+    FetchJurorUsersUseCase,
+    FetchJurorAssignedProjectsUseCase,
+    ListConfirmedJurorsByEventUseCase,
+  ],
   exports: [EventService],
 })
 export class EventsModule {}

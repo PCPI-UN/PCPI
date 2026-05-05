@@ -408,8 +408,10 @@ export class EventsController {
     description: 'Forbidden - Missing read:event-members permission',
   })
   @ApiResponse({ status: 404, description: 'Event not found' })
-  async listEventJurors(@Param('eventId', ParseIntPipe) eventId: number) {
-    return this.eventsService.listJurorsByEvent(eventId);
+  async listConfirmedJurorsByEvent(
+    @Param('eventId', ParseIntPipe) eventId: number,
+  ) {
+    return this.eventsService.listConfirmedJurorsByEvent(eventId);
   }
 
   @Post('courses')

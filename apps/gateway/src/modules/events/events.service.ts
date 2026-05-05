@@ -5,8 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { CreateEventDTO } from './dto/events/create-event.dto';
 import { DeleteEventDTO } from './dto/events/delete-event.dto';
 import { GetEventDTO } from './dto/events/get-event.dto';
@@ -42,36 +41,13 @@ import {
 import {
   EVENT_SERVICE_NAME,
   EventServiceClient,
-  EventStatus,
 } from '@app/common/generated/event';
-
-type JurorUser = {
-  id: number;
-  firstName: string;
-  lastName?: string | null;
-  email: string;
-};
-
-type JurorAssignedProject = {
-  id: number;
-  evaluated: boolean;
-};
-
-type AuthServiceWithOptionalBulkUsers = AuthServiceClient & {
-  getUsersByIds?: (request: {
-    userIds: number[];
-  }) => Observable<{ users?: JurorUser[] }>;
-};
 import {
   AUTH_SERVICE_NAME,
   AuthServiceClient,
-  Role,
 } from '@app/common/generated/auth';
-import {
-  INVITATION_SERVICE_NAME,
-  InvitationServiceClient,
-  InvitationStatus,
-} from '@app/common/generated/invitation';
+import { ListConfirmedJurorsByEventUseCase } from './use-cases/list-confirmed-jurors-by-event.use-case';
+import { ListConfirmedJurorsByEventResponse } from './types/confirmed-jurors.types';
 import {
   CreateEventRequest,
   CreateEventResponse,
@@ -159,17 +135,14 @@ import {
 export class EventService implements OnModuleInit {
   private eventService!: EventServiceClient;
   private authService!: AuthServiceClient;
-  private invitationService!: InvitationServiceClient;
   private statusCache: EventStatusMapping[] | null = null;
   private rolesCache: any[] | null = null;
 
   constructor(
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
-    @Inject(INVITATION_SERVICE_NAME)
-    private readonly invitationClient: ClientGrpc,
-    private readonly configService: ConfigService,
     private readonly projectsService: ProjectsService,
+    private readonly listConfirmedJurorsByEventUseCase: ListConfirmedJurorsByEventUseCase,
   ) {}
 
   onModuleInit() {
@@ -177,10 +150,6 @@ export class EventService implements OnModuleInit {
       this.eventClient.getService<EventServiceClient>(EVENT_SERVICE_NAME);
     this.authService =
       this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
-    this.invitationService =
-      this.invitationClient.getService<InvitationServiceClient>(
-        INVITATION_SERVICE_NAME,
-      );
   }
 
   private mapCourseForFrontend(
@@ -607,231 +576,10 @@ export class EventService implements OnModuleInit {
     );
   }
 
-  async listJurorsByEvent(eventId: number): Promise<{
-    jurors: Array<{
-      id: number;
-      firstName: string;
-      lastName: string | null;
-      email: string;
-      assignedProjects: JurorAssignedProject[];
-    }>;
-  }> {
-    const [members, acceptedInvitationUserIds] = await Promise.all([
-      this.fetchAllEventMembers(eventId),
-      this.fetchAcceptedInvitationUserIds(eventId),
-    ]);
-
-    if (
-      !members ||
-      members.length === 0 ||
-      acceptedInvitationUserIds.size === 0
-    ) {
-      return { jurors: [] };
-    }
-
-    const uniqueRoleIds = [...new Set(members.map((m) => m.roleId))];
-    const jurorRoleIds = await this.resolveJurorRoleIds(uniqueRoleIds);
-
-    const jurorMembers = members.filter(
-      (member) =>
-        member.active &&
-        jurorRoleIds.has(member.roleId) &&
-        acceptedInvitationUserIds.has(member.userId),
-    );
-
-    const userIds = [...new Set(jurorMembers.map((m) => m.userId))];
-    const users = await this.fetchUsersByIds(userIds);
-    const usersById = new Map(users.map((user) => [user.id, user]));
-
-    const jurors = (
-      await Promise.all(
-        jurorMembers.map(async (member) => {
-          const user = usersById.get(member.userId);
-          if (!user) return null;
-
-          const assignedProjects = await this.fetchAllAssignedProjectsByJuror(
-            member.userId,
-            eventId,
-          );
-
-          return {
-            id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName ?? null,
-            email: user.email,
-            assignedProjects,
-          };
-        }),
-      )
-    ).filter(
-      (
-        juror,
-      ): juror is {
-        id: number;
-        firstName: string;
-        lastName: string | null;
-        email: string;
-        assignedProjects: JurorAssignedProject[];
-      } => juror !== null,
-    );
-
-    return { jurors };
-  }
-
-  private async fetchAllAssignedProjectsByJuror(
-    jurorUserId: number,
+  async listConfirmedJurorsByEvent(
     eventId: number,
-  ): Promise<JurorAssignedProject[]> {
-    const pageSize = 20;
-    let page = 1;
-    let total = 0;
-    const assignedProjects: JurorAssignedProject[] = [];
-
-    do {
-      const response = await this.projectsService.listAssignedProjectsByJuror(
-        jurorUserId,
-        eventId,
-        page,
-        pageSize,
-      );
-
-      total = response.total ?? 0;
-      assignedProjects.push(
-        ...(response.items ?? []).map((project) => ({
-          id: project.id,
-          evaluated: Boolean(project.evaluated),
-        })),
-      );
-
-      page += 1;
-    } while ((page - 1) * pageSize < total);
-
-    return assignedProjects;
-  }
-
-  private async fetchAllEventMembers(eventId: number) {
-    const pageSize = 20;
-    let page = 1;
-    let totalPages = 1;
-    const members: NonNullable<ListEventMembersResponse['members']> = [];
-
-    do {
-      const response = await this.listMembers({
-        eventId,
-        page,
-        limit: pageSize,
-      });
-      members.push(...(response.members ?? []));
-      totalPages = response.meta?.totalPages ?? 1;
-      page += 1;
-    } while (page <= totalPages);
-
-    return members;
-  }
-
-  private async fetchAcceptedInvitationUserIds(eventId: number) {
-    const pageSize = 20;
-    let page = 1;
-    let totalPages = 1;
-    const accepted = new Set<number>();
-
-    do {
-      const invitationResponse = await firstValueFrom(
-        this.invitationService.getEventInvitations({
-          eventId,
-          page,
-          limit: pageSize,
-        }),
-      );
-
-      for (const invitation of invitationResponse.invitations ?? []) {
-        if (
-          invitation.status === InvitationStatus.ACCEPTED &&
-          invitation.invitedUserId > 0
-        ) {
-          accepted.add(invitation.invitedUserId);
-        }
-      }
-
-      totalPages = invitationResponse.meta?.totalPages ?? 1;
-      page += 1;
-    } while (page <= totalPages);
-
-    return accepted;
-  }
-
-  private async resolveJurorRoleIds(roleIds: number[]) {
-    if (!roleIds || roleIds.length === 0) return new Set<number>();
-
-    const rolesResponse = await firstValueFrom(
-      this.authService.getRolesByIds({ roleIds }),
-    );
-    const jurorRoleIds = new Set<number>(
-      (rolesResponse.roles ?? [])
-        .filter(
-          (role: Role) =>
-            role.scope === 'EVENT' && role.name.toLowerCase() === 'juror',
-        )
-        .map((role: Role) => role.id),
-    );
-
-    return jurorRoleIds;
-  }
-
-  private async fetchUsersByIds(userIds: number[]): Promise<JurorUser[]> {
-    if (!userIds || userIds.length === 0) return [];
-
-    try {
-      const auth = this.authService as AuthServiceWithOptionalBulkUsers;
-      if (typeof auth.getUsersByIds === 'function') {
-        const resp = await firstValueFrom(auth.getUsersByIds({ userIds }));
-        return resp.users ?? [];
-      }
-    } catch (error) {
-      console.warn(
-        'Bulk users fetch failed, falling back to getUser by id',
-        error,
-      );
-    }
-
-    const users = await Promise.all(
-      userIds.map(async (id) => {
-        const response = await firstValueFrom(this.authService.getUser({ id }));
-        return this.extractJurorUser(response);
-      }),
-    );
-
-    return users.filter((user): user is JurorUser => user !== null);
-  }
-
-  private extractJurorUser(response: unknown): JurorUser | null {
-    if (!response || typeof response !== 'object') {
-      return null;
-    }
-
-    const responseRecord = response as Record<string, unknown>;
-    const candidate =
-      responseRecord.user && typeof responseRecord.user === 'object'
-        ? (responseRecord.user as Record<string, unknown>)
-        : responseRecord;
-
-    if (
-      typeof candidate.id === 'number' &&
-      typeof candidate.firstName === 'string' &&
-      typeof candidate.email === 'string'
-    ) {
-      return {
-        id: candidate.id,
-        firstName: candidate.firstName,
-        lastName:
-          typeof candidate.lastName === 'string' || candidate.lastName === null
-            ? candidate.lastName
-            : null,
-        email: candidate.email,
-      };
-    }
-
-    return null;
+  ): Promise<ListConfirmedJurorsByEventResponse> {
+    return this.listConfirmedJurorsByEventUseCase.execute(eventId);
   }
 
   async createCategory(
