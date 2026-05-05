@@ -267,6 +267,28 @@ export class ProjectsController {
     );
   }
 
+  @Post(':id/change-to-under-review')
+  @ApiOperation({
+    summary: 'Change project state to under review',
+    description:
+      'Changes the state of a project from "request changes" to "under review". Requires the user to be a participant of the project.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project state changed to under review successfully',
+  })
+  async changeToUnderReviewProject(
+    @Param('id', ParseIntPipe) projectId: number,
+    @GetUser() user: AppUser,
+  ) {
+    return this.projectsService.changeToUnderReviewProject(projectId, user.id);
+  }
+
   @Get('by-event/:eventId')
   @ApiOperation({
     summary: 'List projects by event',
@@ -332,6 +354,31 @@ export class ProjectsController {
       Number(page ?? 1),
       Number(pageSize ?? 20),
     );
+  }
+
+  @Get(':id/for-review')
+  @ApiOperation({
+    summary: 'Get project details for review',
+    description:
+      'Returns detailed information of a project for review purposes, including participants and documents. ' +
+      'This endpoint is intended for jurors to review assigned projects.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project details for review retrieved successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async getProjectForReview(@Param('id', ParseIntPipe) id: number) {
+    return this.projectsService.getProjectForReview(id);
   }
 
   @Get(':id')
