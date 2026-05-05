@@ -51,8 +51,6 @@ export class EnrichProjectsWithJurorsUseCase {
     totalPages: number,
     config?: EnrichProjectsConfig,
   ): Promise<ListProjectsWithJurorsResponse> {
-    this.logger.debug(`Enriching ${projects.length} projects with juror data`);
-
     if (projects.length === 0) {
       return {
         items: [],
