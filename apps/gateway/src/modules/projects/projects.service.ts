@@ -64,23 +64,18 @@ import {
 } from '@app/common/generated/evaluation';
 import { ProjectForReviewResponseDto } from './dto/project-for-review-response.dto';
 import { AuthService } from '../auth/auth.service';
+import { FetchProjectJurorsUseCase } from './use-cases/fetch-project-jurors.use-case';
+import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-case';
+import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
+import {
+  ProjectWithEnrichedJurors,
+  ListProjectsWithJurorsResponse,
+} from './types/project-enrichment.types';
 
-export interface JurorProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
-
-export type ProjectWithEnrichedJurors = Omit<
-  ProjectComplete,
-  'createdAt' | 'updatedAt'
-> & {
-  jurorAssignments: JurorKey[];
-  jurors: JurorProfile[];
-  createdAt: number;
-  updatedAt: number;
-};
+export type {
+  JurorProfile,
+  ProjectWithEnrichedJurors,
+} from './types/project-enrichment.types';
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
@@ -95,6 +90,9 @@ export class ProjectsService implements OnModuleInit {
     private readonly evaluationClient: ClientGrpc,
     private readonly azureBlobUploadService: AzureBlobUploadService,
     private readonly authService: AuthService,
+    private readonly fetchProjectJurorsUseCase: FetchProjectJurorsUseCase,
+    private readonly fetchUserProfilesUseCase: FetchUserProfilesUseCase,
+    private readonly enrichProjectsWithJurorsUseCase: EnrichProjectsWithJurorsUseCase,
   ) {}
 
   onModuleInit() {
@@ -454,85 +452,21 @@ export class ProjectsService implements OnModuleInit {
   async listProjectsByEventWithJurors(
     eventId: number,
     query: ListProjectsByEventDto,
-  ): Promise<{
-    items: ProjectWithEnrichedJurors[];
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  }> {
+  ): Promise<ListProjectsWithJurorsResponse> {
     const res = await this.listProjectsByEvent(eventId, query);
     const page = query.currentPage ?? 1;
     const limit = query.itemsPerPage ?? 20;
 
-    // Collect all unique juror user IDs to fetch in batch
-    const jurorUserIds = new Set<number>();
-    const projectJurorMap = new Map<number, JurorKey[]>();
-
-    const projects = res.items;
-    for (const project of projects) {
-      const jurors = await this.listJurorsByProjectId(project.id);
-      projectJurorMap.set(project.id, jurors);
-      jurors.forEach((juror) => jurorUserIds.add(juror.memberUserId));
-    }
-
-    // Fetch all user profiles in batch
-    const userProfiles = new Map<number, JurorProfile>();
-    for (const userId of jurorUserIds) {
-      try {
-        const user = await this.authService.getUser(userId);
-        this.logger.debug(`Fetched user ${userId}: ${JSON.stringify(user)}`);
-        userProfiles.set(userId, {
-          id: String(user.id) || `user-${userId}`,
-          firstName: user.firstName || '',
-          lastName: user.lastName || '',
-          email: user.email || '',
-        });
-      } catch (error) {
-        this.logger.warn(
-          `Failed to fetch user profile for juror ${userId}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        // Fallback: create minimal profile
-        userProfiles.set(userId, {
-          id: `user-${userId}`,
-          firstName: '',
-          lastName: '',
-          email: '',
-        });
-      }
-    }
-
-    // Transform projects with enriched jurors
-    const items = projects.map((project) => {
-      const jurorAssignments = projectJurorMap.get(project.id) || [];
-      const enrichedJurors = jurorAssignments
-        .map((juror) => userProfiles.get(juror.memberUserId))
-        .filter((profile): profile is JurorProfile => profile !== undefined);
-
-      return {
-        id: project.id,
-        eventId: project.eventId,
-        courseId: project.courseId,
-        name: project.name,
-        description: project.description,
-        state: project.state,
-        participants: project.participants,
-        documents: project.documents,
-        pendingParticipants: project.pendingParticipants,
-        jurorAssignments,
-        jurors: enrichedJurors,
-        createdAt: new Date(project.createdAt).getTime(),
-        updatedAt: new Date(project.updatedAt).getTime(),
-      };
-    });
-
-    return {
-      items,
+    return this.enrichProjectsWithJurorsUseCase.execute(
+      res.items,
       page,
       limit,
-      total: res.total,
-      totalPages: res.totalPages,
-    };
+      res.total,
+      res.totalPages,
+      {
+        userProfileConcurrencyLimit: 5,
+      },
+    );
   }
 
   async getDashboardStats() {

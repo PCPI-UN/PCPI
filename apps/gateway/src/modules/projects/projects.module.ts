@@ -9,6 +9,9 @@ import {
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
+import { FetchProjectJurorsUseCase } from './use-cases/fetch-project-jurors.use-case';
+import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-case';
+import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
 
 import {
   EVENT_SERVICE_NAME,
@@ -101,7 +104,13 @@ import { AuthModule } from '../auth/auth.module';
     ]),
   ],
   controllers: [ProjectsController],
-  providers: [ProjectsService, AzureBlobUploadService],
+  providers: [
+    ProjectsService,
+    AzureBlobUploadService,
+    FetchProjectJurorsUseCase,
+    FetchUserProfilesUseCase,
+    EnrichProjectsWithJurorsUseCase,
+  ],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}

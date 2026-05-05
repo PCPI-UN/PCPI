@@ -28,11 +28,9 @@ import { ProjectsService } from './projects.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AppUser } from '../auth/types/app-user.type';
-import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
 import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
 import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
-import { ApproveProjectDto } from './dto/approve-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
 import { ListProjectsByEventDto } from './dto/list-projects-by-event.dto';
 import {
@@ -242,7 +240,7 @@ export class ProjectsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Required changes succesfully',
+    description: 'Required changes successfully requested for the project',
   })
   @ApiResponse({
     status: 400,
