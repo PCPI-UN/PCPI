@@ -27,8 +27,13 @@ export const getEventStatus = (
         ? inscriptionDeadline
         : new Date(inscriptionDeadline);
 
+    // Comparar solo fechas, sin considerar la hora
+    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const deadlineDateOnly = new Date(regDeadline.getFullYear(), regDeadline.getMonth(), regDeadline.getDate());
+    const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+
     // Registrations closed but event hasn't started
-    if (now >= regDeadline && now < startDate) {
+    if (nowDateOnly > deadlineDateOnly && nowDateOnly < startDateOnly) {
       return EventStatus.REGISTRATION_CLOSED;
     }
   }
