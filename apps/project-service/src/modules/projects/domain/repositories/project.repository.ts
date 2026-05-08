@@ -5,6 +5,7 @@ export interface ProjectRepository {
     eventId: number;
     courseId: number;              
     name: string;
+    projectCode?: string;
     description?: string;
     eventNumber?: string;
     state: ProjectState;           

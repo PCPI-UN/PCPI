@@ -8,6 +8,7 @@ export interface Project {
   eventId: number;
   courseId: number ;
   name: string;
+  projectCode?: string | null;
   description?: string | null;
   eventNumber?: string | null;
   state: ProjectState;

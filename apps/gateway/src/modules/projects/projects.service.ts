@@ -193,6 +193,7 @@ export class ProjectsService implements OnModuleInit {
           courseId,
           name: body.name,
           description: body.description,
+          projectCode: body.projectCode,
           participants: participants.map((p) => ({
             firstName: p.firstName,
             lastName: p.lastName,
@@ -276,6 +277,7 @@ export class ProjectsService implements OnModuleInit {
         courseId: dto.courseId,
         name: dto.name,
         description: dto.description,
+        projectCode: dto.projectCode,
         participants: dto.participants?.map((p) => ({
           firstName: p.firstName,
           lastName: p.lastName,

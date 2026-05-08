@@ -91,6 +91,7 @@ export class ProjectsController {
         eventId: req.eventId,
         courseId: req.courseId,
         name: req.name,
+        projectCode: req.projectCode,
         description: req.description,
         eventNumber: req.eventNumber,
         state: protoToState(req.state),
@@ -140,6 +141,7 @@ export class ProjectsController {
     const updated = await this.updateProjectUC.execute({
       id: req.id,
       name: req.name,
+      projectCode: req.projectCode,
       description: req.description,
       eventNumber: req.eventNumber,
       courseId: req.courseId,
@@ -268,6 +270,7 @@ export class ProjectsController {
         eventId: req.eventId,
         courseId: req.courseId,
         name: req.name,
+        projectCode: req.projectCode,
         description: req.description,
         eventNumber: req.eventNumber, // Optional - set during confirmation
         state: 'UNDER_REVIEW'

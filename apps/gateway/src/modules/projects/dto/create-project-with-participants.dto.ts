@@ -7,6 +7,8 @@ import {
   IsArray,
   ValidateNested,
   Min,
+  MaxLength,
+  IsNumberString,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Type } from 'class-transformer';
@@ -37,7 +39,7 @@ export class CreateProjectWithParticipantsDto {
   @IsString()
   @IsNotEmpty()
   eventType: string;
-  
+
   @ApiProperty({
     description: 'Course ID associated with this project',
     example: 1,
@@ -56,6 +58,18 @@ export class CreateProjectWithParticipantsDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({
+    description: 'Código opcional del proyecto',
+    required: false,
+    example: '202301',
+    maxLength: 50,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumberString()
+  @MaxLength(50)
+  projectCode?: string;
 
   @ApiProperty({
     description: 'Detailed description of the project',

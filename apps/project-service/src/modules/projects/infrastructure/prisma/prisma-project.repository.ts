@@ -9,6 +9,7 @@ type CreateProjectInput = {
   eventId: number;
   courseId: number;
   name: string;
+  projectCode?: string;
   description?: string;
   eventNumber?: string;
   state: 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'REQUEST_CHANGES';
@@ -37,6 +38,7 @@ export class PrismaProjectRepository implements ProjectRepository {
         eventId: data.eventId,
         courseId: data.courseId,
         name: data.name,
+        projectCode: data.projectCode ?? null,
         description: data.description ?? null,
         eventNumber: data.eventNumber ?? null,
         state: data.state,
@@ -100,6 +102,7 @@ export class PrismaProjectRepository implements ProjectRepository {
   async updateProject(input: {
     id: number;
     name?: string;
+    projectCode?: string | null;
     description?: string | null;
     eventNumber?: string | null;
     courseId?: number;
@@ -107,6 +110,7 @@ export class PrismaProjectRepository implements ProjectRepository {
   }): Promise<Project> {
     const data: any = {};
     if (input.name !== undefined) data.name = input.name;
+    if (input.projectCode !== undefined) data.projectCode = input.projectCode;
     if (input.description !== undefined) data.description = input.description;
     if (input.eventNumber !== undefined) data.eventNumber = input.eventNumber;
     if (input.courseId !== undefined) data.courseId = input.courseId;
