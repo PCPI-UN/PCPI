@@ -5,8 +5,9 @@ WORKDIR /app
 RUN apk add --no-cache protobuf-dev && \
   npm install -g pnpm
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN npm pkg delete scripts.prepare && \
+  pnpm install --frozen-lockfile
 
 COPY . .
 
@@ -42,7 +43,7 @@ ENV HUSKY=0
 RUN apk add --no-cache dumb-init openssl && \
   npm install -g pnpm prisma@6.16.2
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN npm pkg delete scripts.prepare && \
     pnpm install --prod --frozen-lockfile
 
