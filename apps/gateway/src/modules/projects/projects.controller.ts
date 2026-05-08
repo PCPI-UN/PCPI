@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Param,
   ParseIntPipe,
   Patch,
@@ -31,6 +32,7 @@ import { AppUser } from '../auth/types/app-user.type';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
 import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
 import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
+import { RemoveJurorFromProjectDto } from './dto/remove-juror-from-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
 import { ListProjectsByEventDto } from './dto/list-projects-by-event.dto';
 import {
@@ -158,6 +160,35 @@ export class ProjectsController {
   })
   reassignProjectJuror(@Body() reassignJurorDto: ReassignProjectJurorDto) {
     return this.projectsService.reassignProjectJuror(reassignJurorDto);
+  }
+
+  @Delete(':projectId/jurors/:jurorId')
+  @ApiOperation({
+    summary: 'Remove a juror from a project',
+    description:
+      'Removes a juror assignment after verifying the juror has not evaluated the project yet.',
+  })
+  @ApiParam({ name: 'projectId', description: 'Project ID', example: 1 })
+  @ApiParam({ name: 'jurorId', description: 'Juror User ID', example: 5 })
+  @ApiResponse({ status: 200, description: 'Juror removed successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Juror has already evaluated this project',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project or juror assignment not found',
+  })
+  removeJurorFromProject(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('jurorId', ParseIntPipe) jurorId: number,
+  ) {
+    const dto: RemoveJurorFromProjectDto = {
+      projectId,
+      jurorUserId: jurorId,
+    };
+
+    return this.projectsService.removeJurorFromProject(dto);
   }
 
   // TODO: Add platform permission guard - only admins/event managers can approve projects

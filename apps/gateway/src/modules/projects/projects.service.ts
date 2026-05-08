@@ -67,10 +67,14 @@ import { AuthService } from '../auth/auth.service';
 import { FetchProjectJurorsUseCase } from './use-cases/fetch-project-jurors.use-case';
 import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-case';
 import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
+import { ValidateJurorHasNotEvaluatedUseCase } from './use-cases/validate-juror-has-not-evaluated.use-case';
+import { RemoveJurorFromProjectUseCase } from './use-cases/remove-juror-from-project.use-case';
 import {
   ProjectWithEnrichedJurors,
   ListProjectsWithJurorsResponse,
 } from './types/project-enrichment.types';
+import { RemoveJurorFromProjectDto } from './dto/remove-juror-from-project.dto';
+import { JurorRemovalResult } from './types/juror-removal.types';
 
 export type {
   JurorProfile,
@@ -93,6 +97,8 @@ export class ProjectsService implements OnModuleInit {
     private readonly fetchProjectJurorsUseCase: FetchProjectJurorsUseCase,
     private readonly fetchUserProfilesUseCase: FetchUserProfilesUseCase,
     private readonly enrichProjectsWithJurorsUseCase: EnrichProjectsWithJurorsUseCase,
+    private readonly validateJurorHasNotEvaluatedUseCase: ValidateJurorHasNotEvaluatedUseCase,
+    private readonly removeJurorFromProjectUseCase: RemoveJurorFromProjectUseCase,
   ) {}
 
   onModuleInit() {
@@ -353,6 +359,12 @@ export class ProjectsService implements OnModuleInit {
     );
 
     return response;
+  }
+
+  async removeJurorFromProject(
+    dto: RemoveJurorFromProjectDto,
+  ): Promise<JurorRemovalResult> {
+    return this.removeJurorFromProjectUseCase.execute(dto);
   }
 
   async approveProject(dto: ApproveProjectDto, actingUserId: number) {

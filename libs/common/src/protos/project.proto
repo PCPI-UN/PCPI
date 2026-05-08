@@ -31,6 +31,7 @@ service ProjectsService {
   rpc ChangeToUnderReviewProject (ChangeToUnderReviewProjectRequest) returns (ProjectResponse);
   rpc AssignJurorToProjects (AssignJurorToProjectsRequest) returns (AssignJurorToProjectsResponse); 
   rpc ReassignProjectJuror (ReassignProjectJurorRequest) returns (ReassignProjectJurorResponse);  
+  rpc RemoveJurorFromProject (RemoveJurorFromProjectRequest) returns (RemoveJurorFromProjectResponse);
   rpc ListProjectJurors (ListProjectJurorsRequest) returns (ListProjectJurorsResponse);  
   rpc ListAssignedProjects(ListAssignedProjectsRequest) returns (ListAssignedProjectsResponse);
   rpc GetMyProjectByEvent (GetMyProjectByEventRequest) returns (GetMyProjectByEventResponse);
@@ -246,6 +247,18 @@ message ReassignProjectJurorRequest {
   int32 toUserId = 3;    // New juror userId
 }
 message ReassignProjectJurorResponse { bool ok = 1; bool changed = 2; }
+
+message RemoveJurorFromProjectRequest {
+  int32 projectId = 1;
+  int32 userId = 2;
+}
+
+message RemoveJurorFromProjectResponse {
+  bool ok = 1;
+  int32 projectId = 2;
+  int32 userId = 3;
+  string message = 4;
+}
 
 message ListProjectJurorsRequest { int32 projectId = 1; }
 message ListProjectJurorsResponse { repeated JurorKey jurors = 1; }

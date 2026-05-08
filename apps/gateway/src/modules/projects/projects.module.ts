@@ -12,6 +12,8 @@ import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { FetchProjectJurorsUseCase } from './use-cases/fetch-project-jurors.use-case';
 import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-case';
 import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
+import { ValidateJurorHasNotEvaluatedUseCase } from './use-cases/validate-juror-has-not-evaluated.use-case';
+import { RemoveJurorFromProjectUseCase } from './use-cases/remove-juror-from-project.use-case';
 
 import {
   EVENT_SERVICE_NAME,
@@ -110,6 +112,8 @@ import { AuthModule } from '../auth/auth.module';
     FetchProjectJurorsUseCase,
     FetchUserProfilesUseCase,
     EnrichProjectsWithJurorsUseCase,
+    ValidateJurorHasNotEvaluatedUseCase,
+    RemoveJurorFromProjectUseCase,
   ],
   exports: [ProjectsService],
 })
