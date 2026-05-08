@@ -15,7 +15,7 @@ export class CreateProjectUC {
 
   async execute(input: CreateProjectDTO) {
 
-    // 1. validar evento
+    // 1. Validate event
     const event = await this.eventService.getEventById(input.eventId);
     if (!event) {
       throw new NotFoundError('El evento no existe en event-service');
@@ -24,7 +24,7 @@ export class CreateProjectUC {
       throw new ValidationError('El evento está inactivo');
     }
 
-    // 2. si mandan courseId, validamos que exista y que pertenezca al evento
+    // 2. If courseId is provided, validate it exists and belongs to the event
     if (input.courseId) {
       const course = await this.eventService.getCourseById(input.courseId);
       if (!course) {
@@ -42,20 +42,25 @@ export class CreateProjectUC {
     if (!input.courseId || input.courseId <= 0) {
       throw new ValidationError('Invalid courseId');
     }
-    // Asegura que no exista otro proyecto con el mismo nombre en el mismo evento y curso
+    // Ensure no other project with the same name exists for this event and course
     const existing = await this.repo.findProject(input.eventId, input.courseId, input.name.trim());
     if (existing) {
       throw new ValidationError('A project with the same name already exists for this event and course');
     }
   
-    //3. Validar que la fecha límite de inscripción del evento no haya pasado
+    // 3. Validate that the event registration deadline has not passed
     const currentDate = new Date();
     const registrationDeadline = new Date(event.inscriptionDeadline);
-    if (registrationDeadline < currentDate) {
+    
+    // Compare only dates, without considering the time
+    const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    const deadlineDateOnly = new Date(registrationDeadline.getFullYear(), registrationDeadline.getMonth(), registrationDeadline.getDate());
+    
+    if (deadlineDateOnly < currentDateOnly) {
       throw new ValidationError('The event registration deadline has passed');
     }
     
-    //4. Verficar que el evento sea publicJoinable
+    // 4. Verify that the event is publicly joinable
     if (!event.isPubliclyJoinable) {
       throw new ValidationError('The event is not public joinable');
     }
