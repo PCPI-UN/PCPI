@@ -22,10 +22,16 @@ export class FetchJurorAssignedProjectsUseCase {
       return [];
     }
 
+    // Deduplicate juror members by userId to avoid processing the same juror multiple times
+    const uniqueUserIds = [...new Set(jurorMembers.map((m) => m.userId))];
+    const uniqueJurorMembers = uniqueUserIds
+      .map((userId) => jurorMembers.find((m) => m.userId === userId))
+      .filter((m): m is EventMember => m !== undefined);
+
     const jurors: ConfirmedJuror[] = [];
 
-    for (let i = 0; i < jurorMembers.length; i += this.concurrencyLimit) {
-      const batch = jurorMembers.slice(i, i + this.concurrencyLimit);
+    for (let i = 0; i < uniqueJurorMembers.length; i += this.concurrencyLimit) {
+      const batch = uniqueJurorMembers.slice(i, i + this.concurrencyLimit);
       const batchResults = await Promise.all(
         batch.map(async (member) => {
           const user = usersById.get(member.userId);

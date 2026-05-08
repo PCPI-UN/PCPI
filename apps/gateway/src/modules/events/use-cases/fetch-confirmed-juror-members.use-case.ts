@@ -17,13 +17,18 @@ import {
   InvitationStatus,
 } from '@app/common/generated/invitation';
 
-export type EventMember = NonNullable<ListEventMembersResponse['members']>[number];
+import { Logger } from '@nestjs/common';
+
+export type EventMember = NonNullable<
+  ListEventMembersResponse['members']
+>[number];
 
 @Injectable()
 export class FetchConfirmedJurorMembersUseCase {
   private eventService: EventServiceClient;
   private authService: AuthServiceClient;
   private invitationService: InvitationServiceClient;
+  private logger = new Logger(FetchConfirmedJurorMembersUseCase.name);
 
   constructor(
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
@@ -58,16 +63,18 @@ export class FetchConfirmedJurorMembersUseCase {
     const uniqueRoleIds = [...new Set(members.map((m) => m.roleId))];
     const jurorRoleIds = await this.resolveJurorRoleIds(uniqueRoleIds);
 
-    return members.filter(
+    const result = members.filter(
       (member) =>
         member.active &&
         jurorRoleIds.has(member.roleId) &&
         acceptedInvitationUserIds.has(member.userId),
     );
+
+    return result;
   }
 
   private async fetchAllEventMembers(eventId: number) {
-    const pageSize = 20;
+    const pageSize = 50;
     let page = 1;
     let totalPages = 1;
     const members: NonNullable<ListEventMembersResponse['members']> = [];
@@ -89,7 +96,7 @@ export class FetchConfirmedJurorMembersUseCase {
   }
 
   private async fetchAcceptedInvitationUserIds(eventId: number) {
-    const pageSize = 20;
+    const pageSize = 50;
     let page = 1;
     let totalPages = 1;
     const accepted = new Set<number>();
