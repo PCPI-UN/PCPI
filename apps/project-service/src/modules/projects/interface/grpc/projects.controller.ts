@@ -220,6 +220,15 @@ export class ProjectsController {
     return { project: toProtoProject(updated) };
   }
 
+  @GrpcMethod('ProjectsService', 'ChangeToUnderReviewProject')
+  async changeToUnderReviewProjectRpc(req: { id: number; actingUserId: number }) {
+    const updated = await this.changeToUnderReviewProjectUC.execute({
+      projectId: req.id,
+      activeUserId: req.actingUserId
+    });
+    return { project: toProtoProject(updated) };
+  }
+
   @GrpcMethod('ProjectsService', 'AssignJurorToProjects')
   async assignJurorToProjectsRpc(req: any) {
     console.log('[ProjectsService] AssignJurorToProjects RPC input:', req);

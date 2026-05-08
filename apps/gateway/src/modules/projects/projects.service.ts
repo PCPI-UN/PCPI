@@ -28,6 +28,7 @@ import {
   ListAssignedProjectsResponse,
   GetMyProjectByEventRequest,
   GetMyProjectByEventResponse,
+  AddPendingParticipantRequest,
   JurorKey,
 } from '@app/common/generated/project';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
@@ -35,6 +36,7 @@ import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-
 import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
 import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
 import { ApproveProjectDto } from './dto/approve-project.dto';
+import { AddPendingParticipantDto } from './dto/add-pending-participant.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
 import {
   TypedDocument,
@@ -80,6 +82,7 @@ export type {
   JurorProfile,
   ProjectWithEnrichedJurors,
 } from './types/project-enrichment.types';
+import { ProjectForReviewResponseDto } from './dto/project-for-review-response.dto';
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
@@ -338,6 +341,23 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
+  async addPendingParticipant(dto: AddPendingParticipantDto) {
+    const request: AddPendingParticipantRequest = {
+      projectId: dto.projectId,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      email: dto.email,
+      studentCode: dto.studentCode,
+      semester: dto.semester ?? '',
+      career: dto.career ?? '',
+      status: dto.status ?? 'PENDING',
+    };
+
+    return firstValueFrom(
+      this.projectsService.addPendingParticipant(request as any),
+    );
+  }
+
   async assignJurorToProjects(dto: AssignJurorToProjectsDto) {
     const response = await firstValueFrom(
       this.projectsService.assignJurorToProjects({
@@ -557,6 +577,20 @@ export class ProjectsService implements OnModuleInit {
     }
 
     return res.document;
+  }
+
+  async updateProjectInfo(
+    id: number,
+    name?: string,
+    description?: string,
+  ): Promise<void> {
+    await firstValueFrom(
+      this.projectsService.updateProject({
+        id,
+        name,
+        description,
+      }),
+    );
   }
 
   async listJurorsByProjectId(projectId: number) {

@@ -77,6 +77,7 @@ import { CheckActiveSubmissionByEmailsUC } from './application/use-cases/check-a
     RequestChangesProjectUC,
     CheckActiveSubmissionByEmailsUC,
     ChangeToUnderReviewProjectUC,
+    ChangeToUnderReviewProjectUC,
     {
       provide: NOTIFICATION_SERVICE_PORT,
       useExisting: NotificationServiceAdapter,
