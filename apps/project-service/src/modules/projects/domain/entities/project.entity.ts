@@ -44,6 +44,7 @@ export interface ProjectParticipantWithUserInfo {
   email?: string | null;
   semester?: string | null;
   career?: string | null;
+  status: StudentStatus;
 }
 
 export interface PendingProjectParticipant {
