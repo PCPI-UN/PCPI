@@ -9,6 +9,11 @@ import {
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
+import { FetchProjectJurorsUseCase } from './use-cases/fetch-project-jurors.use-case';
+import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-case';
+import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
+import { ValidateJurorHasNotEvaluatedUseCase } from './use-cases/validate-juror-has-not-evaluated.use-case';
+import { RemoveJurorFromProjectUseCase } from './use-cases/remove-juror-from-project.use-case';
 
 import {
   EVENT_SERVICE_NAME,
@@ -19,9 +24,11 @@ import {
   EVALUATION_SERVICE_NAME,
   protobufPackage as evaluationProtobufPackage,
 } from '@app/common/generated/evaluation';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     ClientsModule.registerAsync([
       {
         name: PROJECTS_SERVICE_NAME,
@@ -99,8 +106,15 @@ import {
     ]),
   ],
   controllers: [ProjectsController],
-  providers: [ProjectsService, AzureBlobUploadService],
+  providers: [
+    ProjectsService,
+    AzureBlobUploadService,
+    FetchProjectJurorsUseCase,
+    FetchUserProfilesUseCase,
+    EnrichProjectsWithJurorsUseCase,
+    ValidateJurorHasNotEvaluatedUseCase,
+    RemoveJurorFromProjectUseCase,
+  ],
   exports: [ProjectsService],
 })
 export class ProjectsModule {}
-

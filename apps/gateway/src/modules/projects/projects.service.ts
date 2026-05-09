@@ -1,4 +1,11 @@
-import { Injectable, Inject, OnModuleInit, BadRequestException, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  OnModuleInit,
+  BadRequestException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
 import {
@@ -31,11 +38,20 @@ import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
 import { ApproveProjectDto } from './dto/approve-project.dto';
 import { AddPendingParticipantDto } from './dto/add-pending-participant.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
-import { TypedDocument, ProjectDocumentInputDto } from './dto/project-document-input.dto';
+import {
+  TypedDocument,
+  ProjectDocumentInputDto,
+} from './dto/project-document-input.dto';
 import { AzureBlobUploadService } from './azure-blob-upload.service';
 import { PendingParticipantInputDto } from './dto/pending-participant-input.dto';
-import { ListProjectsByEventDto, ProjectStateFilter } from './dto/list-projects-by-event.dto';
-import { UpdateProjectDocumentDto, DocumentStatusFilter } from './dto/update-project-document.dto';
+import {
+  ListProjectsByEventDto,
+  ProjectStateFilter,
+} from './dto/list-projects-by-event.dto';
+import {
+  UpdateProjectDocumentDto,
+  DocumentStatusFilter,
+} from './dto/update-project-document.dto';
 import { AddProjectDocumentsMultipartDto } from './dto/add-project-files-multipart.dto';
 import {
   EVENT_SERVICE_NAME,
@@ -49,7 +65,23 @@ import {
   CheckEvaluationStatusResponse,
 } from '@app/common/generated/evaluation';
 import { ProjectForReviewResponseDto } from './dto/project-for-review-response.dto';
+import { AuthService } from '../auth/auth.service';
+import { FetchProjectJurorsUseCase } from './use-cases/fetch-project-jurors.use-case';
+import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-case';
+import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
+import { ValidateJurorHasNotEvaluatedUseCase } from './use-cases/validate-juror-has-not-evaluated.use-case';
+import { RemoveJurorFromProjectUseCase } from './use-cases/remove-juror-from-project.use-case';
+import {
+  ProjectWithEnrichedJurors,
+  ListProjectsWithJurorsResponse,
+} from './types/project-enrichment.types';
+import { RemoveJurorFromProjectDto } from './dto/remove-juror-from-project.dto';
+import { JurorRemovalResult } from './types/juror-removal.types';
 
+export type {
+  JurorProfile,
+  ProjectWithEnrichedJurors,
+} from './types/project-enrichment.types';
 
 @Injectable()
 export class ProjectsService implements OnModuleInit {
@@ -60,23 +92,30 @@ export class ProjectsService implements OnModuleInit {
   constructor(
     @Inject(PROJECTS_SERVICE_NAME) private readonly projectsClient: ClientGrpc,
     @Inject(EVENT_SERVICE_NAME) private readonly eventsClient: ClientGrpc,
-    @Inject(EVALUATION_SERVICE_NAME) private readonly evaluationClient: ClientGrpc,
+    @Inject(EVALUATION_SERVICE_NAME)
+    private readonly evaluationClient: ClientGrpc,
     private readonly azureBlobUploadService: AzureBlobUploadService,
-
-  ) { }
+    private readonly authService: AuthService,
+    private readonly fetchProjectJurorsUseCase: FetchProjectJurorsUseCase,
+    private readonly fetchUserProfilesUseCase: FetchUserProfilesUseCase,
+    private readonly enrichProjectsWithJurorsUseCase: EnrichProjectsWithJurorsUseCase,
+    private readonly validateJurorHasNotEvaluatedUseCase: ValidateJurorHasNotEvaluatedUseCase,
+    private readonly removeJurorFromProjectUseCase: RemoveJurorFromProjectUseCase,
+  ) {}
 
   onModuleInit() {
-    this.projectsService = this.projectsClient.getService<ProjectsServiceClient>(
-      PROJECTS_SERVICE_NAME,
-    );
+    this.projectsService =
+      this.projectsClient.getService<ProjectsServiceClient>(
+        PROJECTS_SERVICE_NAME,
+      );
 
-    this.eventsService = this.eventsClient.getService<EventServiceClient>(
-      EVENT_SERVICE_NAME,
-    );
+    this.eventsService =
+      this.eventsClient.getService<EventServiceClient>(EVENT_SERVICE_NAME);
 
-    this.evaluationService = this.evaluationClient.getService<EvaluationServiceClient>(
-      EVALUATION_SERVICE_NAME,
-    );
+    this.evaluationService =
+      this.evaluationClient.getService<EvaluationServiceClient>(
+        EVALUATION_SERVICE_NAME,
+      );
   }
 
   /**
@@ -90,9 +129,11 @@ export class ProjectsService implements OnModuleInit {
       `Creating project with ${files.length} files: ${body.name}`,
     );
 
-    let eventType = body.eventType;
+    const eventType = body.eventType;
     if (eventType !== 'Competition' && eventType !== 'Exposition') {
-      throw new BadRequestException('Invalid event type. Must be "Competition" or "Exposition".');
+      throw new BadRequestException(
+        'Invalid event type. Must be "Competition" or "Exposition".',
+      );
     }
 
     let participants: PendingParticipantInputDto[] = [];
@@ -154,10 +195,13 @@ export class ProjectsService implements OnModuleInit {
 
     // Validate document type distribution
     // Count each document type
-    const typeCounts = documentMetadata.reduce((acc, doc) => {
-      acc[doc.type] = (acc[doc.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const typeCounts = documentMetadata.reduce(
+      (acc, doc) => {
+        acc[doc.type] = (acc[doc.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     // Validate: max 1 logo, 1 poster, 2 supporting documents
     if (typeCounts['LOGO'] > 1) {
@@ -278,18 +322,20 @@ export class ProjectsService implements OnModuleInit {
         name: dto.name,
         description: dto.description,
         projectCode: dto.projectCode,
-        participants: dto.participants?.map((p) => ({
-          firstName: p.firstName,
-          lastName: p.lastName,
-          email: p.email,
-          studentCode: p.studentCode,
-          semester: p.semester,
-          career: p.career,
-        })) ?? [],
-        documents: dto.documents?.map((d) => ({
-          url: d.url,
-          type: this.mapDocumentTypeToProto(d.type),
-        })) ?? [],
+        participants:
+          dto.participants?.map((p) => ({
+            firstName: p.firstName,
+            lastName: p.lastName,
+            email: p.email,
+            studentCode: p.studentCode,
+            semester: p.semester,
+            career: p.career,
+          })) ?? [],
+        documents:
+          dto.documents?.map((d) => ({
+            url: d.url,
+            type: this.mapDocumentTypeToProto(d.type),
+          })) ?? [],
       }),
     );
 
@@ -308,7 +354,9 @@ export class ProjectsService implements OnModuleInit {
       status: dto.status ?? 'PENDING',
     };
 
-    return firstValueFrom(this.projectsService.addPendingParticipant(request as any));
+    return firstValueFrom(
+      this.projectsService.addPendingParticipant(request as any),
+    );
   }
 
   async assignJurorToProjects(dto: AssignJurorToProjectsDto) {
@@ -334,6 +382,12 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
+  async removeJurorFromProject(
+    dto: RemoveJurorFromProjectDto,
+  ): Promise<JurorRemovalResult> {
+    return this.removeJurorFromProjectUseCase.execute(dto);
+  }
+
   async approveProject(dto: ApproveProjectDto, actingUserId: number) {
     const response = await firstValueFrom(
       this.projectsService.approveProject({
@@ -345,7 +399,10 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
-  async rejectProject(dto: { id: number; reason?: string }, actingUserId: number) {
+  async rejectProject(
+    dto: { id: number; reason?: string },
+    actingUserId: number,
+  ) {
     const response = await firstValueFrom(
       this.projectsService.rejectProject({
         id: dto.id,
@@ -357,13 +414,16 @@ export class ProjectsService implements OnModuleInit {
     return response;
   }
 
-  async requestChangesProject(dto: { id: number; reason: string }, actingUserId: number) {
+  async requestChangesProject(
+    dto: { id: number; reason: string },
+    actingUserId: number,
+  ) {
     const response = await firstValueFrom(
       this.projectsService.requestChangesProject({
         id: dto.id,
         actingUserId,
-        reason: dto.reason
-      })
+        reason: dto.reason,
+      }),
     );
 
     return response;
@@ -374,7 +434,7 @@ export class ProjectsService implements OnModuleInit {
       this.projectsService.changeToUnderReviewProject({
         id: projectId,
         actingUserId: actingUserId,
-      })
+      }),
     );
   }
 
@@ -400,7 +460,7 @@ export class ProjectsService implements OnModuleInit {
       case ProjectStateFilter.REJECTED:
         return ProjectState.REJECTED;
       case ProjectStateFilter.REQUEST_CHANGES:
-        return ProjectState.REQUEST_CHANGES
+        return ProjectState.REQUEST_CHANGES;
       default:
         return undefined;
     }
@@ -419,8 +479,26 @@ export class ProjectsService implements OnModuleInit {
       state: this.mapStateToProto(query.state),
     };
 
-    return lastValueFrom(
-      this.projectsService.listProjectsByEvent(request),
+    return lastValueFrom(this.projectsService.listProjectsByEvent(request));
+  }
+
+  async listProjectsByEventWithJurors(
+    eventId: number,
+    query: ListProjectsByEventDto,
+  ): Promise<ListProjectsWithJurorsResponse> {
+    const res = await this.listProjectsByEvent(eventId, query);
+    const page = query.currentPage ?? 1;
+    const limit = query.itemsPerPage ?? 20;
+
+    return this.enrichProjectsWithJurorsUseCase.execute(
+      res.items,
+      page,
+      limit,
+      res.total,
+      res.totalPages,
+      {
+        userProfileConcurrencyLimit: 5,
+      },
     );
   }
 
@@ -431,12 +509,8 @@ export class ProjectsService implements OnModuleInit {
   async getProjectForReview(id: number): Promise<ProjectForReviewResponseDto> {
     const project = await this.getProjectById(id);
 
-    const {
-      participants,
-      pendingParticipants,
-      documents,
-      ...projectInfo
-    } = project;
+    const { participants, pendingParticipants, documents, ...projectInfo } =
+      project;
 
     return {
       confirmedParticipants: participants,
@@ -506,7 +580,11 @@ export class ProjectsService implements OnModuleInit {
     return res.document;
   }
 
-  async updateProjectInfo(id: number, name?: string, description?: string): Promise<void> {
+  async updateProjectInfo(
+    id: number,
+    name?: string,
+    description?: string,
+  ): Promise<void> {
     await firstValueFrom(
       this.projectsService.updateProject({
         id,
@@ -559,7 +637,7 @@ export class ProjectsService implements OnModuleInit {
     }
 
     // Get project IDs from the response
-    const projectIds = res.items.map(project => project.id);
+    const projectIds = res.items.map((project) => project.id);
 
     // Check evaluation status for these projects
     const evaluationStatusRequest: CheckEvaluationStatusRequest = {
@@ -568,20 +646,24 @@ export class ProjectsService implements OnModuleInit {
       projectIds: projectIds,
     };
 
-    const evaluationStatusResponse: CheckEvaluationStatusResponse = await lastValueFrom(
-      this.evaluationService.checkEvaluationStatus(evaluationStatusRequest),
-    );
+    const evaluationStatusResponse: CheckEvaluationStatusResponse =
+      await lastValueFrom(
+        this.evaluationService.checkEvaluationStatus(evaluationStatusRequest),
+      );
 
     // Create a map for quick lookup
     const evaluationStatusMap = new Map(
-      evaluationStatusResponse.projects.map(status => [status.projectId, status])
+      evaluationStatusResponse.projects.map((status) => [
+        status.projectId,
+        status,
+      ]),
     );
 
     // Enrich projects with evaluation status
     // Cast items to ProjectComplete[] since the proto defines them as such
-    const projectCompleteItems = res.items as ProjectComplete[];
+    const projectCompleteItems = res.items;
 
-    const enrichedItems = projectCompleteItems.map(project => {
+    const enrichedItems = projectCompleteItems.map((project) => {
       const status = evaluationStatusMap.get(project.id);
       return {
         id: project.id,
@@ -615,9 +697,7 @@ export class ProjectsService implements OnModuleInit {
     body: AddProjectDocumentsMultipartDto,
     files: Express.Multer.File[],
   ) {
-    this.logger.log(
-      `Adding ${files.length} file(s) to project ${projectId}`,
-    );
+    this.logger.log(`Adding ${files.length} file(s) to project ${projectId}`);
 
     // 1. Validar que haya docs
     let documentMetadata: ProjectDocumentInputDto[] = [];
@@ -670,16 +750,21 @@ export class ProjectsService implements OnModuleInit {
     }
 
     // 6. Validar distribución de tipos en ESTA petición
-    const typeCounts = documentMetadata.reduce((acc, doc) => {
-      acc[doc.type] = (acc[doc.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const typeCounts = documentMetadata.reduce(
+      (acc, doc) => {
+        acc[doc.type] = (acc[doc.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     if (typeCounts['LOGO'] > 1) {
       throw new BadRequestException('Only 1 logo file is allowed per request');
     }
     if (typeCounts['POSTER'] > 1) {
-      throw new BadRequestException('Only 1 poster file is allowed per request');
+      throw new BadRequestException(
+        'Only 1 poster file is allowed per request',
+      );
     }
     if (typeCounts['SUPPORTING_DOCUMENT'] > 2) {
       throw new BadRequestException(
@@ -710,9 +795,8 @@ export class ProjectsService implements OnModuleInit {
     }
 
     const eventGrpcResponse = await firstValueFrom(
-      this.eventsService.getEvent({ id: project.eventId }),  // ✅ propiedad correcta
+      this.eventsService.getEvent({ id: project.eventId }), // ✅ propiedad correcta
     );
-
 
     const event = (eventGrpcResponse as any).event ?? eventGrpcResponse;
 
@@ -728,9 +812,7 @@ export class ProjectsService implements OnModuleInit {
 
     // 7.3. Leer evaluationsOpened y endDate (defensivo: camelCase y snake_case)
     const evaluationsOpened =
-      (event as any).evaluationsOpened ??
-      (event as any).evaluations_opened ??
-      undefined;
+      event.evaluationsOpened ?? event.evaluations_opened ?? undefined;
 
     if (evaluationsOpened === undefined) {
       this.logger.warn(
@@ -749,10 +831,7 @@ export class ProjectsService implements OnModuleInit {
       );
     }
 
-    const rawEndDate =
-      (event as any).endDate ??
-      (event as any).end_date ??
-      undefined;
+    const rawEndDate = event.endDate ?? event.end_date ?? undefined;
 
     if (!rawEndDate) {
       throw new BadRequestException(
@@ -787,9 +866,7 @@ export class ProjectsService implements OnModuleInit {
         `Failed to upload files to Azure: ${error.message}`,
         error.stack,
       );
-      throw new BadRequestException(
-        `Failed to upload files: ${error.message}`,
-      );
+      throw new BadRequestException(`Failed to upload files: ${error.message}`);
     }
 
     // 9. Adjuntar documentos al proyecto
@@ -826,7 +903,10 @@ export class ProjectsService implements OnModuleInit {
     };
   }
 
-  async getMyProjectByEvent(userId: number, eventId: number): Promise<GetMyProjectByEventResponse> {
+  async getMyProjectByEvent(
+    userId: number,
+    eventId: number,
+  ): Promise<GetMyProjectByEventResponse> {
     const request: GetMyProjectByEventRequest = {
       userId,
       eventId,
