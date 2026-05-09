@@ -39,6 +39,7 @@ model Project {
   eventId         Int          @map("event_id")
   courseId        Int          @map("course_id")
   name            String       @db.VarChar(255)
+  projectCode     String?      @map("project_code") @db.VarChar(50)
   description     String?      @db.Text
   eventNumber     String?      @map("event_number") @db.VarChar(150)
   state           ProjectState @map("state")

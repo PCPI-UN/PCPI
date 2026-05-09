@@ -104,6 +104,7 @@ export class ProjectsController {
         eventId: req.eventId,
         courseId: req.courseId,
         name: req.name,
+        projectCode: req.projectCode,
         description: req.description,
         eventNumber: req.eventNumber,
         state: protoToState(req.state),
@@ -163,6 +164,7 @@ export class ProjectsController {
     const updated = await this.updateProjectUC.execute({
       id: req.id,
       name: req.name,
+      projectCode: req.projectCode,
       description: req.description,
       eventNumber: req.eventNumber,
       courseId: req.courseId,
@@ -216,15 +218,6 @@ export class ProjectsController {
     const updated = await this.changeToUnderReviewProjectUC.execute({
       projectId: req.id,
       activeUserId: req.actingUserId,
-    });
-    return { project: toProtoProject(updated) };
-  }
-
-  @GrpcMethod('ProjectsService', 'ChangeToUnderReviewProject')
-  async changeToUnderReviewProjectRpc(req: { id: number; actingUserId: number }) {
-    const updated = await this.changeToUnderReviewProjectUC.execute({
-      projectId: req.id,
-      activeUserId: req.actingUserId
     });
     return { project: toProtoProject(updated) };
   }
@@ -337,6 +330,7 @@ export class ProjectsController {
         eventId: req.eventId,
         courseId: req.courseId,
         name: req.name,
+        projectCode: req.projectCode,
         description: req.description,
         eventNumber: req.eventNumber, // Optional - set during confirmation
         state: 'UNDER_REVIEW',

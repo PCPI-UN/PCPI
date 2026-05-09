@@ -34,11 +34,13 @@ export class RemoveJurorFromProjectUseCase implements OnModuleInit {
       dto.jurorUserId,
     );
 
-    const response = await firstValueFrom(
-      this.projectsService.removeJurorFromProject({
-        projectId: dto.projectId,
-        userId: dto.jurorUserId,
-      } as RemoveJurorFromProjectRequest),
+    const request: RemoveJurorFromProjectRequest = {
+      projectId: dto.projectId,
+      userId: dto.jurorUserId,
+    };
+
+    const response = await firstValueFrom<RemoveJurorFromProjectResponse>(
+      this.projectsService.removeJurorFromProject(request),
     );
 
     const result = response;
