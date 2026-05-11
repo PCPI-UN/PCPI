@@ -135,7 +135,10 @@ export class UpdateCriterionUseCase {
       let component: Component | undefined;
       const finalComponentId = componentId !== undefined ? componentId : existingCriterion.componentId;
       if (finalComponentId) {
-        component = await this.criterionRepository.findComponentById(finalComponentId);
+        const found = await this.criterionRepository.findComponentById(finalComponentId);
+        if (found) {
+          component = found;
+        }
       }
 
       return {

@@ -102,7 +102,10 @@ export class CreateCriterionUseCase {
 
       let component: Component | undefined;
       if (componentId) {
-        component = await this.criterionRepository.findComponentById(componentId);
+        const found = await this.criterionRepository.findComponentById(componentId);
+        if (found) {
+          component = found;
+        }
       }
 
       return {

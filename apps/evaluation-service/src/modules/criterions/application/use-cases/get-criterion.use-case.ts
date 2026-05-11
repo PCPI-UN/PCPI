@@ -16,7 +16,7 @@ export class GetCriterionUseCase {
   async execute(getCriterionDto: GetCriterionDto): Promise<{
     criterion: Criterion;
     courseIds: number[];
-    component?: Component | null;
+    component?: Component;
   }> {
     const { id } = getCriterionDto;
 
@@ -32,11 +32,14 @@ export class GetCriterionUseCase {
     const courses = await this.criterionRepository.getCriterionCourses(criterion.id);
     const courseIds = courses.map((c: CriterionCourse) => c.course_id);
 
-    let component: Component | null = null;
+    let component: Component | undefined;
     if (criterion.componentId) {
-      component = await this.criterionRepository.findComponentById(criterion.componentId);
+      const found = await this.criterionRepository.findComponentById(criterion.componentId);
+      if (found) {
+        component = found;
+      }
     }
 
-    return { criterion, courseIds, component };
+    return { criterion, courseIds, ...(component && { component }) };
   }
 }
