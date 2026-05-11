@@ -35,4 +35,8 @@ export class CreateCriterionDto {
   @IsString()
   @IsOptional()
   category?: string;
+
+  @IsInt()
+  @IsOptional()
+  componentId?: number;
 }

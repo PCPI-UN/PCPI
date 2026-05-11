@@ -17,7 +17,7 @@ export class CreateCriterionUseCase {
     criterion: Criterion;
     courseIds: number[];
   }> {
-    const { eventId, name, description, weight, courseIds, category } = createCriterionDto;
+    const { eventId, name, description, weight, courseIds, category, componentId } = createCriterionDto;
 
     // Validate weight is within valid range
     if (weight <= 0 || weight > 1) {
@@ -86,6 +86,7 @@ export class CreateCriterionUseCase {
       weight,
       true,
       category || null,
+      componentId || null,
       new Date(),
       new Date(),
     );

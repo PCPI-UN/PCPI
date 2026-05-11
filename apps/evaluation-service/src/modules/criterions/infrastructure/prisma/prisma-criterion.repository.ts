@@ -3,7 +3,7 @@ import { PrismaService } from '@common/prisma/prisma.service';
 import { CriterionRepositoryPort, PaginatedCriterions, FindAllFilters } from '@criterions/domain/repositories/criterion.repository.port';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
 import { CriterionCourse } from '@criterions/domain/entities/criterion-courses.entity';
-
+import { Component } from '@criterions/domain/entities/component.entity';
 
 import { CriterionMapper } from './mappers/criterion.mapper';
 
@@ -138,5 +138,51 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
     });
 
     return prismaCriterions.map(CriterionMapper.toDomain);
+  }
+
+  // Component methods
+  async createComponent(name: string, weight: number): Promise<Component> {
+    const prismaComponent = await this.prisma.component.create({
+      data: {
+        name,
+        weight,
+      },
+    });
+
+    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight);
+  }
+
+  async findComponentById(id: number): Promise<Component | null> {
+    const prismaComponent = await this.prisma.component.findUnique({
+      where: { id },
+    });
+
+    if (!prismaComponent) return null;
+    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight);
+  }
+
+  async findAllComponents(): Promise<Component[]> {
+    const prismaComponents = await this.prisma.component.findMany();
+    return prismaComponents.map(
+      (c) => new Component(c.id, c.name, c.weight)
+    );
+  }
+
+  async updateComponent(component: Component): Promise<Component> {
+    const prismaComponent = await this.prisma.component.update({
+      where: { id: component.id },
+      data: {
+        name: component.name,
+        weight: component.weight,
+      },
+    });
+
+    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight);
+  }
+
+  async deleteComponent(id: number): Promise<void> {
+    await this.prisma.component.delete({
+      where: { id },
+    });
   }
 }

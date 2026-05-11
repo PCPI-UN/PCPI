@@ -1,5 +1,6 @@
 import { Criterion } from '../entities/criterion.entity';
 import { CriterionCourse } from '../entities/criterion-courses.entity';
+import { Component } from '../entities/component.entity';
 
 export interface PaginatedCriterions {
     criterions: Criterion[];
@@ -24,5 +25,10 @@ export abstract class CriterionRepositoryPort {
   abstract removeAllCourseAssociations(criterionId: number): Promise<void>;
   abstract getCriterionCourses(criterionId: number): Promise<CriterionCourse[]>;
 
-
+  // Componentes
+  abstract createComponent(name: string, weight: number): Promise<Component>;
+  abstract findComponentById(id: number): Promise<Component | null>;
+  abstract findAllComponents(): Promise<Component[]>;
+  abstract updateComponent(component: Component): Promise<Component>;
+  abstract deleteComponent(id: number): Promise<void>;
 }

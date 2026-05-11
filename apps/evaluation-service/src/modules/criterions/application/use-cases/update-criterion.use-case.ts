@@ -18,7 +18,7 @@ export class UpdateCriterionUseCase {
     criterion: Criterion;
     courseIds: number[];
   }> {
-    const { id, eventId, name, description, weight, active, courseIds, category } = updateCriterionDto;
+    const { id, eventId, name, description, weight, active, courseIds, category, componentId } = updateCriterionDto;
 
     const existingCriterion = await this.criterionRepository.findById(id);
     if (!existingCriterion) {
@@ -109,6 +109,7 @@ export class UpdateCriterionUseCase {
       finalWeight,
       active ?? existingCriterion.active,
       category !== undefined ? (category || null) : existingCriterion.category,
+      componentId !== undefined ? (componentId || null) : existingCriterion.componentId,
       existingCriterion.createdAt,
       new Date(),
     );

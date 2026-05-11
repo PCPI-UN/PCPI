@@ -52,6 +52,8 @@ model Criterion {
   updatedAt   DateTime           @map("updated_at") @updatedAt @db.Timestamp()
   scores      EvaluationDetail[]
   criterionsCourses CriterionCourse[]
+  componentId Int?               @map("component_id")
+  component   Component?         @relation(fields: [componentId], references: [id])
 
   @@map("criterions")
 }
@@ -68,3 +70,11 @@ model CriterionCourse {
   @@map("criterions_courses")
 }
 
+// New Criterion Component TABLE
+
+model Component {
+  id       Int         @id @default(autoincrement())
+  name     String
+  weight   Float
+  criteria Criterion[]
+}

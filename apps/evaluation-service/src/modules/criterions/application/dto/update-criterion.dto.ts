@@ -45,4 +45,8 @@ export class UpdateCriterionDto {
   @IsString()
   @IsOptional()
   category?: string;
+
+  @IsInt()
+  @IsOptional()
+  componentId?: number;
 }
