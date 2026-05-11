@@ -33,6 +33,13 @@ service CriterionsService {
 
   // Deletes a criterion
   rpc DeleteCriterion (DeleteCriterionRequest) returns (DeleteCriterionResponse) {}
+
+  // Component CRUD operations
+  rpc CreateComponent (CreateComponentRequest) returns (ComponentProto) {}
+  rpc GetComponent (GetComponentRequest) returns (ComponentProto) {}
+  rpc ListComponents (Empty) returns (ListComponentsResponse) {}
+  rpc UpdateComponent (UpdateComponentRequest) returns (ComponentProto) {}
+  rpc DeleteComponent (DeleteComponentRequest) returns (DeleteCriterionResponse) {}
 }
 
 // ===== COMMON MESSAGES =====
@@ -55,6 +62,7 @@ message CriterionProto {
   bool active = 6;
   repeated int32 courseIds = 7;
   optional string category = 8;
+  optional ComponentProto component = 9;
 }
 
 message EvaluationProto {
@@ -170,6 +178,7 @@ message CreateCriterionRequest {
   double weight = 4;
   repeated int32 courseIds = 5;
   optional string category = 6;
+  optional int32 componentId = 7;
 }
 
 // The request message for updating a criterion.
@@ -182,6 +191,7 @@ message UpdateCriterionRequest {
   optional bool active = 6;
   repeated int32 courseIds = 7;
   optional string category = 8;
+  optional int32 componentId = 9;
 }
 
 // The request message for getting a criterion by ID.
@@ -229,6 +239,39 @@ message TopProjectProto {
 message GetTopProjectsByCourseResponse {
   repeated TopProjectProto topProjects = 1;
 }
+
+// ===== COMPONENT MESSAGES =====
+
+message ComponentProto {
+  int32 id = 1;
+  string name = 2;
+  double weight = 3;
+}
+
+message CreateComponentRequest {
+  string name = 1;
+  double weight = 2;
+}
+
+message GetComponentRequest {
+  int32 id = 1;
+}
+
+message ListComponentsResponse {
+  repeated ComponentProto components = 1;
+}
+
+message UpdateComponentRequest {
+  int32 id = 1;
+  optional string name = 2;
+  optional double weight = 3;
+}
+
+message DeleteComponentRequest {
+  int32 id = 1;
+}
+
+message Empty {}
 
 message GetEvaluationDashboardStatsRequest {}
 

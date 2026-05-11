@@ -11,11 +11,17 @@ export class FindByCourseUseCase {
     private readonly criterionRepository: CriterionRepositoryPort,
   ) {}
 
-  async execute(findByCourseDto: FindByCourseDto): Promise<Criterion[]> {
+  async execute(findByCourseDto: FindByCourseDto): Promise<{ criterions: Criterion[]; components: any[] }> {
     const { courseId } = findByCourseDto;
 
-    const criterions = await this.criterionRepository.findByCourseId(courseId);
+    const [criterions, components] = await Promise.all([
+      this.criterionRepository.findByCourseId(courseId),
+      this.criterionRepository.findAllComponents(),
+    ]);
 
-    return criterions || [];
+    return {
+      criterions: criterions || [],
+      components,
+    };
   }
 }

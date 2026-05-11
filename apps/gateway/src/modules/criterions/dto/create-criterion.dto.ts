@@ -59,4 +59,13 @@ export class CreateCriterionDto {
   @ArrayMinSize(1)
   @Type(() => Number)
   courseIds: number[];
+
+  @ApiProperty({
+    description: 'Component ID to associate with this criterion (optional)',
+    example: 1,
+    type: Number,
+  })
+  @IsInt()
+  @IsOptional()
+  componentId?: number;
 }

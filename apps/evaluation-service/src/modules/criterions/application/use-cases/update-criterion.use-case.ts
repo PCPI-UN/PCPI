@@ -4,6 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
 import { UpdateCriterionDto } from '../dto/update-criterion.dto';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
+import { Component } from '@criterions/domain/entities/component.entity';
 import { CriterionCourse } from '@criterions/domain/entities/criterion-courses.entity';
 import { EventServicePort } from '../../infrastructure/ports/event.service.port';
 
@@ -17,8 +18,9 @@ export class UpdateCriterionUseCase {
   async execute(updateCriterionDto: UpdateCriterionDto): Promise<{
     criterion: Criterion;
     courseIds: number[];
+    component?: Component;
   }> {
-    const { id, eventId, name, description, weight, active, courseIds, category } = updateCriterionDto;
+    const { id, eventId, name, description, weight, active, courseIds, category, componentId } = updateCriterionDto;
 
     const existingCriterion = await this.criterionRepository.findById(id);
     if (!existingCriterion) {
@@ -109,6 +111,7 @@ export class UpdateCriterionUseCase {
       finalWeight,
       active ?? existingCriterion.active,
       category !== undefined ? (category || null) : existingCriterion.category,
+      componentId !== undefined ? (componentId || null) : existingCriterion.componentId,
       existingCriterion.createdAt,
       new Date(),
     );
@@ -129,9 +132,19 @@ export class UpdateCriterionUseCase {
         ? courseIds
         : (await this.criterionRepository.getCriterionCourses(id)).map((cc: CriterionCourse) => cc.course_id);
 
+      let component: Component | undefined;
+      const finalComponentId = componentId !== undefined ? componentId : existingCriterion.componentId;
+      if (finalComponentId) {
+        const found = await this.criterionRepository.findComponentById(finalComponentId);
+        if (found) {
+          component = found;
+        }
+      }
+
       return {
         criterion: savedCriterion,
         courseIds: finalCourseIds,
+        ...(component && { component }),
       };
     } catch (error) {
       throw new RpcException({

@@ -4,6 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
 import { CriterionCourse } from '@criterions/domain/entities/criterion-courses.entity';
+import { Component } from '@criterions/domain/entities/component.entity';
 import { GetCriterionDto } from '../dto/get-criterion.dto';
 
 @Injectable()
@@ -15,6 +16,7 @@ export class GetCriterionUseCase {
   async execute(getCriterionDto: GetCriterionDto): Promise<{
     criterion: Criterion;
     courseIds: number[];
+    component?: Component;
   }> {
     const { id } = getCriterionDto;
 
@@ -30,6 +32,14 @@ export class GetCriterionUseCase {
     const courses = await this.criterionRepository.getCriterionCourses(criterion.id);
     const courseIds = courses.map((c: CriterionCourse) => c.course_id);
 
-    return { criterion, courseIds };
+    let component: Component | undefined;
+    if (criterion.componentId) {
+      const found = await this.criterionRepository.findComponentById(criterion.componentId);
+      if (found) {
+        component = found;
+      }
+    }
+
+    return { criterion, courseIds, ...(component && { component }) };
   }
 }

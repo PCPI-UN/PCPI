@@ -3,3 +3,8 @@ export { UpdateCriterionUseCase } from './update-criterion.use-case';
 export { GetCriterionUseCase } from './get-criterion.use-case';
 export { ListCriterionsUseCase } from './list-criterions.use-case';
 export { DeleteCriterionUseCase } from './delete-criterion.use-case';
+export { CreateComponentUseCase } from './create-component.use-case';
+export { GetComponentUseCase } from './get-component.use-case';
+export { ListComponentsUseCase } from './list-components.use-case';
+export { UpdateComponentUseCase } from './update-component.use-case';
+export { DeleteComponentUseCase } from './delete-component.use-case';

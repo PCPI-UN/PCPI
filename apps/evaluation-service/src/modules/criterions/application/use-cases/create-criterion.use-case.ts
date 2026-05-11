@@ -4,6 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
 import { CreateCriterionDto } from '../dto/create-criterion.dto';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
+import { Component } from '@criterions/domain/entities/component.entity';
 import { EventServicePort } from '../../infrastructure/ports/event.service.port';
 
 @Injectable()
@@ -16,8 +17,9 @@ export class CreateCriterionUseCase {
   async execute(createCriterionDto: CreateCriterionDto): Promise<{
     criterion: Criterion;
     courseIds: number[];
+    component?: Component;
   }> {
-    const { eventId, name, description, weight, courseIds, category } = createCriterionDto;
+    const { eventId, name, description, weight, courseIds, category, componentId } = createCriterionDto;
 
     // Validate weight is within valid range
     if (weight <= 0 || weight > 1) {
@@ -86,6 +88,7 @@ export class CreateCriterionUseCase {
       weight,
       true,
       category || null,
+      componentId || null,
       new Date(),
       new Date(),
     );
@@ -97,9 +100,18 @@ export class CreateCriterionUseCase {
         await this.criterionRepository.associateCourses(savedCriterion.id, courseIds);
       }
 
+      let component: Component | undefined;
+      if (componentId) {
+        const found = await this.criterionRepository.findComponentById(componentId);
+        if (found) {
+          component = found;
+        }
+      }
+
       return {
         criterion: savedCriterion,
         courseIds: courseIds || [],
+        ...(component && { component }),
       };
     } catch (error) {
       throw new RpcException({
