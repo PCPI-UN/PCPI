@@ -89,6 +89,7 @@ enum EvaluationType {
   EVALUATION_TYPE_UNSPECIFIED = 0;
   ZERO_TO_FIVE = 1;
   ZERO_TO_HUNDRED = 2;
+  FINAL_PROJECTS = 3;
 }
 
 // =====================
