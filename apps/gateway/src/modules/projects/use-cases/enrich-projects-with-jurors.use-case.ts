@@ -128,6 +128,7 @@ export class EnrichProjectsWithJurorsUseCase {
         id: project.id,
         eventId: project.eventId,
         courseId: project.courseId,
+        projectCode: project.projectCode,
         name: project.name,
         description: project.description,
         state: project.state,
