@@ -12,7 +12,7 @@ import { Component } from '@criterions/domain/entities/component.entity';
 
 export class CriterionMapper {
   static toCreateCriterionResponse(
-    result: { criterion: Criterion; courseIds: number[] }
+    result: { criterion: Criterion; courseIds: number[]; component?: Component }
   ): CriterionProto {
     return {
       id: result.criterion.id,
@@ -23,11 +23,12 @@ export class CriterionMapper {
       courseIds: result.courseIds,
       ...(result.criterion.description && { description: result.criterion.description }),
       ...(result.criterion.category && { category: result.criterion.category }),
+      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight } }),
     };
   }
 
   static toUpdateCriterionResponse(
-    result: { criterion: Criterion; courseIds: number[] }
+    result: { criterion: Criterion; courseIds: number[]; component?: Component }
   ): CriterionProto {
     return {
       id: result.criterion.id,
@@ -38,11 +39,12 @@ export class CriterionMapper {
       active: result.criterion.active,
       courseIds: result.courseIds,
       ...(result.criterion.category && { category: result.criterion.category }),
+      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight } }),
     };
   }
 
   static toGetCriterionResponse(
-    result: { criterion: Criterion; courseIds: number[] }
+    result: { criterion: Criterion; courseIds: number[]; component?: Component }
   ): CriterionProto {
     return {
       id: result.criterion.id,
@@ -53,12 +55,13 @@ export class CriterionMapper {
       active: result.criterion.active,
       courseIds: result.courseIds,
       ...(result.criterion.category && { category: result.criterion.category }),
+      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight } }),
     };
   }
 
   static toListCriterionsResponse(
     result: {
-      criterions: Array<{ criterion: Criterion; courseIds: number[] }>;
+      criterions: Array<{ criterion: Criterion; courseIds: number[]; component?: Component }>;
       total: number;
     },
     page: number,
@@ -74,7 +77,7 @@ export class CriterionMapper {
     }
 
     return {
-      criterions: result.criterions.map(({ criterion, courseIds }) => ({
+      criterions: result.criterions.map(({ criterion, courseIds, component }) => ({
         id: criterion.id,
         eventId: criterion.eventId,
         name: criterion.name,
@@ -83,6 +86,7 @@ export class CriterionMapper {
         active: criterion.active,
         courseIds,
         ...(criterion.category && { category: criterion.category }),
+        ...(component && { component: { id: component.id, name: component.name, weight: component.weight } }),
       })),
       meta,
     };

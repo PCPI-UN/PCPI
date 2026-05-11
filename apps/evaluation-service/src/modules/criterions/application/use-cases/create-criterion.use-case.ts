@@ -4,6 +4,7 @@ import { status } from '@grpc/grpc-js';
 import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
 import { CreateCriterionDto } from '../dto/create-criterion.dto';
 import { Criterion } from '@criterions/domain/entities/criterion.entity';
+import { Component } from '@criterions/domain/entities/component.entity';
 import { EventServicePort } from '../../infrastructure/ports/event.service.port';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class CreateCriterionUseCase {
   async execute(createCriterionDto: CreateCriterionDto): Promise<{
     criterion: Criterion;
     courseIds: number[];
+    component?: Component;
   }> {
     const { eventId, name, description, weight, courseIds, category, componentId } = createCriterionDto;
 
@@ -98,9 +100,15 @@ export class CreateCriterionUseCase {
         await this.criterionRepository.associateCourses(savedCriterion.id, courseIds);
       }
 
+      let component: Component | undefined;
+      if (componentId) {
+        component = await this.criterionRepository.findComponentById(componentId);
+      }
+
       return {
         criterion: savedCriterion,
         courseIds: courseIds || [],
+        ...(component && { component }),
       };
     } catch (error) {
       throw new RpcException({

@@ -62,6 +62,7 @@ message CriterionProto {
   bool active = 6;
   repeated int32 courseIds = 7;
   optional string category = 8;
+  optional ComponentProto component = 9;
 }
 
 message EvaluationProto {
