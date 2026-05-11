@@ -113,6 +113,7 @@ message GetProjectStatsResponse {
   double averageGrade = 2;
   int32 evaluationCount = 3;
   repeated CategoryStatsResponse categoryStats = 4;
+  repeated int32 evaluatorIds = 5;
 }
 
 message CheckEvaluationStatusRequest {
