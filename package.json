@@ -96,5 +96,17 @@
   },
   "prisma": {
     "seed": "ts-node apps/auth-service/prisma/seed.ts"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "@swc/core",
+      "bcrypt",
+      "prisma",
+      "protobufjs"
+    ]
   }
 }

@@ -30,6 +30,7 @@ export class GetMyProjectByEventUC {
             email: participant.email ?? null,
             semester: participant.semester ?? null,
             career: participant.career ?? null,
+            status: participant.status,
         }));
 
         return {

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Param,
   ParseIntPipe,
   Patch,
@@ -9,9 +10,12 @@ import {
   UploadedFiles,
   UseInterceptors,
   Get,
-  Query
+  Query,
 } from '@nestjs/common';
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
@@ -25,24 +29,29 @@ import { ProjectsService } from './projects.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { AppUser } from '../auth/types/app-user.type';
+import { AddPendingParticipantDto } from './dto/add-pending-participant.dto';
 import { CreateProjectWithParticipantsDto } from './dto/create-project-with-participants.dto';
 import { CreateProjectWithParticipantsMultipartDto } from './dto/create-project-with-participants-multipart.dto';
 import { AssignJurorToProjectsDto } from './dto/assign-juror-to-projects.dto';
 import { ReassignProjectJurorDto } from './dto/reassign-project-juror.dto';
-import { ApproveProjectDto } from './dto/approve-project.dto';
+import { RemoveJurorFromProjectDto } from './dto/remove-juror-from-project.dto';
 import { RejectProjectDto } from './dto/reject-project.dto';
 import { ListProjectsByEventDto } from './dto/list-projects-by-event.dto';
-import { DocumentStatusFilter, UpdateProjectDocumentDto } from './dto/update-project-document.dto';
+import {
+  DocumentStatusFilter,
+  UpdateProjectDocumentDto,
+} from './dto/update-project-document.dto';
 import { TypedDocument } from './dto/project-document-input.dto';
 import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-juror.dto';
-import { AddProjectDocumentsMultipartDto} from './dto/add-project-files-multipart.dto';
+import { AddProjectDocumentsMultipartDto } from './dto/add-project-files-multipart.dto';
 import { RequestChangesProjectDto } from './dto/request-changes-project.dto';
+import { UpdateProjectInfoDto } from './dto/update-project-info.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
 @Controller('projects')
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) { }
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Public()
   @Post()
@@ -81,7 +90,8 @@ export class ProjectsController {
   })
   @ApiResponse({
     status: 409,
-    description: 'One or more of the project participants already have an existing project in this event.'
+    description:
+      'One or more of the project participants already have an existing project in this event.',
   })
   @ApiResponse({
     status: 413,
@@ -99,6 +109,21 @@ export class ProjectsController {
       body,
       uploadedFiles.files || [],
     );
+  }
+
+  // TODO: Add platform permission guard - only admins/team leaders can add/update pending participants
+  @Post('add-update-participants')
+  @ApiOperation({
+    summary: 'Add a pending participant to a project or update an existing one',
+    description:
+      'Adds a new pending participant to a project or updates an existing pending participant if the email already exists for that project. ',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Participant created/updated successfully',
+  })
+  addPendingParticipant(@Body() body: AddPendingParticipantDto) {
+    return this.projectsService.addPendingParticipant(body);
   }
 
   // TODO: Add platform permission guard - only admins/event managers can assign jurors
@@ -153,6 +178,35 @@ export class ProjectsController {
   })
   reassignProjectJuror(@Body() reassignJurorDto: ReassignProjectJurorDto) {
     return this.projectsService.reassignProjectJuror(reassignJurorDto);
+  }
+
+  @Delete(':projectId/jurors/:jurorId')
+  @ApiOperation({
+    summary: 'Remove a juror from a project',
+    description:
+      'Removes a juror assignment after verifying the juror has not evaluated the project yet.',
+  })
+  @ApiParam({ name: 'projectId', description: 'Project ID', example: 1 })
+  @ApiParam({ name: 'jurorId', description: 'Juror User ID', example: 5 })
+  @ApiResponse({ status: 200, description: 'Juror removed successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Juror has already evaluated this project',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project or juror assignment not found',
+  })
+  removeJurorFromProject(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('jurorId', ParseIntPipe) jurorId: number,
+  ) {
+    const dto: RemoveJurorFromProjectDto = {
+      projectId,
+      jurorUserId: jurorId,
+    };
+
+    return this.projectsService.removeJurorFromProject(dto);
   }
 
   // TODO: Add platform permission guard - only admins/event managers can approve projects
@@ -225,7 +279,8 @@ export class ProjectsController {
   @Patch(':id/request-changes')
   @ApiOperation({
     summary: 'Request changes of a project',
-    description: 'Marks a project as request changes with a mandatory reason. Requires admin or event manager role.'
+    description:
+      'Marks a project as request changes with a mandatory reason. Requires admin or event manager role.',
   })
   @ApiParam({
     name: 'id',
@@ -234,29 +289,52 @@ export class ProjectsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Required changes succesfully'
+    description: 'Required changes successfully requested for the project',
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid input data'
+    description: 'Invalid input data',
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - Requires platform permissions'
+    description: 'Forbidden - Requires platform permissions',
   })
   @ApiResponse({
     status: 404,
-    description: 'Project not found'
+    description: 'Project not found',
   })
   requestChangesProject(
     @Param('id', ParseIntPipe) id: number,
     @Body() requestChangesDto: RequestChangesProjectDto,
     @GetUser() user: AppUser,
   ) {
-    return this.projectsService.requestChangesProject({ id, ...requestChangesDto }, user.id)
+    return this.projectsService.requestChangesProject(
+      { id, ...requestChangesDto },
+      user.id,
+    );
   }
-  
 
+  @Post(':id/change-to-under-review')
+  @ApiOperation({
+    summary: 'Change project state to under review',
+    description:
+      'Changes the state of a project from "request changes" to "under review". Requires the user to be a participant of the project.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project state changed to under review successfully',
+  })
+  async changeToUnderReviewProject(
+    @Param('id', ParseIntPipe) projectId: number,
+    @GetUser() user: AppUser,
+  ) {
+    return this.projectsService.changeToUnderReviewProject(projectId, user.id);
+  }
 
   @Get('by-event/:eventId')
   @ApiOperation({
@@ -274,10 +352,7 @@ export class ProjectsController {
     @Param('eventId', ParseIntPipe) eventId: number,
     @Query() query: ListProjectsByEventDto,
   ) {
-    const res = await this.projectsService.listProjectsByEvent(
-      eventId,
-      query,
-    );
+    const res = await this.projectsService.listProjectsByEvent(eventId, query);
 
     return {
       items: res.items,
@@ -287,6 +362,25 @@ export class ProjectsController {
       itemsPerPage: res.itemsPerPage,
       totalPages: res.totalPages,
     };
+  }
+
+  @Get('by-event/:eventId/with-jurors')
+  @ApiOperation({
+    summary: 'List projects by event with their assigned jurors',
+    description:
+      'Returns paginated projects for a given event and includes the jurors assigned to each project.',
+  })
+  @ApiParam({
+    name: 'eventId',
+    type: Number,
+    description: 'ID of the event to filter projects',
+    example: 1,
+  })
+  async listProjectsByEventWithJurors(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() query: ListProjectsByEventDto,
+  ) {
+    return this.projectsService.listProjectsByEventWithJurors(eventId, query);
   }
 
   @Get('assigned-projects')
@@ -309,6 +403,31 @@ export class ProjectsController {
     );
   }
 
+  @Get(':id/for-review')
+  @ApiOperation({
+    summary: 'Get project details for review',
+    description:
+      'Returns detailed information of a project for review purposes, including participants and documents. ' +
+      'This endpoint is intended for jurors to review assigned projects.',
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project details for review retrieved successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async getProjectForReview(@Param('id', ParseIntPipe) id: number) {
+    return this.projectsService.getProjectForReview(id);
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get project by id',
@@ -320,16 +439,15 @@ export class ProjectsController {
     description: 'Project identifier',
     example: 1,
   })
-  async getProject(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async getProject(@Param('id', ParseIntPipe) id: number) {
     return this.projectsService.getProjectById(id);
   }
 
   @Patch('documents/:id')
   @ApiOperation({
     summary: 'Update project document',
-    description: 'Update the document file, type, or state of a project document.',
+    description:
+      'Update the document file, type, or state of a project document.',
   })
   @ApiParam({
     name: 'id',
@@ -373,6 +491,39 @@ export class ProjectsController {
     return updated;
   }
 
+  @Patch(':id/info')
+  @ApiOperation({
+    summary: 'Update project information',
+    description: 'Updates the name and/or description of a project.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiBody({
+    description: 'Project information to update',
+    type: UpdateProjectInfoDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project information updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async updateProjectInfo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProjectInfoDto: UpdateProjectInfoDto,
+  ) {
+    return this.projectsService.updateProjectInfo(
+      id,
+      updateProjectInfoDto.name,
+      updateProjectInfoDto.description,
+    );
+  }
+
   @Get(':id/jurors')
   @ApiOperation({
     summary: 'List jurors assigned to a project',
@@ -392,9 +543,7 @@ export class ProjectsController {
     status: 404,
     description: 'Project not found',
   })
-  async listProjectJurors(
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  async listProjectJurors(@Param('id', ParseIntPipe) id: number) {
     const jurors = await this.projectsService.listJurorsByProjectId(id);
     return { jurors };
   }
@@ -454,6 +603,4 @@ export class ProjectsController {
       uploadedFiles.files || [],
     );
   }
-
-
 }

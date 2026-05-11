@@ -5,9 +5,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
   IsArray,
   ValidateNested,
+  IsNumberString,
 } from 'class-validator';
 import { PendingParticipantInputDto } from './pending-participant-input.dto';
 import { ProjectDocumentInputDto } from './project-document-input.dto';
@@ -51,6 +53,18 @@ export class CreateProjectWithParticipantsMultipartDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty({
+    description: 'Código opcional del proyecto',
+    required: false,
+    example: '202301',
+    maxLength: 50,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumberString()
+  @MaxLength(50)
+  projectCode?: string;
 
   @ApiProperty({
     description: 'Detailed description of the project',

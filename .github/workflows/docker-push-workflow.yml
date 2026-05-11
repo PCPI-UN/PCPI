@@ -65,7 +65,7 @@ jobs:
           COOLIFY_URLS_TOKENS_JSON: ${{ secrets.COOLIFY_URLS_TOKENS_JSON }}
 
   migrations-service-build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     needs: search-individual-migration-service-changes
     if: ${{ 
       contains(fromJSON(needs.search-individual-migration-service-changes.outputs.services), 'auth-service') ||
@@ -126,12 +126,7 @@ jobs:
 
         env:
           COOLIFY_WEBHOOKS_JSON: ${{ secrets.COOLIFY_WEBHOOKS_JSON }}
-        
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
         
       - name: Build and push base image
         uses: docker/build-push-action@v6
@@ -206,7 +201,7 @@ jobs:
           --header "Authorization: Bearer ${{ needs.search-individual-migration-service-changes.outputs.coolify-token }}"
   
   no-migration-service-build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     needs: search-individual-migration-service-changes
     if: ${{ 
       contains(needs.search-individual-migration-service-changes.outputs.services, 'notification-service') || 
@@ -263,12 +258,6 @@ jobs:
 
         env:
           COOLIFY_WEBHOOKS_JSON: ${{ secrets.COOLIFY_WEBHOOKS_JSON }}
-        
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
         
       - name: Build and push base image
         uses: docker/build-push-action@v6
