@@ -118,6 +118,18 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
           },
         },
       },
+      select: {
+        id: true,
+        eventId: true,
+        name: true,
+        description: true,
+        weight: true,
+        active: true,
+        category: true,
+        componentId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return prismaCriterions.map(CriterionMapper.toDomain);
@@ -134,6 +146,18 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
             },
           },
         },
+      },
+      select: {
+        id: true,
+        eventId: true,
+        name: true,
+        description: true,
+        weight: true,
+        active: true,
+        category: true,
+        componentId: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
