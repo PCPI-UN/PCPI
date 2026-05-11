@@ -5,6 +5,8 @@ import { CreateCriterionDto } from './dto/create-criterion.dto';
 import { UpdateCriterionDto } from './dto/update-criterion.dto';
 import { ListCriterionsDto } from './dto/list-criterions.dto';
 import { FindCriterionsByCourseDto } from './dto/find-criterions-by-course.dto';
+import { CreateComponentDto } from './dto/create-component.dto';
+import { UpdateComponentDto } from './dto/update-component.dto';
 import {
   CriterionsServiceClient,
   CRITERIONS_SERVICE_NAME,
@@ -77,6 +79,41 @@ export class CriterionsService implements OnModuleInit {
   async deleteCriterion(id: number): Promise<DeleteCriterionResponse> {
     return firstValueFrom(
       this.criterionsService.deleteCriterion({ id } as DeleteCriterionRequest),
+    );
+  }
+
+  // Component methods
+  async createComponent(request: CreateComponentDto): Promise<any> {
+    return firstValueFrom(this.criterionsService.createComponent(request));
+  }
+
+  async getComponent(id: number): Promise<any> {
+    return firstValueFrom(
+      this.criterionsService.getComponent({ id }),
+    );
+  }
+
+  async listComponents(): Promise<any> {
+    return firstValueFrom(
+      this.criterionsService.listComponents({}),
+    );
+  }
+
+  async updateComponent(
+    id: number,
+    request: UpdateComponentDto,
+  ): Promise<any> {
+    return firstValueFrom(
+      this.criterionsService.updateComponent({
+        id,
+        ...request,
+      }),
+    );
+  }
+
+  async deleteComponent(id: number): Promise<DeleteCriterionResponse> {
+    return firstValueFrom(
+      this.criterionsService.deleteComponent({ id }),
     );
   }
 }
