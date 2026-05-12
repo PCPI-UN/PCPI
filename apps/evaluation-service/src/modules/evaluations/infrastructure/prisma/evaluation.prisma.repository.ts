@@ -293,10 +293,19 @@ export class EvaluationPrismaRepository implements EvaluationRepositoryPort {
             });
         }
 
+        // Get unique evaluator user IDs for this project
+        const evaluators = await this.prisma.evaluation.findMany({
+            where: { projectId },
+            select: { memberUserId: true },
+        });
+
+        const evaluatorIds = Array.from(new Set(evaluators.map(e => e.memberUserId)));
+
         return {
             averageGrade: gradeStats._avg.grade || 0,
             evaluationCount: gradeStats._count,
             categoryStats,
+            evaluatorIds,
         };
     }
 
