@@ -43,8 +43,10 @@ function toProtoEvaluationType(value: string | null | undefined): EvaluationType
 
 function toPrismaEvaluationType(
   value: EvaluationType | undefined,
-): 'ZERO_TO_FIVE' | 'ZERO_TO_HUNDRED' | undefined {
+): 'FINAL_PROJECTS' | 'ZERO_TO_FIVE' | 'ZERO_TO_HUNDRED' | undefined {
   switch (value) {
+    case EvaluationType.FINAL_PROJECTS:
+      return 'FINAL_PROJECTS';
     case EvaluationType.ZERO_TO_FIVE:
       return 'ZERO_TO_FIVE';
     case EvaluationType.ZERO_TO_HUNDRED:

@@ -23,7 +23,10 @@ export class EvaluationScoreDto {
 
   @ApiProperty({
     description:
-      'Score value. Valid range depends on the evaluation type configured for the event and is validated server-side.',
+      'Score value. Validated server-side against the evaluation type of the event. ' +
+      'For FINAL_PROJECTS (default): integer 1–4 where 4 = Excelente (90), 3 = Bueno (75), ' +
+      '2 = Aceptable (55), 1 = Insuficiente (25). The mapped value (0–100 scale) is stored and ' +
+      'used for grade calculation.',
     example: 4,
   })
   @IsInt()
