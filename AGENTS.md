@@ -141,8 +141,16 @@ pnpm exec prisma db seed   # auth-service only; idempotent
 ## Commit conventions
 
 Format: `[taskId]: message` (e.g., `[42]: add grpc method for project approval`)
-- `taskId` is required and enforced by commitlint.
+- `taskId` is required and enforced by commitlint (commit-msg hook).
 - Pre-commit hook runs `pnpm run build` (gateway) — compilation must pass.
+
+---
+
+## CI/CD
+
+- CI builds ARM64 images and pushes to Docker Hub on PR to `dev` or `prod` branches.
+- Services with DB (auth, evaluation, event, invitation, project) deploy migrations first, then the main app via Coolify webhooks.
+- Gateway and notification-service deploy without migration step.
 
 ---
 

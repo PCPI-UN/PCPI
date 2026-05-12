@@ -1,59 +1,107 @@
 import { Injectable } from '@nestjs/common';
-import { 
-    EvaluationRepositoryPort, 
+import {
+    EvaluationRepositoryPort,
     ProjectEvaluationStatus,
     EvaluationWithDetails
 } from '@evaluations/domain/repositories/evaluation.repository.port';
 import { CheckEvaluationStatusDto } from '@evaluations/application/dto/check-evaluation-status.dto';
-import { ScoreMapper } from '@evaluations/application/mappers/score.mapper';
+import { ScoreMapper } from '../../domain/ports/score-mapper.port';
+import { EventServicePort } from '@evaluations/infrastructure/ports/event.service.port';
+import { ScoreMapperFactory } from '../mappers/score-mapper.factory';
+import { FinalProjectsScoreMapper } from '../mappers/final-projects-score.mapper';
+import { EvaluationType } from '../../../../common/constants/evaluation-type.constants';
+import { EvaluationType as EventEvaluationType } from '@app/common/generated/event';
 
 @Injectable()
 export class CheckEvaluationStatusUseCase {
     constructor(
         private readonly evaluationRepository: EvaluationRepositoryPort,
+        private readonly eventService: EventServicePort,
     ) {}
 
-    async execute(dto: CheckEvaluationStatusDto): Promise<ProjectEvaluationStatus[]> {
-        const { projectIds, userId, eventId } = dto;
+    private resolveEvaluationType(evaluationType: unknown): EvaluationType {
+        if (
+            evaluationType === undefined ||
+            evaluationType === null ||
+            evaluationType === EventEvaluationType.EVALUATION_TYPE_UNSPECIFIED ||
+            evaluationType === EventEvaluationType.FINAL_PROJECTS ||
+            evaluationType === EvaluationType.FINAL_PROJECTS
+        ) {
+            return EvaluationType.FINAL_PROJECTS;
+        }
 
-        // Fetch all evaluations for these projects by this evaluator
-        const evaluations = await this.evaluationRepository.findByProjectIdsAndEvaluator(
-            projectIds,
-            userId,
-            eventId
-        );
+        if (
+            evaluationType === EventEvaluationType.ZERO_TO_FIVE ||
+            evaluationType === EvaluationType.ZERO_TO_FIVE
+        ) {
+            return EvaluationType.ZERO_TO_FIVE;
+        }
 
-        // Create a map for quick lookup
-        const evaluationMap = new Map<number, EvaluationWithDetails>(
-            evaluations.map((item: any) => [item.evaluation.projectId, item])
-        );
+        if (
+            evaluationType === EventEvaluationType.ZERO_TO_HUNDRED ||
+            evaluationType === EvaluationType.ZERO_TO_HUNDRED
+        ) {
+            return EvaluationType.ZERO_TO_HUNDRED;
+        }
 
-        // Build response for all requested projects
-        return projectIds.map((projectId: number) => {
-            const evalData = evaluationMap.get(projectId);
-
-            if (!evalData) {
-                return {
-                    projectId,
-                    evaluated: false,
-                };
-            }
-
-            // Reverse-map scores from stored values (90,75,55,25) back to original (4,3,2,1)
-            const reverseMappedScores = evalData.scores.map((score: any) => ({
-                evaluationId: score.evaluationId,
-                criterionId: score.criterionId,
-                score: ScoreMapper.toOriginalValue(score.score),
-            }));
-
-            return {
-                projectId,
-                evaluated: true,
-                evaluation: {
-                    evaluation: evalData.evaluation,
-                    scores: reverseMappedScores,
-                },
-            };
-        });
+        return EvaluationType.FINAL_PROJECTS;
     }
+
+  async execute(
+    dto: CheckEvaluationStatusDto,
+  ): Promise<ProjectEvaluationStatus[]> {
+    const { projectIds, userId, eventId } = dto;
+
+    // Get event to determine evaluation type
+    const event = await this.eventService.getEvent(eventId);
+    const evaluationType = this.resolveEvaluationType(event.evaluationType);
+
+    const scoreMapper: ScoreMapper =
+      evaluationType === EvaluationType.FINAL_PROJECTS
+        ? new FinalProjectsScoreMapper()
+        : evaluationType === EvaluationType.ZERO_TO_FIVE
+          ? ScoreMapperFactory.create(evaluationType)
+          : null!;
+
+    // Fetch all evaluations for these projects by this evaluator
+    const evaluations =
+      await this.evaluationRepository.findByProjectIdsAndEvaluator(
+        projectIds,
+        userId,
+        eventId,
+      );
+
+    // Create a map for quick lookup
+    const evaluationMap = new Map<number, EvaluationWithDetails>(
+      evaluations.map((item: any) => [item.evaluation.projectId, item]),
+    );
+
+    // Build response for all requested projects
+    return projectIds.map((projectId: number) => {
+      const evalData = evaluationMap.get(projectId);
+
+      if (!evalData) {
+        return {
+          projectId,
+          evaluated: false,
+        };
+      }
+
+      // Reverse-map scores from stored values back to original
+      const reverseMappedScores = evalData.scores.map((score: any) => ({
+        evaluationId: score.evaluationId,
+        criterionId: score.criterionId,
+        score: scoreMapper.toOriginalValue(score.score),
+      }));
+
+      return {
+        projectId,
+        evaluated: true,
+        evaluation: {
+          evaluation: evalData.evaluation,
+          scores: reverseMappedScores,
+        },
+      };
+    });
+  }
 }
