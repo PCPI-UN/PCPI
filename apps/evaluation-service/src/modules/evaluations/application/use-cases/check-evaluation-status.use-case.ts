@@ -3,10 +3,10 @@ import {
     EvaluationRepositoryPort,
     ProjectEvaluationStatus,
     EvaluationWithDetails
-} from '@evaluations/domain/repositories/evaluation.repository.port';
-import { CheckEvaluationStatusDto } from '@evaluations/application/dto/check-evaluation-status.dto';
+} from '../../domain/repositories/evaluation.repository.port';
+import { CheckEvaluationStatusDto } from '../dto/check-evaluation-status.dto';
 import { ScoreMapper } from '../../domain/ports/score-mapper.port';
-import { EventServicePort } from '@evaluations/infrastructure/ports/event.service.port';
+import { EventServicePort } from '../../infrastructure/ports/event.service.port';
 import { ScoreMapperFactory } from '../mappers/score-mapper.factory';
 import { FinalProjectsScoreMapper } from '../mappers/final-projects-score.mapper';
 import { EvaluationType } from '../../../../common/constants/evaluation-type.constants';
