@@ -290,7 +290,7 @@ message AddPendingParticipantRequest {
   string studentCode = 5;
   string semester = 6;
   string career = 7;
-  string status = 8;
+  int32 status = 8;
 }
 message AddPendingParticipantResponse {
   PendingProjectParticipant participant = 1;

@@ -351,7 +351,7 @@ export class ProjectsService implements OnModuleInit {
       studentCode: dto.studentCode,
       semester: dto.semester ?? '',
       career: dto.career ?? '',
-      status: dto.status ?? 'PENDING',
+      status: dto.status ?? 1, // Default to PENDING if not provided
     };
 
     return firstValueFrom(
