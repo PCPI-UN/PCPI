@@ -46,6 +46,7 @@ import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-
 import { AddProjectDocumentsMultipartDto } from './dto/add-project-files-multipart.dto';
 import { RequestChangesProjectDto } from './dto/request-changes-project.dto';
 import { UpdateProjectInfoDto } from './dto/update-project-info.dto';
+import { ApproveProjectDto } from './dto/approve-project.dto';
 
 @ApiTags('projects')
 @ApiSecurity('JWT-auth')
@@ -236,8 +237,9 @@ export class ProjectsController {
   approveProject(
     @Param('id', ParseIntPipe) id: number,
     @GetUser() user: AppUser,
+    @Body() approveDto: ApproveProjectDto,
   ) {
-    return this.projectsService.approveProject({ id }, user.id);
+    return this.projectsService.approveProject({ id, ...approveDto }, user.id);
   }
 
   // TODO: Add platform permission guard - only admins/event managers can reject projects

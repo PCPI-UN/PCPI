@@ -1,8 +1,12 @@
-import { IsInt, IsNotEmpty, Min } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 
 export class ApproveProjectDto {
-  @IsInt()
+  @ApiProperty({
+    description: 'Type of event the project is associated with (e.g., "Competition", "Exposition")',
+    example: 'Competition',
+  })
+  @IsString()
   @IsNotEmpty()
-  @Min(1)
-  id: number;
+  eventType: string;
 }

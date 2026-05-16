@@ -10,4 +10,11 @@ export class RejectProjectDto {
   @IsString()
   @IsOptional()
   reason?: string;
+
+  @ApiProperty({
+    description: 'Type of event the project is associated with (e.g., "Competition", "Exposition")',
+    example: 'Competition',
+  })
+  @IsString()
+  eventType: string;
 }

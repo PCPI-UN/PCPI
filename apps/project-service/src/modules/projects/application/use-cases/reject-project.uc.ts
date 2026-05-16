@@ -13,7 +13,7 @@ export class RejectProjectUC {
     private readonly notificationService: NotificationServicePort,
   ) {}
 
-  async execute(input: { id: number; actingUserId: number; reason?: string }) {
+  async execute(input: { id: number; actingUserId: number; reason?: string, eventType: string }) {
     const project = await this.repo.findById(input.id);
     if (!project) throw new NotFoundError('Project not found');
 
@@ -37,6 +37,7 @@ export class RejectProjectUC {
 
     // Notify all pending participants about the rejection
     const pendings = await this.repo.listPendingParticipants(project.id!);
+    const template = input.eventType === 'Competition' ? EmailTemplate.PARTICIPANTS_REJECTED : EmailTemplate.PROJECT_REJECTED;
 
     for (const pending of pendings) {
       const firstName = pending.firstName || 'Estudiante';
@@ -45,7 +46,7 @@ export class RejectProjectUC {
       try {
         await this.notificationService.sendEmail({
           to: pending.email,
-          template: EmailTemplate.PROJECT_REJECTED,
+          template,
           params: {
             firstName,
             lastName,
