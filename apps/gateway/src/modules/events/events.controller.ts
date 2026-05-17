@@ -101,6 +101,31 @@ export class EventsController {
   }
 
   /**
+   * PUBLIC ENDPOINT - List past (closed) public events only
+   * No authentication required
+   * Returns events with CLOSED status
+   */
+  @Public()
+  @Get('public/past')
+  @ApiOperation({
+    summary: 'List past public events',
+    description:
+      'Get a paginated list of past (closed) events. No authentication required. Status is always CLOSED.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of past events with pagination',
+  })
+  async listPastPublicEvents(@Query() query: ListEventsDTO) {
+    return this.eventsService.listEvents({
+      ...query,
+      status: undefined,
+      statuses: [EventStatus.CLOSED],
+      onlyActive: false,
+    });
+  }
+
+  /**
    * ADMIN ENDPOINT - List all events with filtering
    * Requires manage:events permission (Admin/EventManager only)
    */
@@ -275,6 +300,39 @@ export class EventsController {
   @ApiResponse({ status: 404, description: 'Event not found' })
   async getPublicEvent(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.get({ id });
+  }
+
+  @Public()
+  @Get('public/past/:id')
+  @ApiOperation({ summary: 'Get public past event by ID' })
+  @ApiParam({ name: 'id', description: 'Past event ID', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns past public event details',
+  })
+  @ApiResponse({ status: 403, description: 'Event is not a past event' })
+  @ApiResponse({ status: 404, description: 'Event not found' })
+  async getPublicPastEvent(@Param('id', ParseIntPipe) id: number) {
+    const response = await this.eventsService.get({ id });
+    const responseRecord = response as unknown as Record<string, unknown>;
+    const eventCandidate =
+      responseRecord.data ?? responseRecord.event ?? responseRecord;
+    const eventRecord =
+      typeof eventCandidate === 'object' && eventCandidate !== null
+        ? (eventCandidate as Record<string, unknown>)
+        : {};
+
+    const statusValue = Number(eventRecord.status);
+    const statusNameRaw = eventRecord.statusName;
+    const statusName =
+      typeof statusNameRaw === 'string' ? statusNameRaw.toUpperCase() : '';
+    const closedStatusValue = Number(EventStatus.CLOSED);
+
+    if (statusValue !== closedStatusValue && statusName !== 'CLOSED') {
+      throw new ForbiddenException('Event is not a past event');
+    }
+
+    return response;
   }
 
   @RequirePermission('read:events')
