@@ -174,10 +174,11 @@ export class ProjectsController {
   }
 
   @GrpcMethod('ProjectsService', 'ApproveProject')
-  async approveProjectRpc(req: { id: number; actingUserId: number }) {
+  async approveProjectRpc(req: { id: number; actingUserId: number, eventType: string }) {
     const updated = await this.approveProjectUC.execute({
       id: req.id,
       actingUserId: req.actingUserId,
+      eventType: req.eventType,
     });
     return { project: toProtoProject(updated) };
   }
@@ -187,11 +188,13 @@ export class ProjectsController {
     id: number;
     actingUserId: number;
     reason?: string;
+    eventType: string;
   }) {
     const updated = await this.rejectProjectUC.execute({
       id: req.id,
       actingUserId: req.actingUserId,
       reason: req.reason,
+      eventType: req.eventType,
     });
     return { project: toProtoProject(updated) };
   }

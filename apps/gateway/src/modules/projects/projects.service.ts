@@ -388,11 +388,12 @@ export class ProjectsService implements OnModuleInit {
     return this.removeJurorFromProjectUseCase.execute(dto);
   }
 
-  async approveProject(dto: ApproveProjectDto, actingUserId: number) {
+  async approveProject(dto: {id: number; eventType: string}, actingUserId: number) {
     const response = await firstValueFrom(
       this.projectsService.approveProject({
         id: dto.id,
-        actingUserId,
+        actingUserId: actingUserId,
+        eventType: dto.eventType,
       }),
     );
 
@@ -400,7 +401,7 @@ export class ProjectsService implements OnModuleInit {
   }
 
   async rejectProject(
-    dto: { id: number; reason?: string },
+    dto: { id: number; reason?: string; eventType: string },
     actingUserId: number,
   ) {
     const response = await firstValueFrom(
@@ -408,6 +409,7 @@ export class ProjectsService implements OnModuleInit {
         id: dto.id,
         actingUserId,
         reason: dto.reason,
+        eventType: dto.eventType,
       }),
     );
 
