@@ -2,4 +2,5 @@ import { EvaluationType } from "../../../../common/constants/evaluation-type.con
 
 export interface ScoreMapper {
   map(score: number, evaluationType: EvaluationType): number;
+  toOriginalValue(score: number): number;
 }
