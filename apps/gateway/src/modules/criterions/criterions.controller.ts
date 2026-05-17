@@ -20,6 +20,8 @@ import { CriterionsService } from './criterions.service';
 import { CreateCriterionDto } from './dto/create-criterion.dto';
 import { UpdateCriterionDto } from './dto/update-criterion.dto';
 import { ListCriterionsDto } from './dto/list-criterions.dto';
+import { CreateComponentDto } from './dto/create-component.dto';
+import { UpdateComponentDto } from './dto/update-component.dto';
 import { RequirePermission } from '@common/decorators/require-permission.decorator';
 import { InvalidateCache } from '@common/cache/invalidate-cache.decorator';
 
@@ -28,6 +30,156 @@ import { InvalidateCache } from '@common/cache/invalidate-cache.decorator';
 @Controller('criterions')
 export class CriterionsController {
   constructor(private readonly criterionsService: CriterionsService) {}
+
+  // =========================================================
+  // COMPONENT ENDPOINTS
+  // =========================================================
+
+  @Post('components')
+  @RequirePermission('manage:events')
+  @InvalidateCache({
+    endpoints: ['/criterions/components', '/api/criterions/components'],
+  })
+  @ApiOperation({
+    summary: 'Create a new component',
+    description:
+      'Creates a new evaluation component with a name and weight. Requires EventManager role.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Component created successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires manage:events permission',
+  })
+  async createComponent(@Body() createComponentDto: CreateComponentDto) {
+    return this.criterionsService.createComponent(createComponentDto);
+  }
+
+  @Get('components')
+  @RequirePermission('manage:events')
+  @ApiOperation({
+    summary: 'List all components',
+    description:
+      'Retrieves a list of all evaluation components.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Components retrieved successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires manage:events permission',
+  })
+  async listComponents() {
+    return this.criterionsService.listComponents();
+  }
+
+  @Get('components/:id')
+  @RequirePermission('manage:events')
+  @ApiOperation({
+    summary: 'Get component by ID',
+    description:
+      'Retrieves details of a specific component.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Component ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Component retrieved successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires manage:events permission',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Component not found',
+  })
+  async getComponent(@Param('id', ParseIntPipe) id: number) {
+    return this.criterionsService.getComponent(id);
+  }
+
+  @Put('components/:id')
+  @RequirePermission('manage:events')
+  @InvalidateCache({
+    endpoints: ['/criterions/components', '/api/criterions/components'],
+  })
+  @ApiOperation({
+    summary: 'Update a component',
+    description:
+      'Updates component name and/or weight. Requires EventManager role.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Component ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Component updated successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires manage:events permission',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Component not found',
+  })
+  async updateComponent(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateComponentDto: UpdateComponentDto,
+  ) {
+    return this.criterionsService.updateComponent(id, updateComponentDto);
+  }
+
+  @Delete('components/:id')
+  @RequirePermission('manage:events')
+  @InvalidateCache({
+    endpoints: ['/criterions/components', '/api/criterions/components'],
+  })
+  @ApiOperation({
+    summary: 'Delete a component',
+    description:
+      'Deletes a component. Requires EventManager role.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Component ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Component deleted successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires manage:events permission',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Component not found',
+  })
+  async deleteComponent(@Param('id', ParseIntPipe) id: number) {
+    return this.criterionsService.deleteComponent(id);
+  }
+
+  // =========================================================
+  // CRITERION ENDPOINTS
+  // =========================================================
 
   @Post()
   @RequirePermission('manage:events')
@@ -53,72 +205,6 @@ export class CriterionsController {
   })
   async createCriterion(@Body() createCriterionDto: CreateCriterionDto) {
     return this.criterionsService.createCriterion(createCriterionDto);
-  }
-
-  @Put(':id')
-  @RequirePermission('manage:events')
-  @InvalidateCache({
-    endpoints: ['/criterions', '/api/criterions'],
-  })
-  @ApiOperation({
-    summary: 'Update an existing criterion',
-    description:
-      'Updates criterion details and associated courses. Requires EventManager role.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Criterion ID',
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Criterion updated successfully',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Requires manage:events permission',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Criterion not found',
-  })
-  async updateCriterion(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateCriterionDto: UpdateCriterionDto,
-  ) {
-    return this.criterionsService.updateCriterion(id, updateCriterionDto);
-  }
-
-  @Get(':id')
-  @RequirePermission('manage:events')
-  @ApiOperation({
-    summary: 'Get criterion by ID',
-    description:
-      'Retrieves details of a specific criterion including associated courses.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'Criterion ID',
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Criterion retrieved successfully',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Requires manage:events permission',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Criterion not found',
-  })
-  async getCriterion(@Param('id', ParseIntPipe) id: number) {
-    return this.criterionsService.getCriterion(id);
   }
 
   @Get()
@@ -163,6 +249,72 @@ export class CriterionsController {
     @Param('courseId', ParseIntPipe) courseId: number,
   ) {
     return this.criterionsService.findCriterionsByCourse(courseId);
+  }
+
+  @Get(':id')
+  @RequirePermission('manage:events')
+  @ApiOperation({
+    summary: 'Get criterion by ID',
+    description:
+      'Retrieves details of a specific criterion including associated courses.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Criterion ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Criterion retrieved successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires manage:events permission',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Criterion not found',
+  })
+  async getCriterion(@Param('id', ParseIntPipe) id: number) {
+    return this.criterionsService.getCriterion(id);
+  }
+
+  @Put(':id')
+  @RequirePermission('manage:events')
+  @InvalidateCache({
+    endpoints: ['/criterions', '/api/criterions'],
+  })
+  @ApiOperation({
+    summary: 'Update an existing criterion',
+    description:
+      'Updates criterion details and associated courses. Requires EventManager role.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Criterion ID',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Criterion updated successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Requires manage:events permission',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Criterion not found',
+  })
+  async updateCriterion(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCriterionDto: UpdateCriterionDto,
+  ) {
+    return this.criterionsService.updateCriterion(id, updateCriterionDto);
   }
 
   @Delete(':id')

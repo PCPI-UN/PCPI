@@ -173,3 +173,4 @@ The main schema relationships are:
 - `PlatformStaff` is a pure junction model with a composite primary key.
 - `Role` and `Permission` are connected through an implicit Prisma many-to-many relation named `role_permissions`.
 - `active` is used as a logical state flag in both `User` and `PlatformStaff`.
+- Evaluation authorization depends on users and roles managed by this service. `evaluation-service` asks auth for roles and uses the `Juror` role when creating evaluation records, but score validation and mapping are not handled by auth.

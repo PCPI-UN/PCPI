@@ -15,6 +15,7 @@ enum eventType {
 
 // Supported evaluation types for grading projects in an event.
 enum EvaluationType {
+  FINAL_PROJECTS
   ZERO_TO_FIVE
   ZERO_TO_HUNDRED
 }
@@ -36,7 +37,7 @@ model Event {
   createdByUserId         Int             @map("created_by_user_id")
   location                String          @db.VarChar(255)
   locationDetails         String?         @db.Text
-  evaluationType          EvaluationType? @map("evaluation_type")
+  evaluationType          EvaluationType? @default(FINAL_PROJECTS) @map("evaluation_type")
   inscriptionRequirements String?         @db.Text
   minimumTeamSize         Int?            @map("minimum_team_size")
   aboutOurAllies          String?         @db.Text

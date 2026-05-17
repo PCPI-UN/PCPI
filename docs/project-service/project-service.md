@@ -73,6 +73,12 @@ This is the main entity in the service. It stores project metadata, the linked e
 - `eventId`: references `event-service.event`.
 - `courseId`: despite its current name, this should be interpreted as the project category reference, not a course.
 
+#### Evaluation interaction
+
+`projectId` is the entry point used by `evaluation-service` to resolve the evaluation type. The evaluation flow reads the project, extracts `eventId`, then asks `event-service` for `event.evaluationType`.
+
+Project records do not store or duplicate `evaluationType`.
+
 #### Relationships
 
 - One `Project` has many `ProjectDocument` records.
@@ -210,3 +216,4 @@ The main schema relationships are:
 - `ProjectParticipant` and `ProjectAssignment` use composite primary keys.
 - `PendingProjectParticipant` supports a staged onboarding flow before the user becomes a formal project member.
 - Juror assignment is modeled through the composite membership identity used by `event-service.StaffEventMember`.
+- Evaluation scale configuration belongs to `event-service`, not `project-service`. Projects only provide the `eventId` needed to resolve it.

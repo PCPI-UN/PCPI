@@ -16,6 +16,7 @@ export interface ProjectStats {
     averageGrade: number;
     evaluationCount: number;
     categoryStats: CategoryStats[];
+    evaluatorIds?: number[];
 }
 
 export interface EvaluationWithDetails {

@@ -1,19 +1,55 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
 import { status } from '@grpc/grpc-js';
-import { EvaluationRepositoryPort } from '@evaluations/domain/repositories/evaluation.repository.port';
-import { ProjectServicePort } from '@evaluations/infrastructure/ports/project.service.port';
-import { EventServicePort } from '@evaluations/infrastructure/ports/event.service.port';
-import { AuthServicePort } from '@evaluations/infrastructure/ports/auth.service.port';
-import { CriterionRepositoryPort } from '@criterions/domain/repositories/criterion.repository.port';
-import { Evaluation } from '@evaluations/domain/entities/evaluation.entity';
-import { EvaluationDetail } from '@evaluations/domain/entities/evaluation-detail.entity';
+import { EvaluationRepositoryPort } from '../../domain/repositories/evaluation.repository.port';
+import { ProjectServicePort } from '../../infrastructure/ports/project.service.port';
+import { EventServicePort } from '../../infrastructure/ports/event.service.port';
+import { AuthServicePort } from '../../infrastructure/ports/auth.service.port';
+import { CriterionRepositoryPort } from '../../../criterions/domain/repositories/criterion.repository.port';
+import { Evaluation } from '../../domain/entities/evaluation.entity';
+import { EvaluationDetail } from '../../domain/entities/evaluation-detail.entity';
 import { EvaluateProjectDto } from '../dto/evaluate-project.dto';
+import { EvaluationType } from '../../../../common/constants/evaluation-type.constants';
+import { EvaluationType as EventEvaluationType } from '@app/common/generated/event';
+import { ScoreMapperFactory } from '../mappers/score-mapper.factory';
+import { ScoreValidatorFactory } from '../validators/score-validator.factory';
 import { Role } from '@app/common/generated/auth';
 
 @Injectable()
 export class EvaluateProjectUseCase {
     private readonly logger = new Logger(EvaluateProjectUseCase.name);
+
+    private resolveEvaluationType(evaluationType: unknown): EvaluationType {
+        if (
+            evaluationType === undefined ||
+            evaluationType === null ||
+            evaluationType === EventEvaluationType.EVALUATION_TYPE_UNSPECIFIED ||
+            evaluationType === EventEvaluationType.FINAL_PROJECTS ||
+            evaluationType === EvaluationType.FINAL_PROJECTS
+        ) {
+            return EvaluationType.FINAL_PROJECTS;
+        }
+
+        if (
+            evaluationType === EventEvaluationType.ZERO_TO_FIVE ||
+            evaluationType === EvaluationType.ZERO_TO_FIVE
+        ) {
+            return EvaluationType.ZERO_TO_FIVE;
+        }
+
+        if (
+            evaluationType === EventEvaluationType.ZERO_TO_HUNDRED ||
+            evaluationType === EvaluationType.ZERO_TO_HUNDRED
+        ) {
+            return EvaluationType.ZERO_TO_HUNDRED;
+        }
+
+        throw new RpcException({
+            code: status.INVALID_ARGUMENT,
+            message: `Unsupported evaluation type: ${evaluationType}`,
+        });
+    }
+
     constructor(
         private readonly evaluationRepository: EvaluationRepositoryPort,
         private readonly projectService: ProjectServicePort,
@@ -107,16 +143,14 @@ export class EvaluateProjectUseCase {
         let totalGrade = 0;
         const evaluationDetails: EvaluationDetail[] = [];
 
-        // Map for score values
-        const scoreMap: Record<number, number> = {
-            4: 90,
-            3: 75,
-            2: 55,
-            1: 25,
-        };
+        // Resolve score validation and mapping from the event evaluation type
+        const evaluationType = this.resolveEvaluationType(event.evaluationType);
+        const scoreValidator = ScoreValidatorFactory.create(evaluationType);
+        const scoreMapper = ScoreMapperFactory.create(evaluationType);
 
         for (const scoreItem of scores) {
             const criterion = await this.criterionRepository.findById(scoreItem.criterionId);
+
             if (!criterion) {
                 throw new RpcException({
                     code: status.NOT_FOUND,
@@ -124,16 +158,19 @@ export class EvaluateProjectUseCase {
                 });
             }
 
-            // Validate score value (1-4)
-            const numericScore = Math.round(scoreItem.score); // Ensure integer
-            const mappedValue = scoreMap[numericScore];
+            const numericScore = Math.round(scoreItem.score);
 
-            if (!mappedValue) {
+            const validation = scoreValidator.validate(numericScore, evaluationType);
+
+            if (!validation.valid) {
                 throw new RpcException({
                     code: status.INVALID_ARGUMENT,
-                    message: `Invalid score value: ${scoreItem.score}. Must be 1, 2, 3, or 4.`,
+                    message: validation.error,
                 });
             }
+
+            const mappedValue = scoreMapper.map(numericScore, evaluationType);
+
 
             // Calculate weighted score
             // Assumption: criterion.weight is the distributed weight (e.g. 0.06)

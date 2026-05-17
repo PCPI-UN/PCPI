@@ -205,12 +205,14 @@ message UpdateProjectRequest {
 message ApproveProjectRequest { 
   int32 id = 1; 
   int32 actingUserId = 2; 
+  string eventType = 3;
 }
 
 message RejectProjectRequest { 
   int32 id = 1; 
   int32 actingUserId = 2;
   optional string reason = 3; // Reason for rejection (stored in database)
+  string eventType = 4;
 }
 
 message RequestChangesProjectRequest {
@@ -290,7 +292,7 @@ message AddPendingParticipantRequest {
   string studentCode = 5;
   string semester = 6;
   string career = 7;
-  string status = 8;
+  int32 status = 8;
 }
 message AddPendingParticipantResponse {
   PendingProjectParticipant participant = 1;

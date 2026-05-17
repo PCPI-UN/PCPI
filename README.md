@@ -242,3 +242,4 @@ make dev-restart     # Then restart containers
 
 ## 📖 Additional Resources
 - [Proto Files](./libs/common/src/protos) - gRPC service contracts
+- [Service Documentation](./docs/README.md) - service-level documentation for gateway and backend microservices

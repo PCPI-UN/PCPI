@@ -101,3 +101,4 @@ The main schema relationship is:
 - `targetType` and `targetId` form a polymorphic target reference, so the schema does not enforce a direct foreign key to a single table.
 - Role assignment is modeled through the `InvitationRole` junction table.
 - Timestamps use `Timestamptz`, which preserves timezone-aware values.
+- Invitations can grant access to events, projects, or platform resources, but they do not carry evaluation scale information. Evaluation scale is resolved from `event-service` during evaluation.

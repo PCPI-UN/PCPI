@@ -1,5 +1,5 @@
-import { EvaluationRepositoryPort, ProjectStats } from "@evaluations/domain/repositories/evaluation.repository.port";
-import { GetProjectStatsDto } from "@evaluations/application/dto/get-project-stats.dto";
+import { EvaluationRepositoryPort, ProjectStats } from "../../domain/repositories/evaluation.repository.port";
+import { GetProjectStatsDto } from "../dto/get-project-stats.dto";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()

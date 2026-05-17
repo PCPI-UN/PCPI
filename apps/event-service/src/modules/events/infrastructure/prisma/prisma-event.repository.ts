@@ -30,19 +30,23 @@ function toPrismaEventType(value: EventType | undefined): 'Exposition' | 'Compet
 
 function toProtoEvaluationType(value: string | null | undefined): EvaluationType {
   switch (value) {
+    case 'FINAL_PROJECTS':
+      return EvaluationType.FINAL_PROJECTS;
     case 'ZERO_TO_FIVE':
       return EvaluationType.ZERO_TO_FIVE;
     case 'ZERO_TO_HUNDRED':
       return EvaluationType.ZERO_TO_HUNDRED;
     default:
-      return EvaluationType.EVALUATION_TYPE_UNSPECIFIED;
+      return EvaluationType.FINAL_PROJECTS;
   }
 }
 
 function toPrismaEvaluationType(
   value: EvaluationType | undefined,
-): 'ZERO_TO_FIVE' | 'ZERO_TO_HUNDRED' | undefined {
+): 'FINAL_PROJECTS' | 'ZERO_TO_FIVE' | 'ZERO_TO_HUNDRED' | undefined {
   switch (value) {
+    case EvaluationType.FINAL_PROJECTS:
+      return 'FINAL_PROJECTS';
     case EvaluationType.ZERO_TO_FIVE:
       return 'ZERO_TO_FIVE';
     case EvaluationType.ZERO_TO_HUNDRED:
@@ -74,7 +78,7 @@ function toDomainEvent(p: any): DomainEvent {
     createdByUserId: p.createdByUserId,
     location: p.location,
     locationDetails: p.locationDetails ?? null,
-    evaluationType: p.evaluationType ? toProtoEvaluationType(p.evaluationType) : null,
+    evaluationType: toProtoEvaluationType(p.evaluationType),
     inscriptionRequirements: p.inscriptionRequirements ?? null,
     minimumTeamSize: p.minimumTeamSize ?? null,
     aboutOurAllies: p.aboutOurAllies ?? null,

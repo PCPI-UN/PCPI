@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GetProjectStatsUseCase } from './get-project-stats.use-case';
-import { EvaluationRepositoryPort, CategoryStats } from '@evaluations/domain/repositories/evaluation.repository.port';
-import { GetProjectStatsDto } from '@evaluations/application/dto/get-project-stats.dto';
+import { GetProjectStatsUseCase } from '../get-project-stats.use-case';
+import { EvaluationRepositoryPort, CategoryStats } from '../../../domain/repositories/evaluation.repository.port';
+import { GetProjectStatsDto } from '../../dto/get-project-stats.dto';
 
 describe('GetProjectStatsUseCase', () => {
     let useCase: GetProjectStatsUseCase;

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, IsNumber} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsNumber, IsInt} from 'class-validator';
 
 export class AddPendingParticipantDto {
     @ApiProperty({
@@ -65,9 +65,9 @@ export class AddPendingParticipantDto {
 
     @ApiProperty({
         description: 'Status of the participant',
-        type: String,
-        example: 'PENDING',
+        type: Number,
+        example: 1,
     })
-    @IsString()
-    status?: string;
+    @IsInt()
+    status?: number;
 }

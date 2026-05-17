@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CheckEvaluationStatusUseCase } from './check-evaluation-status.use-case';
-import { EvaluationRepositoryPort } from '@evaluations/domain/repositories/evaluation.repository.port';
-import { Evaluation } from '@evaluations/domain/entities/evaluation.entity';
-import { EvaluationDetail } from '@evaluations/domain/entities/evaluation-detail.entity';
-import { CheckEvaluationStatusDto } from '@evaluations/application/dto/check-evaluation-status.dto';
+import { CheckEvaluationStatusUseCase } from '../check-evaluation-status.use-case';
+import { EvaluationRepositoryPort } from '../../../domain/repositories/evaluation.repository.port';
+import { EventServicePort } from '../../../infrastructure/ports/event.service.port';
+import { Evaluation } from '../../../domain/entities/evaluation.entity';
+import { EvaluationDetail } from '../../../domain/entities/evaluation-detail.entity';
+import { CheckEvaluationStatusDto } from '../../dto/check-evaluation-status.dto';
+import { EvaluationType as EventEvaluationType } from '@app/common/generated/event';
 
 describe('CheckEvaluationStatusUseCase', () => {
     let useCase: CheckEvaluationStatusUseCase;
@@ -13,13 +15,26 @@ describe('CheckEvaluationStatusUseCase', () => {
         findByProjectIdsAndEvaluator: jest.fn(),
     };
 
+    const mockEventService = {
+        getEvent: jest.fn(),
+    };
+
     beforeEach(async () => {
+        mockEventService.getEvent.mockResolvedValue({
+            id: 1,
+            evaluationType: EventEvaluationType.FINAL_PROJECTS,
+        });
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 CheckEvaluationStatusUseCase,
                 {
                     provide: EvaluationRepositoryPort,
                     useValue: mockEvaluationRepository,
+                },
+                {
+                    provide: EventServicePort,
+                    useValue: mockEventService,
                 },
             ],
         }).compile();

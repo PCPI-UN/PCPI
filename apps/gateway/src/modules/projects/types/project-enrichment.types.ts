@@ -17,6 +17,7 @@ export type ProjectWithEnrichedJurors = Omit<
   ProjectComplete,
   'createdAt' | 'updatedAt'
 > & {
+  projectCode?: string | null;
   jurorAssignments: JurorKey[];
   jurors: JurorProfile[];
   createdAt: string;

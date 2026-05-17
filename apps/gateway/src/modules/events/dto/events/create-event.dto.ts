@@ -232,7 +232,7 @@ export class CreateEventDTO {
     description: 'Evaluation scale configured for the event',
     enum: EvaluationType,
     required: false,
-    example: 'ZERO_TO_FIVE',
+    example: 'FINAL_PROJECTS',
   })
   @IsOptional()
   @Transform(transformEvaluationType)
