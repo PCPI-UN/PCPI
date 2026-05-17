@@ -23,7 +23,7 @@ export class CreateComponentUseCase {
     }
 
     // Validate weight is within valid range
-    if (weight <= 0 || weight > 1) {
+    if (weight < 0 || weight > 1) {
       throw new RpcException({
         code: status.INVALID_ARGUMENT,
         message: 'Weight must be between 0 and 1',

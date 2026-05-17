@@ -224,7 +224,7 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
     const prismaComponent = await this.prisma.component.create({
       data: {
         name,
-        weight: 0,
+        weight,
       },
     });
 

@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsNotEmpty, IsPositive, Max } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, Min, Max } from 'class-validator';
 
 export class CreateComponentDto {
   @IsString()
@@ -6,7 +6,7 @@ export class CreateComponentDto {
   name: string;
 
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   @Max(1)
   weight: number;
 }
