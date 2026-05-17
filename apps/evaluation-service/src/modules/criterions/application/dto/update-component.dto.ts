@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsNumber, IsOptional, IsPositive, Max, IsNotEmpty } from 'class-validator';
+import { IsInt, IsString, IsNumber, IsOptional, Min, Max, IsNotEmpty } from 'class-validator';
 
 export class UpdateComponentDto {
   @IsInt()
@@ -10,7 +10,7 @@ export class UpdateComponentDto {
   name?: string;
 
   @IsNumber()
-  @IsPositive()
+  @Min(0)
   @Max(1)
   @IsOptional()
   weight?: number;

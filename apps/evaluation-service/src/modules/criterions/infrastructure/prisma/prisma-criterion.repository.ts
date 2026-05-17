@@ -11,6 +11,30 @@ import { CriterionMapper } from './mappers/criterion.mapper';
 export class PrismaCriterionRepository implements CriterionRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async calculateComponentWeight(componentId: number): Promise<number> {
+    const aggregation = await this.prisma.criterion.aggregate({
+      where: {
+        componentId,
+        active: true,
+      },
+      _sum: {
+        weight: true,
+      },
+    });
+
+    return aggregation._sum.weight ?? 0;
+  }
+
+  private async syncComponentWeight(componentId: number): Promise<void> {
+    const weight = await this.calculateComponentWeight(componentId);
+    await this.prisma.component.update({
+      where: { id: componentId },
+      data: {
+        weight,
+      },
+    });
+  }
+
   async create(criterion: Criterion): Promise<Criterion> {
     const persistenceData = CriterionMapper.toPersistence(criterion);
     
@@ -19,6 +43,10 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
     const newPrismaCriterion = await this.prisma.criterion.create({
       data: createData,
     });
+
+    if (newPrismaCriterion.componentId) {
+      await this.syncComponentWeight(newPrismaCriterion.componentId);
+    }
     
     return CriterionMapper.toDomain(newPrismaCriterion);
   }
@@ -66,20 +94,47 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
 
   async update(criterion: Criterion): Promise<Criterion> {
     const persistenceData = CriterionMapper.toPersistence(criterion);
+
+    const previousCriterion = await this.prisma.criterion.findUnique({
+      where: { id: criterion.id },
+      select: {
+        componentId: true,
+      },
+    });
     
     const updatedPrismaCriterion = await this.prisma.criterion.update({
       where: { id: criterion.id },
       data: persistenceData,
     });
+
+    const affectedComponentIds = new Set<number>([
+      previousCriterion?.componentId,
+      updatedPrismaCriterion.componentId,
+    ].filter((componentId): componentId is number => typeof componentId === 'number'));
+
+    await Promise.all(
+      Array.from(affectedComponentIds).map((componentId) => this.syncComponentWeight(componentId)),
+    );
     
     return CriterionMapper.toDomain(updatedPrismaCriterion);
   }
 
   async delete(id: number): Promise<void> {
+    const existingCriterion = await this.prisma.criterion.findUnique({
+      where: { id },
+      select: {
+        componentId: true,
+      },
+    });
+
     await this.prisma.criterion.update({
       where: { id },
       data: { active: false },
     });
+
+    if (existingCriterion?.componentId) {
+      await this.syncComponentWeight(existingCriterion.componentId);
+    }
   }
 
   async associateCourses(criterionId: number, courseIds: number[]): Promise<void> {
@@ -193,11 +248,13 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
   }
 
   async updateComponent(component: Component): Promise<Component> {
+    const weight = await this.calculateComponentWeight(component.id);
+
     const prismaComponent = await this.prisma.component.update({
       where: { id: component.id },
       data: {
         name: component.name,
-        weight: component.weight,
+        weight,
       },
     });
 
