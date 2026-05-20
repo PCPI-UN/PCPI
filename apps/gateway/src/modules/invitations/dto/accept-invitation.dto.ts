@@ -13,7 +13,7 @@ export class AcceptInvitationDto {
   })
   @IsString()
   @IsNotEmpty()
-  token: string;
+  token!: string;
 
   @ApiProperty({
     description: 'Password for new users (required for pending users, optional for confirmed users)',
@@ -43,6 +43,16 @@ export class AcceptInvitationDto {
   @IsString()
   @IsOptional()
   lastName?: string;
+
+  @ApiProperty({
+    description: 'Student code required for project invitation acceptance',
+    example: '202312345',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @MinLength(1)
+  studentCode?: string;
 
   @ApiProperty({
     description: 'Microsoft access token (for signing in with Microsoft)',

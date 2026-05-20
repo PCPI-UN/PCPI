@@ -101,12 +101,20 @@ export class AcceptInvitationUseCase {
           });
         }
 
+        const studentCode = dto.studentCode?.trim();
+        if (!studentCode) {
+          throw new RpcException({
+            code: status.INVALID_ARGUMENT,
+            message: 'studentCode is required for project invitation acceptance',
+          });
+        }
+
         // Add as project participant
         await this.projectService.addParticipant({
-            userId: invitation.invitedUserId,
-            projectId: invitation.targetId,
-            studentCode: dto.studentCode || '',
-          });
+          userId: invitation.invitedUserId,
+          projectId: invitation.targetId,
+          studentCode,
+        });
 
         // Once the user is a project participant, assign event roles
         // This makes sense. If the role is participant, the method makes
