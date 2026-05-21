@@ -1,0 +1,73 @@
+import { Injectable, Inject, Logger, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { ClientGrpc } from '@nestjs/microservices';
+import { lastValueFrom } from 'rxjs';
+import {
+  PROJECTS_SERVICE_NAME,
+  ProjectsServiceClient,
+  GetProjectRequest,
+  UpdateProjectRequest,
+  ProjectCompleteResponse,
+  ProjectComplete,
+  ProjectState,
+  ProjectParticipant,
+} from '@app/common/generated/project';
+
+@Injectable()
+export class UpdateProjectCodeUseCase {
+  private readonly logger = new Logger(UpdateProjectCodeUseCase.name);
+  private projectsService: ProjectsServiceClient;
+
+  constructor(
+    @Inject(PROJECTS_SERVICE_NAME) private readonly projectsClient: ClientGrpc,
+  ) {
+    this.projectsService = this.projectsClient.getService<ProjectsServiceClient>(
+      PROJECTS_SERVICE_NAME,
+    );
+  }
+
+  /**
+   * Update a project's code after validating business rules
+   */
+  async execute(id: number, projectCode: string, actingUserId: number): Promise<void> {
+    const request: GetProjectRequest = { id };
+
+    const res: ProjectCompleteResponse = await lastValueFrom(
+      this.projectsService.getProjectComplete(request),
+    );
+
+    const project: ProjectComplete | undefined = res.items?.[0];
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+
+    if (project.state !== ProjectState.REQUEST_CHANGES) {
+      throw new BadRequestException(
+        `Project can only have its code updated when in REQUEST_CHANGES state. Current state: ${ProjectState[project.state]}`,
+      );
+    }
+
+    const participants: ProjectParticipant[] = project.participants ?? [];
+
+    // Note: pendingParticipants objects do not include a userId in the proto
+    // so we only consider confirmed `participants` (those linked to a userId).
+    const isParticipant = participants.some(
+      (p: ProjectParticipant) => p.userId === actingUserId,
+    );
+
+    if (!isParticipant) {
+      throw new ForbiddenException(
+        'Only participants of the project can update the project code',
+      );
+    }
+
+    this.logger.log(`Updating project ${id} code to ${projectCode} by user ${actingUserId}`);
+
+    const updateRequest: UpdateProjectRequest = {
+      id,
+      projectCode,
+    };
+
+    await lastValueFrom(this.projectsService.updateProject(updateRequest));
+  }
+}

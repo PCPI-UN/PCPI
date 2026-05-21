@@ -14,6 +14,7 @@ import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-ca
 import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
 import { ValidateJurorHasNotEvaluatedUseCase } from './use-cases/validate-juror-has-not-evaluated.use-case';
 import { RemoveJurorFromProjectUseCase } from './use-cases/remove-juror-from-project.use-case';
+import { UpdateProjectCodeUseCase } from './use-cases/update-project-code.use-case';
 
 import {
   EVENT_SERVICE_NAME,
@@ -114,6 +115,7 @@ import { AuthModule } from '../auth/auth.module';
     EnrichProjectsWithJurorsUseCase,
     ValidateJurorHasNotEvaluatedUseCase,
     RemoveJurorFromProjectUseCase,
+    UpdateProjectCodeUseCase,
   ],
   exports: [ProjectsService],
 })
