@@ -13,7 +13,7 @@ export class AcceptInvitationDto {
   })
   @IsString()
   @IsNotEmpty()
-  token!: string;
+  token: string;
 
   @ApiProperty({
     description: 'Password for new users (required for pending users, optional for confirmed users)',
