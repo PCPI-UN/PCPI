@@ -12,11 +12,15 @@ import {
 } from '../../../domain/entities/invitation.entity';
 import { InvitationRole } from '../../../domain/entities/invitation-role.entity';
 import {
-  AUTH_SERVICE_NAME,
   AuthServiceClient,
 } from '../../../../../../../../libs/common/src/generated/auth';
-import { EventServiceClient } from '../../../../../../../../libs/common/src/generated/event';
-import { EVENT_SERVICE_NAME } from '../../../invitations.module';
+import {
+  EventServiceClient,
+} from '../../../../../../../../libs/common/src/generated/event';
+import { ProjectsServiceClient } from '../../../../../../../../libs/common/src/generated/project';
+import { AuthServicePort } from '../../../infrastructure/ports/auth-service.port';
+import { EventServicePort } from '../../../infrastructure/ports/event-service.port';
+import { ProjectServicePort } from '../../../infrastructure/ports/project-service.port';
 
 describe('AcceptInvitationUseCase', () => {
   let useCase: AcceptInvitationUseCase;
@@ -24,6 +28,7 @@ describe('AcceptInvitationUseCase', () => {
   let invitationRoleRepository: jest.Mocked<InvitationRoleRepositoryPort>;
   let authService: jest.Mocked<AuthServiceClient>;
   let eventService: jest.Mocked<EventServiceClient>;
+  let projectService: jest.Mocked<ProjectServicePort>;
 
   beforeEach(async () => {
     const mockInvitationRepository = {
@@ -56,13 +61,13 @@ describe('AcceptInvitationUseCase', () => {
       createEventMember: jest.fn(),
     };
 
-    const mockAuthClientGrpc = {
-      getService: jest.fn().mockReturnValue(mockAuthService),
+    const mockProjectService = {
+      getProject: jest.fn(),
+      addParticipant: jest.fn(),
+      listPendingParticipants: jest.fn(),
     };
 
-    const mockEventClientGrpc = {
-      getService: jest.fn().mockReturnValue(mockEventService),
-    };
+    mockAuthService.getUser.mockResolvedValue({ status: 'ACTIVE' } as any);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -76,12 +81,16 @@ describe('AcceptInvitationUseCase', () => {
           useValue: mockInvitationRoleRepository,
         },
         {
-          provide: AUTH_SERVICE_NAME,
-          useValue: mockAuthClientGrpc,
+          provide: AuthServicePort,
+          useValue: mockAuthService,
         },
         {
-          provide: EVENT_SERVICE_NAME,
-          useValue: mockEventClientGrpc,
+          provide: EventServicePort,
+          useValue: mockEventService,
+        },
+        {
+          provide: ProjectServicePort,
+          useValue: mockProjectService,
         },
       ],
     }).compile();
@@ -90,11 +99,9 @@ describe('AcceptInvitationUseCase', () => {
     invitationRepository = module.get(InvitationRepositoryPort);
     invitationRoleRepository = module.get(InvitationRoleRepositoryPort);
 
-    // Trigger onModuleInit
-    await useCase.onModuleInit();
-
     authService = mockAuthService as Partial<AuthServiceClient> as jest.Mocked<AuthServiceClient>;
     eventService = mockEventService as Partial<EventServiceClient> as jest.Mocked<EventServiceClient>;
+    projectService = mockProjectService as Partial<ProjectServicePort> as jest.Mocked<ProjectServicePort>;
   });
 
   afterEach(() => {
@@ -128,6 +135,7 @@ describe('AcceptInvitationUseCase', () => {
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
       invitationRoleRepository.findByInvitationId.mockResolvedValue(roles);
+      (authService.getUser as jest.Mock).mockResolvedValue({ status: 'PENDING' });
       authService.activateUser.mockReturnValue(of({}) as any);
       authService.assignPlatformRoles.mockReturnValue(of({}) as any);
       invitationRepository.save.mockResolvedValue(invitation);
@@ -212,12 +220,14 @@ describe('AcceptInvitationUseCase', () => {
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
       invitationRoleRepository.findByInvitationId.mockResolvedValue([]);
+      (authService.getUser as jest.Mock).mockResolvedValue({ status: 'PENDING' });
       authService.updateUser.mockReturnValue(of({}) as any);
       invitationRepository.save.mockResolvedValue(invitation);
 
       // Act
       const result = await useCase.execute({
         token: 'token-abc',
+        password: 'securePassword123',
         firstName: 'John',
         lastName: 'Doe',
       });
@@ -421,7 +431,7 @@ describe('AcceptInvitationUseCase', () => {
       );
     });
 
-    it('should throw UNIMPLEMENTED for project invitations', async () => {
+    it('should accept project invitation using pending participant studentCode', async () => {
       // Arrange
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 7);
@@ -442,15 +452,93 @@ describe('AcceptInvitationUseCase', () => {
 
       invitationRepository.findByToken.mockResolvedValue(invitation);
       invitationRoleRepository.findByInvitationId.mockResolvedValue([]);
+      projectService.getProject.mockResolvedValue({
+        id: 10,
+        eventId: 99,
+        name: 'Project A',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        courseId: 1,
+        state: 1,
+      } as any);
+      projectService.listPendingParticipants.mockResolvedValue([
+        {
+          pendingId: 1,
+          projectId: 10,
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'user@example.com',
+          studentCode: '2023001',
+          semester: '7',
+          career: 'Engineering',
+          status: 'PENDING',
+          invitedAt: new Date().toISOString(),
+          joinedAt: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ] as any);
+      projectService.addParticipant.mockReturnValue(of({ participant: {} } as any) as any);
+      eventService.createEventMember.mockReturnValue(of({}) as any);
+      invitationRepository.save.mockResolvedValue(invitation);
+
+      // Act
+      const result = await useCase.execute({ token: 'token-abc' });
+
+      // Assert
+      expect(result).toEqual({ success: true });
+      expect(projectService.listPendingParticipants).toHaveBeenCalledWith(10);
+      expect(projectService.addParticipant).toHaveBeenCalledWith({
+        userId: 200,
+        projectId: 10,
+        studentCode: '2023001',
+      });
+      expect(eventService.createEventMember).not.toHaveBeenCalled();
+      expect(invitation.status).toBe(InvitationStatus.ACCEPTED);
+      expect(invitationRepository.save).toHaveBeenCalledWith(invitation);
+    });
+
+    it('should throw INVALID_ARGUMENT when project pending participant is missing', async () => {
+      // Arrange
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 7);
+
+      const invitation = new Invitation(
+        'inv-123',
+        'token-abc',
+        'user@example.com',
+        InvitationTargetType.PROJECT,
+        10,
+        InvitationStatus.PENDING,
+        futureDate,
+        100,
+        200,
+        new Date(),
+        new Date(),
+      );
+
+      invitationRepository.findByToken.mockResolvedValue(invitation);
+      invitationRoleRepository.findByInvitationId.mockResolvedValue([]);
+      projectService.getProject.mockResolvedValue({
+        id: 10,
+        eventId: 99,
+        name: 'Project A',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        courseId: 1,
+        state: 1,
+      } as any);
+      projectService.listPendingParticipants.mockResolvedValue([] as any);
 
       // Act & Assert
       await expect(useCase.execute({ token: 'token-abc' })).rejects.toThrow(
         new RpcException({
-          code: status.UNIMPLEMENTED,
-          message: 'Project invitation acceptance is not yet implemented',
+          code: status.INVALID_ARGUMENT,
+          message: 'studentCode could not be resolved from pending participants for this invitation',
         }),
       );
 
+      expect(projectService.addParticipant).not.toHaveBeenCalled();
       expect(invitationRepository.save).not.toHaveBeenCalled();
     });
   });

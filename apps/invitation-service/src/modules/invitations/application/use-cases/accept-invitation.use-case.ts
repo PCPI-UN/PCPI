@@ -101,13 +101,28 @@ export class AcceptInvitationUseCase {
           });
         }
 
-        const studentCode = dto.studentCode?.trim();
+          const pendingParticipants = await this.projectService.listPendingParticipants(
+            invitation.targetId,
+          );
+
+          const studentCode = pendingParticipants.find(
+            (participant) =>
+              participant.email.trim().toLowerCase() ===
+              invitation.email.trim().toLowerCase(),
+          )?.studentCode?.trim();
+
+          if (!studentCode) {
+            throw new RpcException({
+              code: status.INVALID_ARGUMENT,
+              message: 'studentCode could not be resolved from pending participants for this invitation',
+            });
+          }
 
         // Add as project participant
         await this.projectService.addParticipant({
           userId: invitation.invitedUserId,
           projectId: invitation.targetId,
-          studentCode: dto.studentCode || '',
+            studentCode,
         });
 
         // Once the user is a project participant, assign event roles
