@@ -101,12 +101,14 @@ export class AcceptInvitationUseCase {
           });
         }
 
+        const studentCode = dto.studentCode?.trim();
+
         // Add as project participant
         await this.projectService.addParticipant({
-            userId: invitation.invitedUserId,
-            projectId: invitation.targetId,
-            studentCode: dto.studentCode || '',
-          });
+          userId: invitation.invitedUserId,
+          projectId: invitation.targetId,
+          studentCode: dto.studentCode || '',
+        });
 
         // Once the user is a project participant, assign event roles
         // This makes sense. If the role is participant, the method makes
