@@ -20,7 +20,7 @@ export class UpdateComponentDto {
     required: false,
   })
   @IsNumber()
-  @Min(0.01)
+  @Min(0)
   @Max(1)
   @IsOptional()
   @Type(() => Number)

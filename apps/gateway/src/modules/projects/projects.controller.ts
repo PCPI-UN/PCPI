@@ -338,6 +338,7 @@ export class ProjectsController {
     return this.projectsService.changeToUnderReviewProject(projectId, user.id);
   }
 
+  @Public()
   @Get('by-event/:eventId')
   @ApiOperation({
     summary: 'List projects by event',
@@ -366,6 +367,7 @@ export class ProjectsController {
     };
   }
 
+  @Public()
   @Get('by-event/:eventId/with-jurors')
   @ApiOperation({
     summary: 'List projects by event with their assigned jurors',

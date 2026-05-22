@@ -33,7 +33,7 @@ export class UpdateComponentUseCase {
     }
 
     // Validate weight if provided
-    if (weight !== undefined && (weight <= 0 || weight > 1)) {
+    if (weight !== undefined && (weight < 0 || weight > 1)) {
       throw new RpcException({
         code: status.INVALID_ARGUMENT,
         message: 'Weight must be between 0 and 1',

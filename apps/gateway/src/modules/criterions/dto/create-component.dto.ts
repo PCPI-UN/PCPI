@@ -18,7 +18,7 @@ export class CreateComponentDto {
     maximum: 1,
   })
   @IsNumber()
-  @Min(0.01)
+  @Min(0)
   @Max(1)
   @Type(() => Number)
   weight: number;
