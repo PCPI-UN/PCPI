@@ -88,9 +88,9 @@ export type {
 @Injectable()
 export class ProjectsService implements OnModuleInit {
   private readonly logger = new Logger(ProjectsService.name);
-  private projectsService!: ProjectsServiceClient;
-  private eventsService!: EventServiceClient;
-  private evaluationService!: EvaluationServiceClient;
+  private projectsService: ProjectsServiceClient;
+  private eventsService: EventServiceClient;
+  private evaluationService: EvaluationServiceClient;
   constructor(
     @Inject(PROJECTS_SERVICE_NAME) private readonly projectsClient: ClientGrpc,
     @Inject(EVENT_SERVICE_NAME) private readonly eventsClient: ClientGrpc,
