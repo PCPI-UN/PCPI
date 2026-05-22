@@ -121,6 +121,7 @@ export class CriterionsController {
       id: component.id,
       name: component.name,
       weight: component.weight,
+      ...(component.eventId != null && { eventId: component.eventId }),
     };
   }
 }

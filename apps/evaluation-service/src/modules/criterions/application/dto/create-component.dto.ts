@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsNotEmpty, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsInt, IsNotEmpty, IsOptional, Min, Max } from 'class-validator';
 
 export class CreateComponentDto {
   @IsString()
@@ -9,4 +9,8 @@ export class CreateComponentDto {
   @Min(0)
   @Max(1)
   weight: number;
+
+  @IsInt()
+  @IsOptional()
+  eventId?: number | null;
 }

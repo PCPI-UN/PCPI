@@ -3,5 +3,6 @@ export class Component {
         public readonly id: number,
         public readonly name: string,
         public readonly weight: number,
+        public readonly eventId: number | null = null,
     ) {}
 }
