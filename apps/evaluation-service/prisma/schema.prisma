@@ -76,5 +76,6 @@ model Component {
   id       Int         @id @default(autoincrement())
   name     String
   weight   Float
+  eventId  Int?        @map("event_id")
   criteria Criterion[]
 }

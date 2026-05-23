@@ -247,11 +247,13 @@ message ComponentProto {
   int32 id = 1;
   string name = 2;
   double weight = 3;
+  optional int32 eventId = 4;
 }
 
 message CreateComponentRequest {
   string name = 1;
   double weight = 2;
+  optional int32 eventId = 3;
 }
 
 message GetComponentRequest {

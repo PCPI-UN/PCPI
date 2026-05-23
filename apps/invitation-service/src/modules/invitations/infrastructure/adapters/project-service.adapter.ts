@@ -5,6 +5,7 @@ import {
   ProjectsServiceClient,
   Project,
   AddParticipantResponse,
+  PendingProjectParticipant,
   PROJECTS_SERVICE_NAME
 } from '@app/common/generated/project';
 import { ProjectServicePort } from '../ports/project-service.port';
@@ -36,5 +37,15 @@ export class ProjectServiceAdapter implements ProjectServicePort, OnModuleInit {
     studentCode: string;
   }): Promise<AddParticipantResponse> {
     return await firstValueFrom(this.projectService.addParticipant(params));
+  }
+
+  async listPendingParticipants(
+    projectId: number,
+  ): Promise<PendingProjectParticipant[]> {
+    const response = await firstValueFrom(
+      this.projectService.listPendingParticipants({ projectId }),
+    );
+
+    return response.items ?? [];
   }
 }

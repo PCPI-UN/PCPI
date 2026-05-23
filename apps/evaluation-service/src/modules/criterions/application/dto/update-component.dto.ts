@@ -14,4 +14,8 @@ export class UpdateComponentDto {
   @Max(1)
   @IsOptional()
   weight?: number;
+
+  @IsInt()
+  @IsOptional()
+  eventId?: number | null;
 }
