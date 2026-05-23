@@ -220,15 +220,16 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
   }
 
   // Component methods
-  async createComponent(name: string, weight: number): Promise<Component> {
+  async createComponent(name: string, weight: number, eventId?: number | null): Promise<Component> {
     const prismaComponent = await this.prisma.component.create({
       data: {
         name,
         weight,
+        eventId: eventId ?? null,
       },
     });
 
-    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight);
+    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight, prismaComponent.eventId);
   }
 
   async findComponentById(id: number): Promise<Component | null> {
@@ -237,28 +238,30 @@ export class PrismaCriterionRepository implements CriterionRepositoryPort {
     });
 
     if (!prismaComponent) return null;
-    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight);
+    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight, prismaComponent.eventId);
   }
 
   async findAllComponents(): Promise<Component[]> {
     const prismaComponents = await this.prisma.component.findMany();
     return prismaComponents.map(
-      (c) => new Component(c.id, c.name, c.weight)
+      (c) => new Component(c.id, c.name, c.weight, c.eventId)
     );
   }
 
   async updateComponent(component: Component): Promise<Component> {
     const weight = await this.calculateComponentWeight(component.id);
 
+    const updateData: any = { name: component.name, weight };
+    if (component.eventId !== undefined) {
+      updateData.eventId = component.eventId;
+    }
+
     const prismaComponent = await this.prisma.component.update({
       where: { id: component.id },
-      data: {
-        name: component.name,
-        weight,
-      },
+      data: updateData,
     });
 
-    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight);
+    return new Component(prismaComponent.id, prismaComponent.name, prismaComponent.weight, prismaComponent.eventId);
   }
 
   async deleteComponent(id: number): Promise<void> {

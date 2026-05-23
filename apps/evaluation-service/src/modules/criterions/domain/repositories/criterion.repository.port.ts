@@ -26,7 +26,7 @@ export abstract class CriterionRepositoryPort {
   abstract getCriterionCourses(criterionId: number): Promise<CriterionCourse[]>;
 
   // Componentes
-  abstract createComponent(name: string, weight: number): Promise<Component>;
+  abstract createComponent(name: string, weight: number, eventId?: number | null): Promise<Component>;
   abstract findComponentById(id: number): Promise<Component | null>;
   abstract findAllComponents(): Promise<Component[]>;
   abstract updateComponent(component: Component): Promise<Component>;
