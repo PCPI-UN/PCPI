@@ -79,3 +79,13 @@ model Component {
   eventId  Int?        @map("event_id")
   criteria Criterion[]
 }
+
+model TieBreak {
+  id            Int @id @default(autoincrement())
+  projectId     Int @map("project_id")
+  eventId       Int @map("event_id")
+  categoryId    Int @map("category_id")
+  tiebreakOrder Int @map("tiebreak_order")
+
+  @@map("tiebreak")
+}
