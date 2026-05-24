@@ -59,6 +59,3 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 libs/common/src/generated
 
 AGENTS.md
-
-# Claude
-.claude/
