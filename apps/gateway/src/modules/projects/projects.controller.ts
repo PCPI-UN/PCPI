@@ -11,6 +11,8 @@ import {
   UseInterceptors,
   Get,
   Query,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   FileFieldsInterceptor,
@@ -106,10 +108,17 @@ export class ProjectsController {
     @Body() body: CreateProjectWithParticipantsMultipartDto,
     @UploadedFiles() uploadedFiles: { files?: Express.Multer.File[] },
   ) {
-    return this.projectsService.createProjectWithParticipantsAndFiles(
-      body,
-      uploadedFiles.files || [],
+    // Temporarily block project submissions
+    throw new HttpException(
+      {
+        status: HttpStatus.SERVICE_UNAVAILABLE,
+        error: 'Project submissions are temporarily unavailable. We are experiencing difficulties. Please try again later.',
+      },
+      HttpStatus.SERVICE_UNAVAILABLE,
     );
+    /*  return this.projectsService.createProjectWithParticipantsAndFiles(
+      body,
+      uploadedFiles.files || [],*/
   }
 
   // TODO: Add platform permission guard - only admins/team leaders can add/update pending participants
