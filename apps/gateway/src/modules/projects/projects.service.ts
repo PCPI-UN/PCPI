@@ -354,11 +354,11 @@ export class ProjectsService implements OnModuleInit {
       studentCode: dto.studentCode,
       semester: dto.semester ?? '',
       career: dto.career ?? '',
-      status: dto.status ? String(dto.status) : 'PENDING',
+      status: dto.status ?? 1,
     };
 
     return firstValueFrom(
-      this.projectsService.addPendingParticipant(request as any),
+      this.projectsService.addPendingParticipant(request),
     );
   }
 

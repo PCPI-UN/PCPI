@@ -41,9 +41,17 @@ export class UpdateProjectCodeUseCase {
       throw new NotFoundException('Project not found');
     }
 
-    if (project.state !== ProjectState.REQUEST_CHANGES) {
+    const projectStateLabel =
+      typeof project.state === 'number'
+        ? ProjectState[project.state]
+        : project.state;
+    const canUpdateCode =
+      project.state === ProjectState.REQUEST_CHANGES ||
+      projectStateLabel === 'REQUEST_CHANGES';
+
+    if (!canUpdateCode) {
       throw new BadRequestException(
-        `Project can only have its code updated when in REQUEST_CHANGES state. Current state: ${ProjectState[project.state]}`,
+        `Project can only have its code updated when in REQUEST_CHANGES state. Current state: ${projectStateLabel}`,
       );
     }
 

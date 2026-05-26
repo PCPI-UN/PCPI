@@ -20,6 +20,20 @@ describe('UpdateProjectCodeUseCase', () => {
     expect(projectsService.updateProject).toHaveBeenCalledWith({ id: 1, projectCode: 'CODE-1' });
   });
 
+  it('updates code when project state arrives as the string REQUEST_CHANGES', async () => {
+    const project = { id: 1, state: 'REQUEST_CHANGES', participants: [{ userId: 10 }] } as any;
+    const projectsService = {
+      getProjectComplete: () => of({ items: [project] }),
+      updateProject: jest.fn(() => of({})),
+    };
+
+    // @ts-ignore
+    const useCase = new UpdateProjectCodeUseCase(mockGetService(projectsService));
+
+    await expect(useCase.execute(1, 'CODE-2', 10)).resolves.toBeUndefined();
+    expect(projectsService.updateProject).toHaveBeenCalledWith({ id: 1, projectCode: 'CODE-2' });
+  });
+
   it('throws NotFoundException when project not found', async () => {
     const projectsService = { getProjectComplete: () => of({ items: [] }) };
     // @ts-ignore
