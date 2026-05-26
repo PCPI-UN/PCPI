@@ -45,6 +45,13 @@ export class LoginUseCase {
       });
     }
 
+    if (user.status !== 'CONFIRMED') {
+      throw new RpcException({
+        code: status.PERMISSION_DENIED,
+        message: 'User account is not confirmed, check your email',
+      });
+    }
+
     const isPasswordValid = await this.passwordHasher.compare(
       password,
       user.password,
