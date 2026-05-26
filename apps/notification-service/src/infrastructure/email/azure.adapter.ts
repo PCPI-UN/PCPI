@@ -110,14 +110,39 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
     };
 
     try {
-      const poller = await this.client.beginSend(message);
-      const result = await poller.pollUntilDone();
+      this.logger.log("before beginSend");
+
+      const poller = await Promise.race([
+        this.client.beginSend(message),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), 10000)
+        )
+      ]);
+
+      this.logger.log("after beginSend");
+    } catch (e) {
+      console.error(e);
+    }
+    
+    try {
+      this.logger.log('Sending email with Azure Communication Services...', { to, subject: compiledSubject });
+      const poller = await this.client.beginSend(message, {
+        abortSignal: AbortSignal.timeout(15_000) // 15 segundos máximo
+      });
+      this.logger.log('Email send initiated, waiting for completion...', { to, subject: compiledSubject });
+      const result = await poller.pollUntilDone({
+        abortSignal: AbortSignal.timeout(30_000) // 30 segundos máximo
+      });
 
       this.logger.log(`Email sent successfully. MessageId: ${result.id}`);
       return { success: true };
     } catch (error) {
-      this.logger.error('Failed to send email', error);
-      throw new Error('Failed to send email');
-    }
+        if ((error as any)?.statusCode === 429) {
+          this.logger.warn('Rate limit reached, retry later');
+          throw new Error('RATE_LIMIT_EXCEEDED');
+        }
+        this.logger.error('Failed to send email', error);
+        throw new Error('Failed to send email');
+      }
   }
 }
