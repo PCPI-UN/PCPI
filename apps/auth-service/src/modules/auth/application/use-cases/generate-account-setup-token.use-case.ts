@@ -27,7 +27,7 @@ export class GenerateAccountSetupTokenUseCase {
 
     const expirySeconds =
       this.configService.get<number>('ACCOUNT_SETUP_TOKEN_EXPIRY_SECONDS') ||
-      172800;
+      7 * 24 * 60 * 60; // Default to 7 days
 
     const expiresAt = new Date(Date.now() + expirySeconds * 1000);
 
