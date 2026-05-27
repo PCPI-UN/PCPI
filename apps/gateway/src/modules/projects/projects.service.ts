@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom, lastValueFrom } from 'rxjs';
@@ -71,6 +72,7 @@ import { FetchUserProfilesUseCase } from './use-cases/fetch-user-profiles.use-ca
 import { EnrichProjectsWithJurorsUseCase } from './use-cases/enrich-projects-with-jurors.use-case';
 import { ValidateJurorHasNotEvaluatedUseCase } from './use-cases/validate-juror-has-not-evaluated.use-case';
 import { RemoveJurorFromProjectUseCase } from './use-cases/remove-juror-from-project.use-case';
+import { UpdateProjectCodeUseCase } from './use-cases/update-project-code.use-case';
 import {
   ProjectWithEnrichedJurors,
   ListProjectsWithJurorsResponse,
@@ -101,6 +103,7 @@ export class ProjectsService implements OnModuleInit {
     private readonly enrichProjectsWithJurorsUseCase: EnrichProjectsWithJurorsUseCase,
     private readonly validateJurorHasNotEvaluatedUseCase: ValidateJurorHasNotEvaluatedUseCase,
     private readonly removeJurorFromProjectUseCase: RemoveJurorFromProjectUseCase,
+    private readonly updateProjectCodeUseCase: UpdateProjectCodeUseCase,
   ) {}
 
   onModuleInit() {
@@ -123,7 +126,7 @@ export class ProjectsService implements OnModuleInit {
    */
   async createProjectWithParticipantsAndFiles(
     body: CreateProjectWithParticipantsMultipartDto,
-    files: Express.Multer.File[],
+    files: any[],
   ) {
     this.logger.log(
       `Creating project with ${files.length} files: ${body.name}`,
@@ -140,7 +143,7 @@ export class ProjectsService implements OnModuleInit {
     if (body.participants) {
       try {
         participants = JSON.parse(body.participants);
-      } catch (error) {
+      } catch (error: any) {
         throw new BadRequestException(
           'Invalid participants format. Must be a valid JSON array.',
         );
@@ -151,7 +154,7 @@ export class ProjectsService implements OnModuleInit {
     if (body.documents) {
       try {
         documentMetadata = JSON.parse(body.documents);
-      } catch (error) {
+      } catch (error: any) {
         throw new BadRequestException(
           'Invalid documents format. Must be a valid JSON array.',
         );
@@ -256,7 +259,7 @@ export class ProjectsService implements OnModuleInit {
       this.logger.log(
         `Project created successfully with ID: ${createdProject.id}`,
       );
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Failed to create project: ${error.message}`,
         error.stack,
@@ -274,7 +277,7 @@ export class ProjectsService implements OnModuleInit {
       );
       uploadResults = await Promise.all(uploadPromises);
       this.logger.log(`Successfully uploaded ${uploadResults.length} files`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Failed to upload files to Azure: ${error.message}`,
         error.stack,
@@ -299,7 +302,7 @@ export class ProjectsService implements OnModuleInit {
       this.logger.log(
         `Successfully attached ${uploadResults.length} documents to project ${createdProject.id}`,
       );
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Failed to attach documents to project: ${error.message}`,
         error.stack,
@@ -351,11 +354,11 @@ export class ProjectsService implements OnModuleInit {
       studentCode: dto.studentCode,
       semester: dto.semester ?? '',
       career: dto.career ?? '',
-      status: dto.status ?? 1, // Default to PENDING if not provided
+      status: dto.status ?? 1,
     };
 
     return firstValueFrom(
-      this.projectsService.addPendingParticipant(request as any),
+      this.projectsService.addPendingParticipant(request),
     );
   }
 
@@ -554,7 +557,7 @@ export class ProjectsService implements OnModuleInit {
   async updateProjectDocument(
     id: number,
     dto: UpdateProjectDocumentDto,
-    file?: Express.Multer.File,
+    file?: any,
   ): Promise<ProjectDocument> {
     const request: UpdateProjectDocumentRequest = { id };
 
@@ -594,6 +597,15 @@ export class ProjectsService implements OnModuleInit {
         description,
       }),
     );
+  }
+
+  async updateProjectCode(
+    id: number,
+    projectCode: string,
+    userId: number,
+  ): Promise<void> {
+    // Delegate to the use-case which contains the business rules
+    return this.updateProjectCodeUseCase.execute(id, projectCode, userId);
   }
 
   async listJurorsByProjectId(projectId: number) {
@@ -697,7 +709,7 @@ export class ProjectsService implements OnModuleInit {
   async addFilesToExistingProject(
     projectId: number,
     body: AddProjectDocumentsMultipartDto,
-    files: Express.Multer.File[],
+    files: any[],
   ) {
     this.logger.log(`Adding ${files.length} file(s) to project ${projectId}`);
 
@@ -706,7 +718,7 @@ export class ProjectsService implements OnModuleInit {
     if (body.documents) {
       try {
         documentMetadata = JSON.parse(body.documents);
-      } catch (error) {
+      } catch (error: any) {
         throw new BadRequestException(
           'Invalid documents format. Must be a valid JSON array.',
         );
@@ -863,7 +875,7 @@ export class ProjectsService implements OnModuleInit {
       );
       uploadResults = await Promise.all(uploadPromises);
       this.logger.log(`Successfully uploaded ${uploadResults.length} files`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Failed to upload files to Azure: ${error.message}`,
         error.stack,
@@ -889,7 +901,7 @@ export class ProjectsService implements OnModuleInit {
       this.logger.log(
         `Successfully attached ${uploadResults.length} documents to project ${projectId}`,
       );
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Failed to attach documents to project: ${error.message}`,
         error.stack,
