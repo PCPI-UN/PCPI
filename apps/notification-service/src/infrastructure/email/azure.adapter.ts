@@ -90,12 +90,15 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
     const subject = data.subject;
     const htmlBody = content;
 
+    // Inject currentYear by default; callers can override by providing params.currentYear
+    const compiledParams = { currentYear: new Date().getFullYear(), ...(params || {}) };
+
     let compiledHtml: string;
     let compiledSubject: string;
 
-    // Replace params in the HTML body and subject
-    compiledHtml = handlebars.compile(htmlBody)(params);
-    compiledSubject = handlebars.compile(subject)(params);
+    // Replace params in the HTML body and subject using compiledParams
+    compiledHtml = handlebars.compile(htmlBody)(compiledParams);
+    compiledSubject = handlebars.compile(subject)(compiledParams);
 
     const message: EmailMessage = {
       senderAddress: this.azureSenderAddress!,
@@ -110,14 +113,24 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
     };
 
     try {
-      const poller = await this.client.beginSend(message);
-      const result = await poller.pollUntilDone();
+      this.logger.log('Sending email with Azure Communication Services...', { to, subject: compiledSubject });
+      const poller = await this.client.beginSend(message, {
+        abortSignal: AbortSignal.timeout(15_000) // 15 segundos máximo
+      });
+      this.logger.log('Email send initiated, waiting for completion...', { to, subject: compiledSubject });
+      const result = await poller.pollUntilDone({
+        abortSignal: AbortSignal.timeout(30_000) // 30 segundos máximo
+      });
 
       this.logger.log(`Email sent successfully. MessageId: ${result.id}`);
       return { success: true };
     } catch (error) {
-      this.logger.error('Failed to send email', error);
-      throw new Error('Failed to send email');
-    }
+        if ((error as any)?.statusCode === 429) {
+          this.logger.warn('Rate limit reached, retry later');
+          throw new Error('RATE_LIMIT_EXCEEDED');
+        }
+        this.logger.error('Failed to send email', error);
+        throw new Error('Failed to send email');
+      }
   }
 }
