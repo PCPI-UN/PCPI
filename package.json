@@ -25,6 +25,7 @@
   "dependencies": {
     "@azure/communication-email": "^1.1.0",
     "@azure/storage-blob": "^12.29.1",
+    "@emailjs/nodejs": "^5.0.2",
     "@grpc/grpc-js": "^1.14.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
