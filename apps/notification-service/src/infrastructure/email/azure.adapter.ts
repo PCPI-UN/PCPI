@@ -110,21 +110,6 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
     };
 
     try {
-      this.logger.log("before beginSend");
-
-      const poller = await Promise.race([
-        this.client.beginSend(message),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("timeout")), 10000)
-        )
-      ]);
-
-      this.logger.log("after beginSend");
-    } catch (e) {
-      console.error(e);
-    }
-    
-    try {
       this.logger.log('Sending email with Azure Communication Services...', { to, subject: compiledSubject });
       const poller = await this.client.beginSend(message, {
         abortSignal: AbortSignal.timeout(15_000) // 15 segundos máximo
