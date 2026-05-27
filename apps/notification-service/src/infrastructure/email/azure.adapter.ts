@@ -14,7 +14,7 @@ import {
 @Injectable()
 export class AzureAdapter implements EmailServicePort, OnModuleInit {
   private readonly logger = new Logger(AzureAdapter.name);
-  private client: EmailClient;
+  private client!: EmailClient;
   constructor(private readonly configService: ConfigService) {}
   azureConnectionString: string | undefined;
   azureSenderAddress: string | undefined;
@@ -127,10 +127,10 @@ export class AzureAdapter implements EmailServicePort, OnModuleInit {
     } catch (error) {
         if ((error as any)?.statusCode === 429) {
           this.logger.warn('Rate limit reached, retry later');
-          throw new Error('RATE_LIMIT_EXCEEDED');
+          return { success: false };
         }
         this.logger.error('Failed to send email', error);
-        throw new Error('Failed to send email');
+        return { success: false };
       }
   }
 }

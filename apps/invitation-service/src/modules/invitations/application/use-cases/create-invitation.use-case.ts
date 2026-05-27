@@ -204,7 +204,7 @@ export class CreateInvitationUseCase {
     else // The user already exist and therefore they can accept invitations in the dashboard
       invitationLink = `${frontendUrl}/app/invitations`;
 
-
+    /* EMERGENCY: BLOCKING EMAIL
     await this.sendInvitationEmail({
       targetType: rest.targetType,
       eventType,
@@ -216,6 +216,7 @@ export class CreateInvitationUseCase {
       eventData,
       projectData,
     });
+    */
 
     return { invitation: savedInvitation, invitationRoles: savedInvitationRoles };
   }
