@@ -1,7 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
 import { EvaluationType } from '../../../../../common/constants/evaluation-type.constants';
 import { FinalProjectsScoreMapper } from '../final-projects-score.mapper';
 import { ZeroToFiveScoreMapper } from '../zero-to-five-score.mapper';
+import { ZeroToHundredScoreMapper } from '../zero-to-hundred-score.mapper';
 import { ScoreMapperFactory } from '../score-mapper.factory';
 
 describe('ScoreMapperFactory', () => {
@@ -17,9 +17,9 @@ describe('ScoreMapperFactory', () => {
         );
     });
 
-    it('throws not implemented for ZERO_TO_HUNDRED', () => {
-        expect(() => ScoreMapperFactory.create(EvaluationType.ZERO_TO_HUNDRED)).toThrow(
-            BadRequestException,
+    it('returns ZeroToHundredScoreMapper for ZERO_TO_HUNDRED', () => {
+        expect(ScoreMapperFactory.create(EvaluationType.ZERO_TO_HUNDRED)).toBeInstanceOf(
+            ZeroToHundredScoreMapper,
         );
     });
 

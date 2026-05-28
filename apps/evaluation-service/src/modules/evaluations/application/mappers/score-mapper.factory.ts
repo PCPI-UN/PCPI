@@ -3,6 +3,7 @@ import { EvaluationType } from '../../../../common/constants/evaluation-type.con
 import { ScoreMapper } from '../../domain/ports/score-mapper.port';
 import { FinalProjectsScoreMapper } from './final-projects-score.mapper';
 import { ZeroToFiveScoreMapper } from './zero-to-five-score.mapper';
+import { ZeroToHundredScoreMapper } from './zero-to-hundred-score.mapper';
 
 export class ScoreMapperFactory {
   static create(evaluationType: EvaluationType): ScoreMapper {
@@ -15,9 +16,7 @@ export class ScoreMapperFactory {
         return new ZeroToFiveScoreMapper();
 
       case EvaluationType.ZERO_TO_HUNDRED:
-        throw new BadRequestException(
-          `Evaluation type ${evaluationType} is not implemented yet.`,
-        );
+        return new ZeroToHundredScoreMapper();
 
       default:
         throw new BadRequestException(
