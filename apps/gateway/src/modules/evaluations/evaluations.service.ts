@@ -216,45 +216,53 @@ export class EvaluationsService implements OnModuleInit {
 
         const topProjects = sorted.slice(0, limit);
 
-        // 4. Fetch full project details for the top 5
-        const topProjectIds = topProjects.map(tp => tp.projectId);
-        const projectsPromises = topProjectIds.map(id =>
-            lastValueFrom(this.projectsService.getProjectComplete({ id }))
-                .catch(() => null) // Handle deleted projects gracefully
-        );
+        // Detect disputed: projects outside the limit tied with the last position
+        const disputedStats = topProjects.length > 0
+            ? sorted.slice(limit).filter(p => p.averageGrade === topProjects[topProjects.length - 1].averageGrade)
+            : [];
 
-        const projectsResponses = await Promise.all(projectsPromises);
+        // 4. Fetch full project details for top N and disputed in parallel
+        const topProjectIds = topProjects.map(tp => tp.projectId);
+        const disputedProjectIds = disputedStats.map(dp => dp.projectId);
+
+        const [projectsResponses, disputedResponses] = await Promise.all([
+            Promise.all(topProjectIds.map(id =>
+                lastValueFrom(this.projectsService.getProjectComplete({ id })).catch(() => null)
+            )),
+            Promise.all(disputedProjectIds.map(id =>
+                lastValueFrom(this.projectsService.getProjectComplete({ id })).catch(() => null)
+            )),
+        ]);
+
+        const buildEnrichedProject = (tp: { projectId: number; averageGrade: number; evaluationCount: number }, response: any) => {
+            if (!response || !response.items || response.items.length === 0) return null;
+            const project = response.items[0];
+            return {
+                id: project.id,
+                eventId: project.eventId,
+                name: project.name,
+                description: project.description,
+                eventNumber: project.eventNumber,
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt,
+                courseId: project.courseId,
+                state: project.state,
+                reason: project.reason,
+                participants: project.participants,
+                documents: project.documents,
+                pendingParticipants: project.pendingParticipants,
+                averageGrade: tp.averageGrade,
+                evaluationCount: tp.evaluationCount,
+            };
+        };
 
         // 5. Merge data
         const enrichedProjects = topProjects
-            .map((tp, idx) => {
-                const projectResponse = projectsResponses[idx];
+            .map((tp, idx) => buildEnrichedProject(tp, projectsResponses[idx]))
+            .filter(p => p !== null);
 
-                // Skip if project is deleted or response is null
-                if (!projectResponse || !projectResponse.items || projectResponse.items.length === 0) {
-                    return null;
-                }
-
-                const project = projectResponse.items[0];
-
-                return {
-                    id: project.id,
-                    eventId: project.eventId,
-                    name: project.name,
-                    description: project.description,
-                    eventNumber: project.eventNumber,
-                    createdAt: project.createdAt,
-                    updatedAt: project.updatedAt,
-                    courseId: project.courseId,
-                    state: project.state,
-                    reason: project.reason,
-                    participants: project.participants,
-                    documents: project.documents,
-                    pendingParticipants: project.pendingParticipants,
-                    averageGrade: tp.averageGrade,
-                    evaluationCount: tp.evaluationCount,
-                };
-            })
+        const disputedProjects = disputedStats
+            .map((dp, idx) => buildEnrichedProject(dp, disputedResponses[idx]))
             .filter(p => p !== null);
 
         const enrichedProjectIds = new Set(enrichedProjects.map(p => p.id));
@@ -265,6 +273,7 @@ export class EvaluationsService implements OnModuleInit {
             courseId,
             eventId,
             ...(relevantTiebreaks.length > 0 && { tiebreaks: relevantTiebreaks }),
+            ...(disputedProjects.length > 0 && { disputedProjects }),
         };
     }
 }
