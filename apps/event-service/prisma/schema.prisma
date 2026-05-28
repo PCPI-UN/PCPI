@@ -51,6 +51,7 @@ model Event {
   categories              Category[]
   eventInscriptionDetails EventInscriptionDetail[]
   eventRecaps             EventRecap[]
+  rankingEvent            RankingEvent?
 
   @@map("event")
 }
@@ -172,12 +173,14 @@ model AwardWinnerEvent {
 // - `positions` is constrained to >= 0 via a DB check constraint.
 model RankingEvent {
   id            Int      @id @default(autoincrement())
-  eventId       Int      @map("event_id")
+  eventId       Int      @unique @map("event_id")
   visiblePublic Boolean  @default(false) @map("visible_public")
   positions     Int
   gradeVisible  Boolean  @default(false) @map("grade_visible")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  event Event @relation(fields: [eventId], references: [id])
 
   @@map("ranking_event")
 }
