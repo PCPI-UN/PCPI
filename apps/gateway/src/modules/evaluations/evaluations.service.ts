@@ -154,7 +154,7 @@ export class EvaluationsService implements OnModuleInit {
         );
     }
 
-    async getTopProjectsByCourse(courseId: number, eventId: number) {
+    async getTopProjectsByCourse(courseId: number, eventId: number, limit: number = 5) {
         // 1. Fetch all project IDs for the course and event from project service
         const projectsResponse = await lastValueFrom(
             this.projectsService.listProjectsByEvent({
@@ -184,10 +184,10 @@ export class EvaluationsService implements OnModuleInit {
             return { items: [], courseId, eventId };
         }
 
-        // 3. Sort by averageGrade descending and take top 5
+        // 3. Sort by averageGrade descending and take top N
         const topProjects = projectStats
             .sort((a, b) => b.averageGrade - a.averageGrade)
-            .slice(0, 5);
+            .slice(0, limit);
 
         // 4. Fetch full project details for the top 5
         const topProjectIds = topProjects.map(tp => tp.projectId);
