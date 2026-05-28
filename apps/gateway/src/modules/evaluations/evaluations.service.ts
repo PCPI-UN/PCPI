@@ -8,6 +8,7 @@ import {
     EvaluationServiceClient,
     CriterionsServiceClient,
     TieBreakServiceClient,
+    TieBreakProto,
     FindEvaluationsByEvaluatorResponse,
     FindCriterionsByCourseResponse,
     GetProjectStatsRequest,
@@ -197,7 +198,7 @@ export class EvaluationsService implements OnModuleInit {
 
         const hasTies = sorted.some((p, i, arr) => i > 0 && arr[i - 1].averageGrade === p.averageGrade);
 
-        let appliedTiebreaks: import('@app/common/generated/evaluation').TieBreakProto[] = [];
+        let appliedTiebreaks: TieBreakProto[] = [];
 
         if (hasTies) {
             const tiebreaksResponse = await lastValueFrom(
