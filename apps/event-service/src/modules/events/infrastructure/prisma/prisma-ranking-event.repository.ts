@@ -54,7 +54,7 @@ export class PrismaRankingEventRepository extends RankingEventRepository {
   }
 
   async findByEventId(eventId: number): Promise<RankingEvent | null> {
-    const row = await this.prisma.rankingEvent.findFirst({ where: { eventId } });
+    const row = await this.prisma.rankingEvent.findUnique({ where: { eventId } });
     return row ? toDomain(row) : null;
   }
 
