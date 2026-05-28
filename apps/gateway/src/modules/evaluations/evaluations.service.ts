@@ -214,14 +214,19 @@ export class EvaluationsService implements OnModuleInit {
             });
         }
 
+        const tiebreakProjectIds = new Set(appliedTiebreaks.map(tb => tb.projectId));
+
         const topProjects = sorted.slice(0, limit);
 
-        // Detect disputed: projects outside the limit tied with the last position
+        // Detect disputed: projects outside the limit tied with the last position and without a tiebreak record
         const disputedStats = topProjects.length > 0
-            ? sorted.slice(limit).filter(p => p.averageGrade === topProjects[topProjects.length - 1].averageGrade)
+            ? sorted.slice(limit).filter(p =>
+                p.averageGrade === topProjects[topProjects.length - 1].averageGrade &&
+                !tiebreakProjectIds.has(p.projectId)
+              )
             : [];
 
-        // 4. Fetch full project details for top N and disputed in parallel
+        // 4. Fetch full project details for the top N and disputed projects in parallel
         const topProjectIds = topProjects.map(tp => tp.projectId);
         const disputedProjectIds = disputedStats.map(dp => dp.projectId);
 
