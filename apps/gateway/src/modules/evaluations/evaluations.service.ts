@@ -4,8 +4,10 @@ import { lastValueFrom } from 'rxjs';
 import {
     EVALUATION_SERVICE_NAME,
     CRITERIONS_SERVICE_NAME,
+    TIE_BREAK_SERVICE_NAME,
     EvaluationServiceClient,
     CriterionsServiceClient,
+    TieBreakServiceClient,
     FindEvaluationsByEvaluatorResponse,
     FindCriterionsByCourseResponse,
     GetProjectStatsRequest,
@@ -25,11 +27,13 @@ import {
 export class EvaluationsService implements OnModuleInit {
     private evaluationService: EvaluationServiceClient;
     private criterionsService: CriterionsServiceClient;
+    private tieBreakService: TieBreakServiceClient;
     private projectsService: ProjectsServiceClient;
 
     constructor(
         @Inject(EVALUATION_SERVICE_NAME) private evaluationClient: ClientGrpc,
         @Inject(CRITERIONS_SERVICE_NAME) private criterionsClient: ClientGrpc,
+        @Inject(TIE_BREAK_SERVICE_NAME) private tieBreakClient: ClientGrpc,
         @Inject(PROJECTS_SERVICE_NAME) private projectsClient: ClientGrpc,
     ) { }
 
@@ -41,6 +45,10 @@ export class EvaluationsService implements OnModuleInit {
         this.criterionsService =
             this.criterionsClient.getService<CriterionsServiceClient>(
                 CRITERIONS_SERVICE_NAME,
+            );
+        this.tieBreakService =
+            this.tieBreakClient.getService<TieBreakServiceClient>(
+                TIE_BREAK_SERVICE_NAME,
             );
         this.projectsService =
             this.projectsClient.getService<ProjectsServiceClient>(
@@ -184,10 +192,25 @@ export class EvaluationsService implements OnModuleInit {
             return { items: [], courseId, eventId };
         }
 
-        // 3. Sort by averageGrade descending and take top N
-        const topProjects = projectStats
-            .sort((a, b) => b.averageGrade - a.averageGrade)
-            .slice(0, limit);
+        // 3. Sort by averageGrade descending, applying tiebreak order if there are ties
+        const sorted = projectStats.sort((a, b) => b.averageGrade - a.averageGrade);
+
+        const hasTies = sorted.some((p, i, arr) => i > 0 && arr[i - 1].averageGrade === p.averageGrade);
+
+        if (hasTies) {
+            const tiebreaksResponse = await lastValueFrom(
+                this.tieBreakService.listTieBreaks({ eventId, categoryId: courseId }),
+            );
+            const tiebreakMap = new Map<number, number>(
+                tiebreaksResponse.tiebreaks.map(tb => [tb.projectId, tb.tiebreakOrder]),
+            );
+            sorted.sort((a, b) => {
+                if (b.averageGrade !== a.averageGrade) return b.averageGrade - a.averageGrade;
+                return (tiebreakMap.get(a.projectId) ?? Infinity) - (tiebreakMap.get(b.projectId) ?? Infinity);
+            });
+        }
+
+        const topProjects = sorted.slice(0, limit);
 
         // 4. Fetch full project details for the top 5
         const topProjectIds = topProjects.map(tp => tp.projectId);
