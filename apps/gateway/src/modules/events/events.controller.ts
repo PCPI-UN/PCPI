@@ -59,6 +59,8 @@ import {
   UpdateEventInscriptionDetailDTO,
   UpdateEventRecapDTO,
 } from './dto/event-catalog.dto';
+import { CreateRankingEventDTO } from './dto/ranking-event/create-ranking-event.dto';
+import { UpdateRankingEventDTO } from './dto/ranking-event/update-ranking-event.dto';
 
 @ApiTags('events')
 @ApiSecurity('JWT-auth')
@@ -714,6 +716,62 @@ export class EventsController {
   @ApiOperation({ summary: 'Delete event recap' })
   async deleteEventRecap(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.deleteEventRecap(id);
+  }
+
+  // =====================
+  // RANKING EVENT ENDPOINTS
+  // =====================
+
+  @RequirePermission('manage:events')
+  @Post('ranking-config')
+  @ApiOperation({ summary: 'Create ranking configuration for an event' })
+  @ApiResponse({ status: 201, description: 'Ranking configuration created' })
+  @ApiResponse({ status: 409, description: 'Ranking config already exists for this event' })
+  async createRankingEvent(@Body() dto: CreateRankingEventDTO) {
+    return this.eventsService.createRankingEvent(dto);
+  }
+
+  @Public()
+  @Get('ranking-config/by-event/:eventId')
+  @ApiOperation({ summary: 'Get ranking configuration by event ID' })
+  @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
+  @ApiResponse({ status: 200, description: 'Returns ranking configuration' })
+  @ApiResponse({ status: 404, description: 'Ranking configuration not found' })
+  async getRankingEventByEventId(@Param('eventId', ParseIntPipe) eventId: number) {
+    return this.eventsService.getRankingEventByEventId(eventId);
+  }
+
+  @RequirePermission('manage:events')
+  @Get('ranking-config/:id')
+  @ApiOperation({ summary: 'Get ranking configuration by ID' })
+  @ApiParam({ name: 'id', description: 'Ranking config ID', type: Number })
+  @ApiResponse({ status: 200, description: 'Returns ranking configuration' })
+  @ApiResponse({ status: 404, description: 'Ranking configuration not found' })
+  async getRankingEvent(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.getRankingEvent(id);
+  }
+
+  @RequirePermission('manage:events')
+  @Patch('ranking-config/:id')
+  @ApiOperation({ summary: 'Update ranking configuration' })
+  @ApiParam({ name: 'id', description: 'Ranking config ID', type: Number })
+  @ApiResponse({ status: 200, description: 'Ranking configuration updated' })
+  @ApiResponse({ status: 404, description: 'Ranking configuration not found' })
+  async updateRankingEvent(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateRankingEventDTO,
+  ) {
+    return this.eventsService.updateRankingEvent(id, dto);
+  }
+
+  @RequirePermission('manage:events')
+  @Delete('ranking-config/:id')
+  @ApiOperation({ summary: 'Delete ranking configuration' })
+  @ApiParam({ name: 'id', description: 'Ranking config ID', type: Number })
+  @ApiResponse({ status: 200, description: 'Ranking configuration deleted' })
+  @ApiResponse({ status: 404, description: 'Ranking configuration not found' })
+  async deleteRankingEvent(@Param('id', ParseIntPipe) id: number) {
+    return this.eventsService.deleteRankingEvent(id);
   }
 
   @Get(':id/my-project')

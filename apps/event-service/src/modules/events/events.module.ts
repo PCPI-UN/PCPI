@@ -25,6 +25,14 @@ import { EventMemberRepository } from '@events/domain/repositories/event-member.
 import { AUTH_SERVICE_NAME, protobufPackage } from '@app/common/generated/auth';
 import { EventCatalogService } from '@events/application/event-catalog.service';
 import { GetEventDashboardStatsUC } from '@events/application/use-cases/get-dashboard-stats.uc';
+import { RankingEventController } from '@events/interface/grpc/ranking-event.controller';
+import { PrismaRankingEventRepository } from '@events/infrastructure/prisma/prisma-ranking-event.repository';
+import { RankingEventRepository } from '@events/domain/repositories/ranking-event.repository';
+import { CreateRankingEventUseCase } from '@events/application/use-cases/ranking-event/create-ranking-event.use-case';
+import { UpdateRankingEventUseCase } from '@events/application/use-cases/ranking-event/update-ranking-event.use-case';
+import { GetRankingEventUseCase } from '@events/application/use-cases/ranking-event/get-ranking-event.use-case';
+import { GetRankingEventByEventIdUseCase } from '@events/application/use-cases/ranking-event/get-ranking-event-by-event-id.use-case';
+import { DeleteRankingEventUseCase } from '@events/application/use-cases/ranking-event/delete-ranking-event.use-case';
 
 
 @Module({
@@ -41,7 +49,7 @@ import { GetEventDashboardStatsUC } from '@events/application/use-cases/get-dash
       },
     ]),
   ],
-  controllers: [EventsController, EventMemberController, EventCatalogController],
+  controllers: [EventsController, EventMemberController, EventCatalogController, RankingEventController],
   providers: [
     PrismaService,
     EventCatalogService,
@@ -66,6 +74,16 @@ import { GetEventDashboardStatsUC } from '@events/application/use-cases/get-dash
     ListMyEventsUseCase,
     GetEventStatusesUC,
     GetEventDashboardStatsUC,
+    // Ranking event
+    {
+      provide: RankingEventRepository,
+      useClass: PrismaRankingEventRepository,
+    },
+    CreateRankingEventUseCase,
+    UpdateRankingEventUseCase,
+    GetRankingEventUseCase,
+    GetRankingEventByEventIdUseCase,
+    DeleteRankingEventUseCase,
     // Event-member use cases
     CreateEventMemberUseCase,
     DeleteEventMemberUseCase,
