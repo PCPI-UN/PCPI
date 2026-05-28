@@ -5,6 +5,7 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { EvaluationsModule } from './modules/evaluations/evaluations.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { CriterionsModule } from './modules/criterions/criterions.module';
+import { TieBreaksModule } from './modules/tiebreaks/tiebreaks.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -26,6 +27,7 @@ import { HealthController } from './health.controller';
     EvaluationsModule,
     InvitationsModule,
     CriterionsModule,
+    TieBreaksModule,
     DashboardModule,
   ],
   controllers: [CacheManagementController, HealthController],

@@ -1,11 +1,12 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as path from 'path';
 import * as fs from 'fs/promises';
 const matter = require('gray-matter');
 import * as handlebars from 'handlebars';
 import { EmailTemplate } from '@app/common/generated/notification';
 import { EmailClient, EmailMessage } from '@azure/communication-email';
+import emailjs from '@emailjs/nodejs';
+
 import {
   EmailServicePort,
   SendEmailParams,
@@ -14,123 +15,148 @@ import {
 @Injectable()
 export class AzureAdapter implements EmailServicePort, OnModuleInit {
   private readonly logger = new Logger(AzureAdapter.name);
-  private client!: EmailClient;
-  constructor(private readonly configService: ConfigService) {}
-  azureConnectionString: string | undefined;
-  azureSenderAddress: string | undefined;
-  onModuleInit() {
 
-    // Before everything else, we need to check if we have a connection string and sender address
-    this.azureConnectionString = this.configService.get<string>('ACS_CONNECTION_STRING');
+  private azureClient: EmailClient | null = null;
+  private azureSenderAddress: string | undefined;
+
+  private emailJsServiceId: string | undefined;
+  private emailJsTemplateId: string | undefined;
+  private emailJsPublicKey: string | undefined;
+  private emailJsPrivateKey: string | undefined;
+
+  constructor(private readonly configService: ConfigService) {}
+
+  onModuleInit() {
+    this.emailJsServiceId = this.configService.get<string>('EMAILJS_SERVICE_ID');
+    this.emailJsTemplateId = this.configService.get<string>('EMAILJS_TEMPLATE_ID');
+    this.emailJsPublicKey = this.configService.get<string>('EMAILJS_PUBLIC_KEY');
+    this.emailJsPrivateKey = this.configService.get<string>('EMAILJS_PRIVATE_KEY');
+
+    if (
+      !this.emailJsServiceId ||
+      !this.emailJsTemplateId ||
+      !this.emailJsPublicKey ||
+      !this.emailJsPrivateKey
+    ) {
+      this.logger.error('EmailJS configuration is incomplete');
+      throw new Error('EmailJS configuration error');
+    }
+
+    const azureConnectionString = this.configService.get<string>('ACS_CONNECTION_STRING');
     this.azureSenderAddress = this.configService.get<string>('ACS_SENDER_ADDRESS');
 
-    if (!this.azureConnectionString) {
-      this.logger.error('ACS_CONNECTION_STRING is not configured');
-      throw new Error('Azure Communication Services connection string configuration error');
+    if (azureConnectionString && this.azureSenderAddress) {
+      this.azureClient = new EmailClient(azureConnectionString);
+      this.logger.log('Azure ACS configured as email fallback provider');
+    } else {
+      this.logger.warn('Azure ACS not configured — no email fallback available');
     }
-
-    if (!this.azureSenderAddress) {
-      this.logger.error('ACS_SENDER_ADDRESS is not configured');
-      throw new Error('Azure Communication Services sender address configuration error');
-    }
-
-    this.client = new EmailClient(this.azureConnectionString);
   }
 
-  async sendEmail(templateParams: SendEmailParams): Promise<{ success: boolean }> {
-    this.logger.log('Sending email...', { to: templateParams.to, template: templateParams.template });
-    const { to, template, params } = templateParams;
+  private resolveTemplatePath(template: EmailTemplate): string {
+    const base = 'dist/apps/notification-service/infrastructure/email/templates/iris_';
 
-    // Map the EmailTemplate enum to the corresponding HTML template file
-    let templatePath = 'dist/apps/notification-service/infrastructure/email/templates/iris_';
     switch (template) {
-      case EmailTemplate.PROJECT_SUBMITTED:
-        templatePath += 'project_submitted.html';
-        break;
-      case EmailTemplate.PROJECT_APPROVED:
-        templatePath += 'project_approved.html';
-        break;
-      case EmailTemplate.PROJECT_REJECTED:
-        templatePath += 'project_rejected.html';
-        break;
-      case EmailTemplate.REQUEST_CHANGES:
-        templatePath += 'requested_changes.html'
-        break;
-      case EmailTemplate.JUROR_INVITATION:
-        templatePath += 'juror_invitation.html';
-        break;
-      case EmailTemplate.PASSWORD_CHANGED:
-        templatePath += 'password_changed.html';
-        break;
-      case EmailTemplate.PASSWORD_RESET:
-        templatePath += 'password_reset.html';
-        break;
-      case EmailTemplate.PLATFORM_INVITATION:
-        templatePath += 'platform_invitation.html';
-        break;
-      case EmailTemplate.SIGNUP_CONFIRMATION:
-        templatePath += 'signup_confirmation.html';
-        break;
-      case EmailTemplate.PARTICIPANTS_SUBMITTED:
-        templatePath += 'participants_submitted.html';
-        break;
-      case EmailTemplate.PARTICIPANTS_APPROVED:
-        templatePath += 'participants_approved.html';
-        break;
-      case EmailTemplate.PARTICIPANTS_REJECTED:
-        templatePath += 'participants_rejected.html';
-        break;
+      case EmailTemplate.PROJECT_SUBMITTED:      return base + 'project_submitted.html';
+      case EmailTemplate.PROJECT_APPROVED:       return base + 'project_approved.html';
+      case EmailTemplate.PROJECT_REJECTED:       return base + 'project_rejected.html';
+      case EmailTemplate.REQUEST_CHANGES:        return base + 'requested_changes.html';
+      case EmailTemplate.JUROR_INVITATION:       return base + 'juror_invitation.html';
+      case EmailTemplate.PASSWORD_CHANGED:       return base + 'password_changed.html';
+      case EmailTemplate.PASSWORD_RESET:         return base + 'password_reset.html';
+      case EmailTemplate.PLATFORM_INVITATION:    return base + 'platform_invitation.html';
+      case EmailTemplate.SIGNUP_CONFIRMATION:    return base + 'signup_confirmation.html';
+      case EmailTemplate.PARTICIPANTS_SUBMITTED: return base + 'participants_submitted.html';
+      case EmailTemplate.PARTICIPANTS_APPROVED:  return base + 'participants_approved.html';
+      case EmailTemplate.PARTICIPANTS_REJECTED:  return base + 'participants_rejected.html';
       default:
         throw new Error(`Unsupported email template: ${template}`);
     }
+  }
 
-    // Read the template file and extract the subject and HTML body
-    const fileContent = await fs.readFile(templatePath, 'utf-8');
-    const { data, content } = matter(fileContent);
-    const subject = data.subject;
-    const htmlBody = content;
+  private async sendWithEmailJs(to: string, subject: string, html: string): Promise<void> {
+    await emailjs.send(
+      this.emailJsServiceId!,
+      this.emailJsTemplateId!,
+      {
+        to_email: to,
+        subject,
+        message_html: html,
+      },
+      {
+        publicKey: this.emailJsPublicKey!,
+        privateKey: this.emailJsPrivateKey!,
+      },
+    );
+  }
 
-    // Inject currentYear by default; callers can override by providing params.currentYear
-    const compiledParams = { currentYear: new Date().getFullYear(), ...(params || {}) };
-
-    let compiledHtml: string;
-    let compiledSubject: string;
-
-    // Replace params in the HTML body and subject using compiledParams
-    compiledHtml = handlebars.compile(htmlBody)(compiledParams);
-    compiledSubject = handlebars.compile(subject)(compiledParams);
-
+  private async sendWithAzure(to: string, subject: string, html: string): Promise<void> {
     const message: EmailMessage = {
       senderAddress: this.azureSenderAddress!,
-      recipients: {
-        to: [{ address: to }],
-      },
+      recipients: { to: [{ address: to }] },
       content: {
-        subject: compiledSubject,
-        plainText: "This email requires a plaintext message.", // Ignore this. This doesn't show
-        html: compiledHtml,
+        subject,
+        plainText: 'This email requires a plaintext message.',
+        html,
       },
     };
 
-    try {
-      this.logger.log('Sending email with Azure Communication Services...', { to, subject: compiledSubject });
-      const poller = await this.client.beginSend(message, {
-        abortSignal: AbortSignal.timeout(15_000) // 15 segundos máximo
-      });
-      this.logger.log('Email send initiated, waiting for completion...', { to, subject: compiledSubject });
-      const result = await poller.pollUntilDone({
-        abortSignal: AbortSignal.timeout(30_000) // 30 segundos máximo
-      });
+    await this.azureClient!.beginSend(message, {
+      abortSignal: AbortSignal.timeout(15_000),
+    });
+  }
 
-      this.logger.log(`Email sent successfully. MessageId: ${result.id}`);
+  async sendEmail(templateParams: SendEmailParams): Promise<{ success: boolean }> {
+    const { to, template, params } = templateParams;
+
+    this.logger.log('Preparing email...', { to, template });
+
+    const templatePath = this.resolveTemplatePath(template);
+    const fileContent = await fs.readFile(templatePath, 'utf-8');
+    const { data, content } = matter(fileContent);
+
+    const compiledParams = {
+      currentYear: new Date().getFullYear(),
+      ...(params || {}),
+    };
+
+    const compiledHtml = handlebars.compile(content)(compiledParams);
+    const compiledSubject = handlebars.compile(data.subject)(compiledParams);
+
+    // EmailJS — primary provider
+    try {
+      this.logger.log('Sending email with EmailJS...', { to, template, subject: compiledSubject });
+      await this.sendWithEmailJs(to, compiledSubject, compiledHtml);
+      this.logger.log('Email sent successfully via EmailJS', { to, template, subject: compiledSubject });
       return { success: true };
-    } catch (error) {
-        if ((error as any)?.statusCode === 429) {
-          this.logger.warn('Rate limit reached, retry later');
-          return { success: false };
-        }
-        this.logger.error('Failed to send email', error);
-        return { success: false };
-      }
+    } catch (emailJsError) {
+      this.logger.warn('EmailJS failed. Attempting Azure ACS fallback...', {
+        to,
+        template,
+        subject: compiledSubject,
+        error: emailJsError,
+      });
+    }
+
+    // Azure ACS — fallback
+    if (!this.azureClient || !this.azureSenderAddress) {
+      this.logger.error('Azure ACS fallback not configured', { to, template });
+      throw new Error('Failed to send email: both providers unavailable');
+    }
+
+    try {
+      this.logger.log('Sending email with Azure ACS fallback...', { to, template, subject: compiledSubject });
+      await this.sendWithAzure(to, compiledSubject, compiledHtml);
+      this.logger.log('Email sent successfully via Azure ACS', { to, template, subject: compiledSubject });
+      return { success: true };
+    } catch (azureError) {
+      this.logger.error('Both email providers failed', {
+        to,
+        template,
+        subject: compiledSubject,
+        error: azureError,
+      });
+      throw new Error('Failed to send email');
+    }
   }
 }
