@@ -22,7 +22,7 @@ WORKDIR /app
 RUN apk add --no-cache protobuf-dev && \
   npm install -g pnpm
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --from=builder /app/node_modules ./node_modules
 
 USER root
