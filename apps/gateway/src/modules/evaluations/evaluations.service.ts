@@ -197,12 +197,15 @@ export class EvaluationsService implements OnModuleInit {
 
         const hasTies = sorted.some((p, i, arr) => i > 0 && arr[i - 1].averageGrade === p.averageGrade);
 
+        let appliedTiebreaks: import('@app/common/generated/evaluation').TieBreakProto[] = [];
+
         if (hasTies) {
             const tiebreaksResponse = await lastValueFrom(
                 this.tieBreakService.listTieBreaks({ eventId, categoryId: courseId }),
             );
+            appliedTiebreaks = tiebreaksResponse.tiebreaks;
             const tiebreakMap = new Map<number, number>(
-                tiebreaksResponse.tiebreaks.map(tb => [tb.projectId, tb.tiebreakOrder]),
+                appliedTiebreaks.map(tb => [tb.projectId, tb.tiebreakOrder]),
             );
             sorted.sort((a, b) => {
                 if (b.averageGrade !== a.averageGrade) return b.averageGrade - a.averageGrade;
@@ -253,10 +256,14 @@ export class EvaluationsService implements OnModuleInit {
             })
             .filter(p => p !== null);
 
+        const enrichedProjectIds = new Set(enrichedProjects.map(p => p.id));
+        const relevantTiebreaks = appliedTiebreaks.filter(tb => enrichedProjectIds.has(tb.projectId));
+
         return {
             items: enrichedProjects,
             courseId,
             eventId,
+            ...(relevantTiebreaks.length > 0 && { tiebreaks: relevantTiebreaks }),
         };
     }
 }
