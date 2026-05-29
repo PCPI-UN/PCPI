@@ -15,9 +15,15 @@ import {
   INVITATION_SERVICE_NAME,
   InvitationServiceClient,
   InvitationStatus,
+  InvitationTargetType,
+  GetEventInvitationsResponse,
 } from '@app/common/generated/invitation';
 export type EventMember = NonNullable<
   ListEventMembersResponse['members']
+>[number];
+
+type EventInvitation = NonNullable<
+  GetEventInvitationsResponse['invitations']
 >[number];
 
 @Injectable()
@@ -45,25 +51,43 @@ export class FetchConfirmedJurorMembersUseCase {
   // I'm making changes just 10 hours before the event while studying for my final networking exam. 
   // The jury members haven't confirmed yet, and we need to assign them to the projects.
   // Pure joy :)
-  async execute(eventId: number): Promise<EventMember[]> {
-    // const [members, acceptedInvitationUserIds] = await Promise.all([
-    //   this.fetchAllEventMembers(eventId),
-    //   this.fetchAcceptedInvitationUserIds(eventId),
-    // ]);
-    const members = await this.fetchAllEventMembers(eventId);
+  // async execute(eventId: number): Promise<EventMember[]> {
+  //   // const [members, acceptedInvitationUserIds] = await Promise.all([
+  //   //   this.fetchAllEventMembers(eventId),
+  //   //   this.fetchAcceptedInvitationUserIds(eventId),
+  //   // ]);
+  //   const members = await this.fetchAllEventMembers(eventId);
 
-    // if (
-    //   !members ||
-    //   members.length === 0 ||
-    //   acceptedInvitationUserIds.size === 0
-    // ) {
-    //   return [];
-    // }
-    if (!members || members.length === 0) {
+  //   // if (
+  //   //   !members ||
+  //   //   members.length === 0 ||
+  //   //   acceptedInvitationUserIds.size === 0
+  //   // ) {
+  //   //   return [];
+  //   // }
+  //   if (!members || members.length === 0) {
+  //     return [];
+  //   }
+
+    async execute(eventId: number): Promise<EventMember[]> {
+    const invitations = await this.fetchAllEventInvitations(eventId);
+
+    if (!invitations || invitations.length === 0) {
       return [];
     }
 
-    const uniqueRoleIds = [...new Set(members.map((m) => m.roleId))];
+    const eventJurorInvitations = invitations.filter(
+      (invitation) => invitation.targetType === InvitationTargetType.EVENT,
+    );
+
+    if (eventJurorInvitations.length === 0) {
+      return [];
+    }
+
+    // const uniqueRoleIds = [...new Set(members.map((m) => m.roleId))];
+    const uniqueRoleIds = [...new Set(
+      eventJurorInvitations.flatMap((invitation) => invitation.roleIds ?? []),
+    )];
     const jurorRoleIds = await this.resolveJurorRoleIds(uniqueRoleIds);
 
     // const result = members.filter(
@@ -72,43 +96,46 @@ export class FetchConfirmedJurorMembersUseCase {
     //     jurorRoleIds.has(member.roleId) &&
     //     acceptedInvitationUserIds.has(member.userId),
     // );
-    const result = members.filter(
-      (member) => member.active && jurorRoleIds.has(member.roleId),
+    // const result = members.filter(
+    //   (member) => member.active && jurorRoleIds.has(member.roleId),
+    // );
+
+    const jurorUserIds = [...new Set(
+      eventJurorInvitations
+        .filter((invitation) =>
+          invitation.invitedUserId > 0 &&
+          invitation.roleIds?.some((roleId) => jurorRoleIds.has(roleId)),
+        )
+        .map((invitation) => invitation.invitedUserId),
+    )];
+
+    if (jurorUserIds.length === 0) {
+      return [];
+    }
+
+    const result = jurorUserIds.map(
+      (userId) =>
+        ({
+          userId,
+          eventId,
+          roleId: uniqueRoleIds[0] ?? 0,
+          active: true,
+          createdAt: '',
+          updatedAt: '',
+        }) as EventMember,
     );
 
     return result;
   }
 
-  private async fetchAllEventMembers(eventId: number) {
+  private async fetchAllEventInvitations(eventId: number) {
     const pageSize = 50;
     let page = 1;
     let totalPages = 1;
-    const members: NonNullable<ListEventMembersResponse['members']> = [];
+    const invitations: EventInvitation[] = [];
 
     do {
       const response = await firstValueFrom(
-        this.eventService.listEventMembers({
-          eventId,
-          page,
-          limit: pageSize,
-        }),
-      );
-      members.push(...(response.members ?? []));
-      totalPages = response.meta?.totalPages ?? 1;
-      page += 1;
-    } while (page <= totalPages);
-
-    return members;
-  }
-
-  private async fetchAcceptedInvitationUserIds(eventId: number) {
-    const pageSize = 50;
-    let page = 1;
-    let totalPages = 1;
-    const accepted = new Set<number>();
-
-    do {
-      const invitationResponse = await firstValueFrom(
         this.invitationService.getEventInvitations({
           eventId,
           page,
@@ -116,21 +143,66 @@ export class FetchConfirmedJurorMembersUseCase {
         }),
       );
 
-      for (const invitation of invitationResponse.invitations ?? []) {
-        if (
-          invitation.status === InvitationStatus.ACCEPTED &&
-          invitation.invitedUserId > 0
-        ) {
-          accepted.add(invitation.invitedUserId);
-        }
-      }
-
-      totalPages = invitationResponse.meta?.totalPages ?? 1;
+      invitations.push(...(response.invitations ?? []));
+      totalPages = response.meta?.totalPages ?? 1;
       page += 1;
     } while (page <= totalPages);
 
-    return accepted;
+    return invitations;
   }
+
+  // private async fetchAllEventMembers(eventId: number) {
+  //   const pageSize = 50;
+  //   let page = 1;
+  //   let totalPages = 1;
+  //   const members: NonNullable<ListEventMembersResponse['members']> = [];
+
+  //   do {
+  //     const response = await firstValueFrom(
+  //       this.eventService.listEventMembers({
+  //         eventId,
+  //         page,
+  //         limit: pageSize,
+  //       }),
+  //     );
+  //     members.push(...(response.members ?? []));
+  //     totalPages = response.meta?.totalPages ?? 1;
+  //     page += 1;
+  //   } while (page <= totalPages);
+
+  //   return members;
+  // }
+
+  // private async fetchAcceptedInvitationUserIds(eventId: number) {
+  //   const pageSize = 50;
+  //   let page = 1;
+  //   let totalPages = 1;
+  //   const accepted = new Set<number>();
+
+  //   do {
+  //     const invitationResponse = await firstValueFrom(
+  //       this.invitationService.getEventInvitations({
+  //         eventId,
+  //         page,
+  //         limit: pageSize,
+  //       }),
+  //     );
+
+  //     for (const invitation of invitationResponse.invitations ?? []) {
+  //       if (
+  //         invitation.status === InvitationStatus.ACCEPTED &&
+  //         invitation.invitedUserId > 0
+  //       ) {
+  //         accepted.add(invitation.invitedUserId);
+  //       }
+  //     }
+
+  //     totalPages = invitationResponse.meta?.totalPages ?? 1;
+  //     page += 1;
+  //   } while (page <= totalPages);
+
+  //   return accepted;
+  // }
 
   private async resolveJurorRoleIds(roleIds: number[]) {
     if (!roleIds || roleIds.length === 0) return new Set<number>();
