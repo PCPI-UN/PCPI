@@ -557,7 +557,7 @@ export class EventService implements OnModuleInit {
 
     const headerRow = worksheet.getRow(1);
     headerRow.height = 20;
-    headerRow.eachCell((cell) => {
+    headerRow.eachCell((cell: ExcelJS.Cell) => {
       cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
       cell.fill = {
         type: 'pattern',
@@ -579,7 +579,7 @@ export class EventService implements OnModuleInit {
 
     for (let rowIndex = 2; rowIndex <= worksheet.rowCount; rowIndex += 1) {
       const row = worksheet.getRow(rowIndex);
-      row.eachCell((cell, columnNumber) => {
+      row.eachCell((cell: ExcelJS.Cell, columnNumber: number) => {
         cell.alignment = {
           horizontal: columnNumber <= 2 ? 'center' : 'left',
           vertical: 'middle',
