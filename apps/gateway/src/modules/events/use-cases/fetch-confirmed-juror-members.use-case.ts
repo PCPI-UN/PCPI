@@ -16,9 +16,6 @@ import {
   InvitationServiceClient,
   InvitationStatus,
 } from '@app/common/generated/invitation';
-
-import { Logger } from '@nestjs/common';
-
 export type EventMember = NonNullable<
   ListEventMembersResponse['members']
 >[number];
@@ -28,8 +25,6 @@ export class FetchConfirmedJurorMembersUseCase {
   private eventService: EventServiceClient;
   private authService: AuthServiceClient;
   private invitationService: InvitationServiceClient;
-  private logger = new Logger(FetchConfirmedJurorMembersUseCase.name);
-
   constructor(
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
@@ -46,28 +41,39 @@ export class FetchConfirmedJurorMembersUseCase {
       );
   }
 
+  // NOTE: The original implementation filtered jury members based on accepted invitations.
+  // I'm making changes just 10 hours before the event while studying for my final networking exam. 
+  // The jury members haven't confirmed yet, and we need to assign them to the projects.
+  // Pure joy :)
   async execute(eventId: number): Promise<EventMember[]> {
-    const [members, acceptedInvitationUserIds] = await Promise.all([
-      this.fetchAllEventMembers(eventId),
-      this.fetchAcceptedInvitationUserIds(eventId),
-    ]);
+    // const [members, acceptedInvitationUserIds] = await Promise.all([
+    //   this.fetchAllEventMembers(eventId),
+    //   this.fetchAcceptedInvitationUserIds(eventId),
+    // ]);
+    const members = await this.fetchAllEventMembers(eventId);
 
-    if (
-      !members ||
-      members.length === 0 ||
-      acceptedInvitationUserIds.size === 0
-    ) {
+    // if (
+    //   !members ||
+    //   members.length === 0 ||
+    //   acceptedInvitationUserIds.size === 0
+    // ) {
+    //   return [];
+    // }
+    if (!members || members.length === 0) {
       return [];
     }
 
     const uniqueRoleIds = [...new Set(members.map((m) => m.roleId))];
     const jurorRoleIds = await this.resolveJurorRoleIds(uniqueRoleIds);
 
+    // const result = members.filter(
+    //   (member) =>
+    //     member.active &&
+    //     jurorRoleIds.has(member.roleId) &&
+    //     acceptedInvitationUserIds.has(member.userId),
+    // );
     const result = members.filter(
-      (member) =>
-        member.active &&
-        jurorRoleIds.has(member.roleId) &&
-        acceptedInvitationUserIds.has(member.userId),
+      (member) => member.active && jurorRoleIds.has(member.roleId),
     );
 
     return result;
