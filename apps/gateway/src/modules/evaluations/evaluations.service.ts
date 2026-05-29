@@ -187,13 +187,7 @@ export class EvaluationsService implements OnModuleInit {
       return { items: [], courseId, eventId };
     }
 
-    console.log(
-      `1. Found ${allProjects.length} projects for course ${courseId} in event ${eventId}`,
-    );
     const projectIds = allProjects.map((p) => p.id);
-    console.log(
-      `2. Project IDs for course ${courseId} in event ${eventId}: ${projectIds.join(', ')}`,
-    );
 
     // 2. Get evaluation statistics for these projects from evaluation service
     const response: GetTopProjectsByCourseResponse = await lastValueFrom(
@@ -220,14 +214,8 @@ export class EvaluationsService implements OnModuleInit {
         this.tieBreakService.listTieBreaks({ eventId, categoryId: courseId }),
       );
       appliedTiebreaks = tiebreaksResponse.tiebreaks ?? [];
-      console.log(
-        `3. Applied tiebreaks: ${appliedTiebreaks.length} for course ${courseId} in event ${eventId}`,
-      );
       const tiebreakMap = new Map<number, number>(
         appliedTiebreaks.map((tb) => [tb.projectId, tb.tiebreakOrder]),
-      );
-      console.log(
-        `4. Tiebreak map for course ${courseId} in event ${eventId}: ${[...tiebreakMap.entries()].map(([pid, order]) => `Project ${pid}: Order ${order}`).join(', ')}`,
       );
       sorted.sort((a, b) => {
         if (b.averageGrade !== a.averageGrade)
@@ -239,14 +227,8 @@ export class EvaluationsService implements OnModuleInit {
       });
     }
 
-    console.log(
-      `5. Sorted projects by average grade${hasTies ? ' with tiebreaks applied' : ''} for course ${courseId} in event ${eventId}`,
-    );
     const tiebreakProjectIds = new Set(
       appliedTiebreaks.map((tb) => tb.projectId),
-    );
-    console.log(
-      `6. Projects with tiebreaks for course ${courseId} in event ${eventId}: ${[...tiebreakProjectIds].join(', ')}`,
     );
 
     const topProjects = sorted.slice(0, limit);
@@ -265,17 +247,8 @@ export class EvaluationsService implements OnModuleInit {
         : [];
 
     // 4. Fetch full project details for the top N and disputed projects in parallel
-    console.log(
-      `7. Fetching full project details for top ${topProjects.length} projects and ${disputedStats.length} disputed projects for course ${courseId} in event ${eventId}`,
-    );
     const topProjectIds = topProjects.map((tp) => tp.projectId);
-    console.log(
-      `8. Top project IDs: ${topProjectIds.join(', ')} for course ${courseId} in event ${eventId}`,
-    );
     const disputedProjectIds = disputedStats.map((dp) => dp.projectId);
-    console.log(
-      `9. Disputed project IDs: ${disputedProjectIds.join(', ')} for course ${courseId} in event ${eventId}`,
-    );
 
     const [projectsResponses, disputedResponses] = await Promise.all([
       Promise.all(
@@ -294,9 +267,6 @@ export class EvaluationsService implements OnModuleInit {
       ),
     ]);
 
-    console.log(
-      `10. Fetched project responses for course ${courseId} in event ${eventId}`,
-    );
     const buildEnrichedProject = (
       tp: { projectId: number; averageGrade: number; evaluationCount: number },
       response: any,
@@ -327,9 +297,6 @@ export class EvaluationsService implements OnModuleInit {
     const enrichedProjects = topProjects
       .map((tp, idx) => buildEnrichedProject(tp, projectsResponses[idx]))
       .filter((p) => p !== null);
-    console.log(
-      `11. Enriched top projects for course ${courseId} in event ${eventId}: ${enrichedProjects.length}`,
-    );
     const disputedProjects = disputedStats
       .map((dp, idx) => buildEnrichedProject(dp, disputedResponses[idx]))
       .filter((p) => p !== null);
@@ -337,9 +304,6 @@ export class EvaluationsService implements OnModuleInit {
     const enrichedProjectIds = new Set(enrichedProjects.map((p) => p.id));
     const relevantTiebreaks = appliedTiebreaks.filter((tb) =>
       enrichedProjectIds.has(tb.projectId),
-    );
-    console.log(
-      `12. Relevant tiebreaks for course ${courseId} in event ${eventId}: ${relevantTiebreaks.length}`,
     );
 
     return {
