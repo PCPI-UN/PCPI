@@ -17,6 +17,8 @@ export interface Event {
   createdByUserId: number;
   location: string;
   locationDetails?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   evaluationType?: EvaluationType | null;
   inscriptionRequirements?: string | null;
   minimumTeamSize?: number | null;

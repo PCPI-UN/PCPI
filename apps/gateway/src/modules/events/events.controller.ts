@@ -258,6 +258,42 @@ export class EventsController {
     return this.eventsService.getEventStatuses();
   }
 
+  /**
+   * PUBLIC ENDPOINT - Get events for AR view
+   * Returns all active events with GPS coordinates for mobile AR display
+   * No authentication required
+   */
+  @Public()
+  @Get('ar')
+  @ApiOperation({
+    summary: 'Get events for AR view',
+    description:
+      'Get all active events with GPS coordinates for augmented reality mobile display',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of events with location data for AR',
+    schema: {
+      example: {
+        events: [
+          {
+            id: 1,
+            name: 'Event Name',
+            description: 'Event Description',
+            start_date: '2026-06-01T10:00:00Z',
+            end_date: '2026-06-01T18:00:00Z',
+            location: 'Venue Name',
+            latitude: 10.3932,
+            longitude: -75.4898,
+          },
+        ],
+      },
+    },
+  })
+  async getEventsForAR() {
+    return this.eventsService.getEventsForAR();
+  }
+
   // =====================
   // EVENT CRUD ENDPOINTS
   // =====================

@@ -136,6 +136,8 @@ import {
   DeleteRankingEventRequest,
   RankingEventResponse,
   DeleteRankingEventResponse,
+  GetEventsForARRequest,
+  GetEventsForARResponse,
 } from '@app/common/generated/event';
 import { CreateRankingEventDTO } from './dto/ranking-event/create-ranking-event.dto';
 import { UpdateRankingEventDTO } from './dto/ranking-event/update-ranking-event.dto';
@@ -641,6 +643,10 @@ export class EventService implements OnModuleInit {
 
   async getDashboardStats() {
     return firstValueFrom(this.eventService.getDashboardStats({}));
+  }
+
+  async getEventsForAR(): Promise<GetEventsForARResponse> {
+    return firstValueFrom(this.eventService.getEventsForAr({} as GetEventsForARRequest));
   }
 
   async createCourse(dto: CreateCourseDTO): Promise<CreateCourseResponse> {

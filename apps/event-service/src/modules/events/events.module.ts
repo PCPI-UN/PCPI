@@ -33,6 +33,7 @@ import { UpdateRankingEventUseCase } from '@events/application/use-cases/ranking
 import { GetRankingEventUseCase } from '@events/application/use-cases/ranking-event/get-ranking-event.use-case';
 import { GetRankingEventByEventIdUseCase } from '@events/application/use-cases/ranking-event/get-ranking-event-by-event-id.use-case';
 import { DeleteRankingEventUseCase } from '@events/application/use-cases/ranking-event/delete-ranking-event.use-case';
+import { GetEventsForARUseCase } from './application/use-cases/get-events-for-ar.use-case';
 
 
 @Module({
@@ -74,6 +75,7 @@ import { DeleteRankingEventUseCase } from '@events/application/use-cases/ranking
     ListMyEventsUseCase,
     GetEventStatusesUC,
     GetEventDashboardStatsUC,
+    GetEventsForARUseCase,
     // Ranking event
     {
       provide: RankingEventRepository,
