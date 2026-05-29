@@ -264,7 +264,7 @@ export class EventsController {
    * No authentication required
    */
   @Public()
-  @Get('ar/events')
+  @Get('ar')
   @ApiOperation({
     summary: 'Get events for AR view',
     description:
