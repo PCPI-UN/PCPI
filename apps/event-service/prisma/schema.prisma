@@ -44,6 +44,8 @@ model Event {
   eventType               eventType       @map("event_type")
   collaborators           String[]        @db.VarChar(255)
   organizers              String[]        @db.VarChar(255)
+  latitude                Float?
+  longitude               Float?
   createdAt               DateTime        @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt               DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
 

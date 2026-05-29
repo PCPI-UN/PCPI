@@ -42,6 +42,8 @@ export class EventMapper {
       status: status as PbEventStatus,
       inscriptionCost: e.inscriptionCost ?? 0,
       locationDetails: e.locationDetails ?? '',
+      latitude: e.latitude ?? 0,
+      longitude: e.longitude ?? 0,
       eventType: e.eventType ?? EventType.EVENT_TYPE_UNSPECIFIED,
       collaborators: e.collaborators ?? [],
       organizers: e.organizers ?? [],
@@ -171,6 +173,21 @@ export class EventMapper {
     return {
       events: eventProtos,
       meta,
+    };
+  }
+
+  static toGetEventsForARResponse(events: any[]): { events: any[] } {
+    return {
+      events: events.map((e) => ({
+        id:          e.id,
+        name:        e.name,
+        description: e.description ?? '',
+        startDate:   e.startDate instanceof Date ? e.startDate.toISOString() : e.startDate,
+        endDate:     e.endDate   instanceof Date ? e.endDate.toISOString()   : e.endDate,
+        location:    e.location  ?? '',
+        latitude:    e.latitude  ?? 0,
+        longitude:   e.longitude ?? 0,
+      })),
     };
   }
 }
