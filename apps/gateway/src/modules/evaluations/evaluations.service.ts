@@ -230,14 +230,14 @@ export class EvaluationsService implements OnModuleInit {
     const tiebreakProjectIds = new Set(
       appliedTiebreaks.map((tb) => tb.projectId),
     );
-
-    const topProjects = sorted.slice(0, limit);
+    const sizeReal = limit || sorted.length;
+    const topProjects = sorted.slice(0, sizeReal);
 
     // Detect disputed: projects outside the limit tied with the last position and without a tiebreak record
     const disputedStats =
       topProjects.length > 0
         ? sorted
-            .slice(limit)
+            .slice(sizeReal)
             .filter(
               (p) =>
                 p.averageGrade ===
