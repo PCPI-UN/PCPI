@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, ParseIntPipe, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Param, ParseIntPipe, DefaultValuePipe, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiSecurity, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { EvaluationsService } from './evaluations.service';
 import { EvaluateProjectDto } from './dto/evaluate-project.dto';
@@ -77,9 +77,9 @@ export class EvaluationsController {
     @RequirePermission('manage:events')
     @Get('courses/:courseId/top-projects')
     @ApiOperation({
-        summary: 'Get top 5 projects for a course',
+        summary: 'Get top N projects for a course',
         description:
-            'Returns the top 5 projects for a specific course within an event, ranked by average evaluation grade. ' +
+            'Returns the top N projects for a specific course within an event, ranked by average evaluation grade. ' +
             'Each project includes complete project details along with average grade and evaluation count.',
     })
     @ApiParam({
@@ -93,6 +93,12 @@ export class EvaluationsController {
         example: 1,
         required: true,
     })
+    @ApiQuery({
+        name: 'limit',
+        description: 'Number of top projects to return',
+        example: 5,
+        required: false,
+    })
     @ApiResponse({
         status: 200,
         description: 'Top projects retrieved successfully',
@@ -104,8 +110,9 @@ export class EvaluationsController {
     async getTopProjectsByCourse(
         @Param('courseId', ParseIntPipe) courseId: number,
         @Query('eventId', ParseIntPipe) eventId: number,
+        @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
     ) {
-        return this.evaluationsService.getTopProjectsByCourse(courseId, eventId);
+        return this.evaluationsService.getTopProjectsByCourse(courseId, eventId, limit);
     }
 
 }
