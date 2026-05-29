@@ -129,7 +129,16 @@ import {
   ListEventRecapsResponse,
   DeleteEventRecapRequest,
   DeleteEventRecapResponse,
+  CreateRankingEventRequest,
+  UpdateRankingEventRequest,
+  GetRankingEventRequest,
+  GetRankingEventByEventIdRequest,
+  DeleteRankingEventRequest,
+  RankingEventResponse,
+  DeleteRankingEventResponse,
 } from '@app/common/generated/event';
+import { CreateRankingEventDTO } from './dto/ranking-event/create-ranking-event.dto';
+import { UpdateRankingEventDTO } from './dto/ranking-event/update-ranking-event.dto';
 
 @Injectable()
 export class EventService implements OnModuleInit {
@@ -908,6 +917,36 @@ export class EventService implements OnModuleInit {
   async deleteEventRecap(id: number): Promise<DeleteEventRecapResponse> {
     return firstValueFrom(
       this.eventService.deleteEventRecap({ id } as DeleteEventRecapRequest),
+    );
+  }
+
+  async createRankingEvent(dto: CreateRankingEventDTO): Promise<RankingEventResponse> {
+    return firstValueFrom(
+      this.eventService.createRankingEvent(dto as CreateRankingEventRequest),
+    );
+  }
+
+  async updateRankingEvent(id: number, dto: UpdateRankingEventDTO): Promise<RankingEventResponse> {
+    return firstValueFrom(
+      this.eventService.updateRankingEvent({ ...dto, id } as UpdateRankingEventRequest),
+    );
+  }
+
+  async getRankingEvent(id: number): Promise<RankingEventResponse> {
+    return firstValueFrom(
+      this.eventService.getRankingEvent({ id } as GetRankingEventRequest),
+    );
+  }
+
+  async getRankingEventByEventId(eventId: number): Promise<RankingEventResponse> {
+    return firstValueFrom(
+      this.eventService.getRankingEventByEventId({ eventId } as GetRankingEventByEventIdRequest),
+    );
+  }
+
+  async deleteRankingEvent(id: number): Promise<DeleteRankingEventResponse> {
+    return firstValueFrom(
+      this.eventService.deleteRankingEvent({ id } as DeleteRankingEventRequest),
     );
   }
 

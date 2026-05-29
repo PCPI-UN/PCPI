@@ -12,9 +12,8 @@ export class CreateComponentUseCase {
   ) {}
 
   async execute(createComponentDto: CreateComponentDto): Promise<Component> {
-    const { name, weight } = createComponentDto;
+    const { name, weight, eventId } = createComponentDto;
 
-    // Validate name is not empty
     if (!name || name.trim().length === 0) {
       throw new RpcException({
         code: status.INVALID_ARGUMENT,
@@ -22,7 +21,6 @@ export class CreateComponentUseCase {
       });
     }
 
-    // Validate weight is within valid range
     if (weight < 0 || weight > 1) {
       throw new RpcException({
         code: status.INVALID_ARGUMENT,
@@ -30,6 +28,6 @@ export class CreateComponentUseCase {
       });
     }
 
-    return await this.criterionRepository.createComponent(name, weight);
+    return await this.criterionRepository.createComponent(name, weight, eventId);
   }
 }

@@ -247,11 +247,13 @@ message ComponentProto {
   int32 id = 1;
   string name = 2;
   double weight = 3;
+  optional int32 eventId = 4;
 }
 
 message CreateComponentRequest {
   string name = 1;
   double weight = 2;
+  optional int32 eventId = 3;
 }
 
 message GetComponentRequest {
@@ -278,4 +280,61 @@ message GetEvaluationDashboardStatsRequest {}
 
 message GetEvaluationDashboardStatsResponse {
   int32 evaluations = 1;
+}
+
+// ===== TIEBREAK SERVICE =====
+
+service TieBreakService {
+  rpc CreateTieBreak (CreateTieBreakRequest) returns (TieBreakProto) {}
+  rpc GetTieBreak (GetTieBreakRequest) returns (TieBreakProto) {}
+  rpc ListTieBreaks (ListTieBreaksRequest) returns (ListTieBreaksResponse) {}
+  rpc UpdateTieBreak (UpdateTieBreakRequest) returns (TieBreakProto) {}
+  rpc DeleteTieBreak (DeleteTieBreakRequest) returns (DeleteTieBreakResponse) {}
+}
+
+message TieBreakProto {
+  int32 id = 1;
+  int32 projectId = 2;
+  int32 eventId = 3;
+  int32 categoryId = 4;
+  int32 tiebreakOrder = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+message CreateTieBreakRequest {
+  int32 projectId = 1;
+  int32 eventId = 2;
+  int32 categoryId = 3;
+  int32 tiebreakOrder = 4;
+}
+
+message GetTieBreakRequest {
+  int32 id = 1;
+}
+
+message ListTieBreaksRequest {
+  optional int32 eventId = 1;
+  optional int32 categoryId = 2;
+  optional int32 projectId = 3;
+}
+
+message ListTieBreaksResponse {
+  repeated TieBreakProto tiebreaks = 1;
+}
+
+message UpdateTieBreakRequest {
+  int32 id = 1;
+  optional int32 tiebreakOrder = 2;
+  optional int32 projectId = 3;
+  optional int32 categoryId = 4;
+}
+
+message DeleteTieBreakRequest {
+  int32 id = 1;
+}
+
+message DeleteTieBreakResponse {
+  bool success = 1;
+  string message = 2;
 }

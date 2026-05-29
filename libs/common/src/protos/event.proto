@@ -66,6 +66,13 @@ service EventService {
   rpc GetEventRecap (GetEventRecapRequest) returns (GetEventRecapResponse) {}
   rpc ListEventRecaps (ListEventRecapsRequest) returns (ListEventRecapsResponse) {}
   rpc DeleteEventRecap (DeleteEventRecapRequest) returns (DeleteEventRecapResponse) {}
+
+  // ---- RANKING EVENT ----
+  rpc CreateRankingEvent (CreateRankingEventRequest) returns (RankingEventResponse) {}
+  rpc UpdateRankingEvent (UpdateRankingEventRequest) returns (RankingEventResponse) {}
+  rpc GetRankingEvent (GetRankingEventRequest) returns (RankingEventResponse) {}
+  rpc GetRankingEventByEventId (GetRankingEventByEventIdRequest) returns (RankingEventResponse) {}
+  rpc DeleteRankingEvent (DeleteRankingEventRequest) returns (DeleteRankingEventResponse) {}
 }
 
 // =====================
@@ -750,5 +757,52 @@ message DeleteEventRecapRequest {
 }
 
 message DeleteEventRecapResponse {
+  bool ok = 1;
+}
+
+// =====================
+//     RANKING EVENT
+// =====================
+message RankingEventProto {
+  int32 id = 1;
+  int32 eventId = 2;
+  bool visiblePublic = 3;
+  int32 positions = 4;
+  bool gradeVisible = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+message RankingEventResponse {
+  RankingEventProto rankingEvent = 1;
+}
+
+message CreateRankingEventRequest {
+  int32 eventId = 1;
+  int32 positions = 2;
+  optional bool visiblePublic = 3;
+  optional bool gradeVisible = 4;
+}
+
+message UpdateRankingEventRequest {
+  int32 id = 1;
+  optional int32 positions = 2;
+  optional bool visiblePublic = 3;
+  optional bool gradeVisible = 4;
+}
+
+message GetRankingEventRequest {
+  int32 id = 1;
+}
+
+message GetRankingEventByEventIdRequest {
+  int32 eventId = 1;
+}
+
+message DeleteRankingEventRequest {
+  int32 id = 1;
+}
+
+message DeleteRankingEventResponse {
   bool ok = 1;
 }

@@ -11,6 +11,8 @@ import {
   UseInterceptors,
   Get,
   Query,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   FileFieldsInterceptor,
@@ -46,6 +48,7 @@ import { ListProjectsAssignedToJurorDto } from './dto/list-projects-assigned-to-
 import { AddProjectDocumentsMultipartDto } from './dto/add-project-files-multipart.dto';
 import { RequestChangesProjectDto } from './dto/request-changes-project.dto';
 import { UpdateProjectInfoDto } from './dto/update-project-info.dto';
+import { UpdateProjectCodeDto } from './dto/update-project-code.dto';
 import { ApproveProjectDto } from './dto/approve-project.dto';
 
 @ApiTags('projects')
@@ -526,6 +529,50 @@ export class ProjectsController {
       updateProjectInfoDto.name,
       updateProjectInfoDto.description,
     );
+  }
+
+  @Patch(':id/code')
+  @ApiOperation({
+    summary: 'Update project code',
+    description:
+      'Updates the project code. Only allowed when the project is in REQUEST_CHANGES state and the user is a participant of the project.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Project ID',
+    example: 1,
+  })
+  @ApiBody({
+    description: 'Project code to update',
+    type: UpdateProjectCodeDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Project code updated successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data or project is not in REQUEST_CHANGES state',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a participant of the project',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async updateProjectCode(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProjectCodeDto: UpdateProjectCodeDto,
+    @GetUser() user: AppUser,
+  ) {
+    await this.projectsService.updateProjectCode(
+      id,
+      updateProjectCodeDto.projectCode,
+      user.id,
+    );
+    return { message: 'Project code updated successfully' };
   }
 
   @Get(':id/jurors')

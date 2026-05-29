@@ -5,6 +5,7 @@ import { join } from 'path';
 import {
   EVALUATION_SERVICE_NAME,
   CRITERIONS_SERVICE_NAME,
+  TIE_BREAK_SERVICE_NAME,
   protobufPackage as evaluationProtobufPackage,
 } from '@app/common/generated/evaluation';
 import {
@@ -35,6 +36,22 @@ import { EvaluationsService } from './evaluations.service';
       },
       {
         name: CRITERIONS_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: evaluationProtobufPackage,
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/evaluation.proto',
+            ),
+            url: configService.get<string>('EVALUATION_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: TIE_BREAK_SERVICE_NAME,
         imports: [ConfigModule],
         useFactory: (configService: ConfigService) => ({
           transport: Transport.GRPC,

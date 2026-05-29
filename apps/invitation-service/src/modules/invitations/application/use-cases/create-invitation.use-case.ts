@@ -204,7 +204,6 @@ export class CreateInvitationUseCase {
     else // The user already exist and therefore they can accept invitations in the dashboard
       invitationLink = `${frontendUrl}/app/invitations`;
 
-
     await this.sendInvitationEmail({
       targetType: rest.targetType,
       eventType,

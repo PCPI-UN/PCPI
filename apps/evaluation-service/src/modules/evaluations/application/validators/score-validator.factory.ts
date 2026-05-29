@@ -3,6 +3,7 @@ import { EvaluationType } from '../../../../common/constants/evaluation-type.con
 import { ScoreValidator } from '../../domain/ports/score-validator.port';
 import { FinalProjectsScoreValidator } from './final-projects-score.validator';
 import { ZeroToFiveScoreValidator } from './zero-to-five-score.validator';
+import { ZeroToHundredScoreValidator } from './zero-to-hundred-score.validator';
 
 export class ScoreValidatorFactory {
   static create(evaluationType: EvaluationType): ScoreValidator {
@@ -15,9 +16,7 @@ export class ScoreValidatorFactory {
         return new ZeroToFiveScoreValidator();
 
       case EvaluationType.ZERO_TO_HUNDRED:
-        throw new BadRequestException(
-          `Evaluation type ${evaluationType} is not implemented yet.`,
-        );
+        return new ZeroToHundredScoreValidator();
 
       default:
         throw new BadRequestException(

@@ -53,6 +53,7 @@ model Event {
   categories              Category[]
   eventInscriptionDetails EventInscriptionDetail[]
   eventRecaps             EventRecap[]
+  rankingEvent            RankingEvent?
 
   @@map("event")
 }
@@ -165,4 +166,23 @@ model AwardWinnerEvent {
   award AwardCategoryEvent @relation(fields: [awardId], references: [id])
 
   @@map("award_winners")
+}
+
+// Ranking display configuration for a competition event.
+// Controls visibility and how many positions are shown in the public ranking.
+// Specific detail:
+// - `eventId` references event.id within this service (FK enforced at DB level).
+// - `positions` is constrained to >= 0 via a DB check constraint.
+model RankingEvent {
+  id            Int      @id @default(autoincrement())
+  eventId       Int      @unique @map("event_id")
+  visiblePublic Boolean  @default(false) @map("visible_public")
+  positions     Int
+  gradeVisible  Boolean  @default(false) @map("grade_visible")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@map("ranking_event")
 }

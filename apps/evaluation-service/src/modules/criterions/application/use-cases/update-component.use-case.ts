@@ -44,6 +44,7 @@ export class UpdateComponentUseCase {
       id,
       name ?? existingComponent.name,
       weight ?? existingComponent.weight,
+      'eventId' in updateComponentDto ? updateComponentDto.eventId : existingComponent.eventId,
     );
 
     return await this.criterionRepository.updateComponent(updatedComponent);

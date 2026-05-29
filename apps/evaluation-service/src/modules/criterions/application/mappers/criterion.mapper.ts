@@ -23,7 +23,7 @@ export class CriterionMapper {
       courseIds: result.courseIds,
       ...(result.criterion.description && { description: result.criterion.description }),
       ...(result.criterion.category && { category: result.criterion.category }),
-      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight } }),
+      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight, ...(result.component.eventId != null && { eventId: result.component.eventId }) } }),
     };
   }
 
@@ -39,7 +39,7 @@ export class CriterionMapper {
       active: result.criterion.active,
       courseIds: result.courseIds,
       ...(result.criterion.category && { category: result.criterion.category }),
-      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight } }),
+      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight, ...(result.component.eventId != null && { eventId: result.component.eventId }) } }),
     };
   }
 
@@ -55,7 +55,7 @@ export class CriterionMapper {
       active: result.criterion.active,
       courseIds: result.courseIds,
       ...(result.criterion.category && { category: result.criterion.category }),
-      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight } }),
+      ...(result.component && { component: { id: result.component.id, name: result.component.name, weight: result.component.weight, ...(result.component.eventId != null && { eventId: result.component.eventId }) } }),
     };
   }
 
@@ -86,7 +86,7 @@ export class CriterionMapper {
         active: criterion.active,
         courseIds,
         ...(criterion.category && { category: criterion.category }),
-        ...(component && { component: { id: component.id, name: component.name, weight: component.weight } }),
+        ...(component && { component: { id: component.id, name: component.name, weight: component.weight, ...(component.eventId != null && { eventId: component.eventId }) } }),
       })),
       meta,
     };

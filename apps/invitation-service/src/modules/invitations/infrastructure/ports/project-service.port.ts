@@ -1,6 +1,7 @@
 import type {
   Project,
   AddParticipantResponse,
+  PendingProjectParticipant,
 } from '@app/common/generated/project';
 
 export abstract class ProjectServicePort {
@@ -23,4 +24,14 @@ export abstract class ProjectServicePort {
     userId: number;
     studentCode: string;
   }): Promise<AddParticipantResponse>;
+
+  /**
+   * Retrieves the pending participants for a project.
+   *
+   * @param projectId - The project ID
+   * @returns The list of pending participants
+   */
+  abstract listPendingParticipants(
+    projectId: number,
+  ): Promise<PendingProjectParticipant[]>;
 }
