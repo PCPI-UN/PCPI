@@ -799,7 +799,7 @@ export class EventsController {
   }
 
   @RequirePermission('manage:events')
-  @Patch('ranking-config/:id')
+  @Patch('update-ranking-config/:id')
   @ApiOperation({ summary: 'Update ranking configuration' })
   @ApiParam({ name: 'id', description: 'Ranking config ID', type: Number })
   @ApiResponse({ status: 200, description: 'Ranking configuration updated' })
