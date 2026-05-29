@@ -36,4 +36,6 @@ export abstract class EventRepository {
     events: Array<DomainEvent & { userEventRoleId?: number }>;
     total: number;
   }>;
+
+  abstract findActiveWithCoordinates(): Promise<DomainEvent[]>;
 }

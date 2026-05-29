@@ -15,6 +15,7 @@ service EventService {
   rpc ListEvents (ListEventsRequest) returns (ListEventsResponse) {}
   rpc GetEventStatuses (GetEventStatusesRequest) returns (GetEventStatusesResponse) {}
   rpc GetDashboardStats (GetEventDashboardStatsRequest) returns (GetEventDashboardStatsResponse) {}
+  rpc GetEventsForAR (GetEventsForARRequest) returns (GetEventsForARResponse);
 
   // ---- EVENT MEMBERS ----
   rpc CreateEventMember (CreateEventMemberRequest) returns (CreateEventMemberResponse) {}
@@ -140,6 +141,8 @@ message EventProto {
   string inscriptionRequirements = 22;
   int32 minimumTeamSize = 23;
   string aboutOurAllies = 24;
+  optional double latitude = 25;
+  optional double longitude = 26;
 }
 
 message CreateEventRequest {
@@ -280,6 +283,23 @@ message GetEventDashboardStatsRequest {}
 
 message GetEventDashboardStatsResponse {
   int32 activeEvents = 1;
+}
+
+message GetEventsForARRequest {}
+
+message EventArItem {
+  int32  id          = 1;
+  string name        = 2;
+  string description = 3;
+  string start_date  = 4;
+  string end_date    = 5;
+  string location    = 6;
+  double latitude    = 7;
+  double longitude   = 8;
+}
+
+message GetEventsForARResponse {
+  repeated EventArItem events = 1;
 }
 
 // =====================
