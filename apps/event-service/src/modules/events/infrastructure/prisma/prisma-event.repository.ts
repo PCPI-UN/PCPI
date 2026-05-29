@@ -78,6 +78,8 @@ function toDomainEvent(p: any): DomainEvent {
     createdByUserId: p.createdByUserId,
     location: p.location,
     locationDetails: p.locationDetails ?? null,
+    latitude: p.latitude ?? null,
+    longitude: p.longitude ?? null,
     evaluationType: toProtoEvaluationType(p.evaluationType),
     inscriptionRequirements: p.inscriptionRequirements ?? null,
     minimumTeamSize: p.minimumTeamSize ?? null,
@@ -193,6 +195,8 @@ export class PrismaEventRepository extends EventRepository {
       endDate: input.endDate,
       location: input.location,
       locationDetails: input.locationDetails ?? null,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
       evaluationType: toPrismaEvaluationType(input.evaluationType),
       inscriptionRequirements: input.inscriptionRequirements ?? null,
       minimumTeamSize: input.minimumTeamSize ?? null,
@@ -248,6 +252,8 @@ export class PrismaEventRepository extends EventRepository {
       endDate: input.endDate,
       location: input.location,
       locationDetails: input.locationDetails,
+      latitude: input.latitude,
+      longitude: input.longitude,
       evaluationType:
         input.evaluationType !== undefined
           ? toPrismaEvaluationType(input.evaluationType)
@@ -461,6 +467,18 @@ export class PrismaEventRepository extends EventRepository {
     return this.prisma.event.count({
       where: { active: true },
     });
+  }
+
+  async findActiveWithCoordinates(): Promise<DomainEvent[]> {
+    const rows = await this.prisma.event.findMany({
+      where: {
+        active: true,
+        latitude:  { not: null },
+        longitude: { not: null },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+    return rows.map(toDomainEvent);
   }
 
 

@@ -16,6 +16,7 @@ import { DeleteEventDTO } from '@events/application/dto/delete-event.dto';
 import { ListMyEventsDto } from '@events/application/dto/list-my-events.dto';
 import { ListEventsDTO } from '@events/application/dto/list-events.dto';
 import { GetEventDashboardStatsUC } from '../../application/use-cases/get-dashboard-stats.uc';
+import { GetEventsForARUseCase } from '../../application/use-cases/get-events-for-ar.use-case';
 
 @Controller()
 export class EventsController {
@@ -28,6 +29,7 @@ export class EventsController {
     private readonly listEventsUC: ListEventsUC,
     private readonly getEventStatusesUC: GetEventStatusesUC,
     private readonly getDashboardStatsUC: GetEventDashboardStatsUC,
+    private readonly getEventsForARUC: GetEventsForARUseCase,
   ) { }
 
   @GrpcMethod(EVENT_SERVICE_NAME, 'CreateEvent')
@@ -76,4 +78,9 @@ export class EventsController {
     return this.getDashboardStatsUC.execute();
   }
 
+  @GrpcMethod(EVENT_SERVICE_NAME, 'GetEventsForAR')
+  async getEventsForAR(_request: any) {
+    const events = await this.getEventsForARUC.execute();
+    return EventMapper.toGetEventsForARResponse(events);
+  }
 }
