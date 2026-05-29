@@ -9,11 +9,13 @@ import {
   Query,
   ParseIntPipe,
   ForbiddenException,
+  Res,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
   ApiSecurity,
@@ -61,12 +63,39 @@ import {
 } from './dto/event-catalog.dto';
 import { CreateRankingEventDTO } from './dto/ranking-event/create-ranking-event.dto';
 import { UpdateRankingEventDTO } from './dto/ranking-event/update-ranking-event.dto';
+import {
+  GetRankingReportDto,
+  RankingReportFormat,
+} from './dto/ranking-report/get-ranking-report.dto';
+import { Response } from 'express';
+import { RankingReportResult } from './events.service';
 
 @ApiTags('events')
 @ApiSecurity('JWT-auth')
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventService) {}
+
+  private normalizeFilePart(value: string): string {
+    const normalized = value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+    return normalized || 'general';
+  }
+
+  private buildRankingFileName(
+    report: RankingReportResult,
+    scope: 'admin' | 'public',
+  ): string {
+    const categoryName =
+      report.items[0]?.category || (report.categoryId ? `categoria_${report.categoryId}` : 'general');
+
+    return `ranking_${this.normalizeFilePart(categoryName)}_${this.normalizeFilePart(report.eventName)}_${scope}.xlsx`;
+  }
 
   // =====================
   // EVENT LISTING ENDPOINTS
@@ -169,6 +198,24 @@ export class EventsController {
   @ApiResponse({
     status: 401,
     description: 'Unauthorized - Authentication required',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error - query parameters are out of range or malformed',
+    content: {
+      'application/json': {
+        examples: {
+          limitTooHigh: {
+            summary: 'limit exceeds the allowed maximum',
+            value: {
+              statusCode: 400,
+              message: 'Validation failed: limit: limit must not be greater than 50',
+              timestamp: '2026-05-29T00:18:18.737Z',
+            },
+          },
+        },
+      },
+    },
   })
   async listMyEvents(
     @GetUser('id') userId: number,
@@ -772,6 +819,296 @@ export class EventsController {
   @ApiResponse({ status: 404, description: 'Ranking configuration not found' })
   async deleteRankingEvent(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.deleteRankingEvent(id);
+  }
+
+  @RequirePermission('manage:events')
+  @Get(':eventId/rankings')
+  @ApiOperation({
+    summary: 'Get full ranking report (admin)',
+    description:
+      'Returns full ranking report for an event with optional category filter in json or excel format.',
+  })
+  @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: Number,
+    description: 'Optional category (degree/course) filter',
+    example: 3,
+  })
+  @ApiQuery({
+    name: 'category_id',
+    required: false,
+    type: Number,
+    description: 'Alias for categoryId',
+    example: 3,
+  })
+  @ApiQuery({
+    name: 'format',
+    required: false,
+    enum: RankingReportFormat,
+    description: 'Response format. Use excel for downloadable XLSX file',
+    example: RankingReportFormat.JSON,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Ranking report generated (JSON)',
+    content: {
+      'application/json': {
+        examples: {
+          adminRankingJson: {
+            summary: 'Admin JSON response',
+            value: {
+              eventId: 10,
+              eventName: 'Hackathon 2026',
+              scope: 'admin',
+              categoryId: 3,
+              configuration: {
+                visiblePublic: true,
+                positions: 10,
+                gradeVisible: true,
+              },
+              items: [
+                {
+                  projectId: 42,
+                  projectName: 'EcoVision',
+                  participantNames: ['Ana Perez', 'Luis Ramos'],
+                  categoryId: 3,
+                  category: 'Ingenieria de Sistemas',
+                  position: 1,
+                  individualGrades: [19.2, 18.7, 19.8],
+                  averageGrade: 19.23,
+                },
+                {
+                  projectId: 51,
+                  projectName: 'CivicFlow',
+                  participantNames: ['Maria Soto', 'Diego Leon'],
+                  categoryId: 3,
+                  category: 'Ingenieria de Sistemas',
+                  position: 2,
+                  individualGrades: [18.4, 18.8, 18.5],
+                  averageGrade: 18.57,
+                },
+              ],
+            },
+          },
+        },
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+    headers: {
+      'Content-Disposition': {
+        description:
+          'Present when format=excel. Example: attachment; filename="ranking-event-10-admin.xlsx"',
+        schema: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  /**
+   * Admin ranking report endpoint.
+   *
+   * Behavior:
+   * - Requires admin-level permission.
+   * - Returns full ranking rows without public visibility restrictions.
+   * - Supports JSON payload or downloadable XLSX output.
+   */
+  async getAdminRankingReport(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() query: GetRankingReportDto,
+    @Res() response: Response,
+  ) {
+    const report = await this.eventsService.generateRankingReport(
+      eventId,
+      query,
+      'admin',
+    );
+
+    if (query.format === RankingReportFormat.EXCEL) {
+      const buffer = await this.eventsService.generateRankingExcelBuffer(report);
+      const fileName = this.buildRankingFileName(report, 'admin');
+
+      response.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      response.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${fileName}"`,
+      );
+      response.send(buffer);
+      return;
+    }
+
+    response.json(report);
+  }
+
+  @Public()
+  @Get(':eventId/rankings/public')
+  @ApiOperation({
+    summary: 'Get public ranking report',
+    description:
+      'Returns public ranking report, respecting ranking visibility, positions limit, and grade visibility in json or excel format.',
+  })
+  @ApiParam({ name: 'eventId', description: 'Event ID', type: Number })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: Number,
+    description: 'Optional category (degree/course) filter',
+    example: 3,
+  })
+  @ApiQuery({
+    name: 'category_id',
+    required: false,
+    type: Number,
+    description: 'Alias for categoryId',
+    example: 3,
+  })
+  @ApiQuery({
+    name: 'format',
+    required: false,
+    enum: RankingReportFormat,
+    description: 'Response format. Use excel for downloadable XLSX file',
+    example: RankingReportFormat.JSON,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Public ranking report generated (JSON or Excel)',
+    content: {
+      'application/json': {
+        examples: {
+          publicRankingJsonVisibleGrades: {
+            summary: 'Public JSON (grades visible)',
+            value: {
+              eventId: 10,
+              eventName: 'Hackathon 2026',
+              scope: 'public',
+              categoryId: 3,
+              configuration: {
+                visiblePublic: true,
+                positions: 3,
+                gradeVisible: true,
+              },
+              items: [
+                {
+                  projectId: 42,
+                  projectName: 'EcoVision',
+                  participantNames: ['Ana Perez', 'Luis Ramos'],
+                  categoryId: 3,
+                  category: 'Ingenieria de Sistemas',
+                  position: 1,
+                  individualGrades: [19.2, 18.7, 19.8],
+                  averageGrade: 19.23,
+                },
+                {
+                  projectId: 51,
+                  projectName: 'CivicFlow',
+                  participantNames: ['Maria Soto', 'Diego Leon'],
+                  categoryId: 3,
+                  category: 'Ingenieria de Sistemas',
+                  position: 2,
+                  individualGrades: [18.4, 18.8, 18.5],
+                  averageGrade: 18.57,
+                },
+              ],
+            },
+          },
+          publicRankingJsonHiddenGrades: {
+            summary: 'Public JSON (grades hidden)',
+            value: {
+              eventId: 10,
+              eventName: 'Hackathon 2026',
+              scope: 'public',
+              categoryId: 3,
+              configuration: {
+                visiblePublic: true,
+                positions: 3,
+                gradeVisible: false,
+              },
+              items: [
+                {
+                  projectId: 42,
+                  projectName: 'EcoVision',
+                  participantNames: ['Ana Perez', 'Luis Ramos'],
+                  categoryId: 3,
+                  category: 'Ingenieria de Sistemas',
+                  position: 1,
+                },
+                {
+                  projectId: 51,
+                  projectName: 'CivicFlow',
+                  participantNames: ['Maria Soto', 'Diego Leon'],
+                  categoryId: 3,
+                  category: 'Ingenieria de Sistemas',
+                  position: 2,
+                },
+              ],
+            },
+          },
+        },
+      },
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+    headers: {
+      'Content-Disposition': {
+        description:
+          'Present when format=excel. Example: attachment; filename="ranking-event-10-public.xlsx"',
+        schema: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 403, description: 'Public ranking is not enabled' })
+  /**
+   * Public ranking report endpoint.
+   *
+   * Behavior:
+   * - Anonymous access is allowed.
+   * - Enforces RankingConfiguration visibility rules.
+   * - Applies position limits and grade visibility before responding.
+   * - Supports JSON payload or downloadable XLSX output.
+   */
+  async getPublicRankingReport(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @Query() query: GetRankingReportDto,
+    @Res() response: Response,
+  ) {
+    const report = await this.eventsService.generateRankingReport(
+      eventId,
+      query,
+      'public',
+    );
+
+    if (query.format === RankingReportFormat.EXCEL) {
+      const buffer = await this.eventsService.generateRankingExcelBuffer(report);
+      const fileName = this.buildRankingFileName(report, 'public');
+
+      response.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      response.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${fileName}"`,
+      );
+      response.send(buffer);
+      return;
+    }
+
+    response.json(report);
   }
 
   @Get(':id/my-project')

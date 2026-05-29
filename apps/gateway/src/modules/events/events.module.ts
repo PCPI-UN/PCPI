@@ -17,11 +17,23 @@ import {
   INVITATION_SERVICE_NAME,
   protobufPackage as invitationProtobufPackage,
 } from '@app/common/generated/invitation';
+import {
+  EVALUATION_SERVICE_NAME,
+  protobufPackage as evaluationProtobufPackage,
+} from '@app/common/generated/evaluation';
 import { FetchConfirmedJurorMembersUseCase } from './use-cases/fetch-confirmed-juror-members.use-case';
 import { FetchJurorUsersUseCase } from './use-cases/fetch-juror-users.use-case';
 import { FetchJurorAssignedProjectsUseCase } from './use-cases/fetch-juror-assigned-projects.use-case';
 import { ListConfirmedJurorsByEventUseCase } from './use-cases/list-confirmed-jurors-by-event.use-case';
 
+/**
+ * Events module composition.
+ *
+ * Ranking report support requires:
+ * - event-service for event metadata and ranking configuration.
+ * - evaluation-service for project stats and tie-break records.
+ * - project-service (via ProjectsModule) for project + participant data.
+ */
 @Module({
   imports: [
     ClientsModule.registerAsync([
@@ -66,6 +78,22 @@ import { ListConfirmedJurorsByEventUseCase } from './use-cases/list-confirmed-ju
               'libs/common/src/protos/invitation.proto',
             ),
             url: configService.get<string>('INVITATION_SERVICE_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: EVALUATION_SERVICE_NAME,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: evaluationProtobufPackage,
+            protoPath: join(
+              process.cwd(),
+              'libs/common/src/protos/evaluation.proto',
+            ),
+            url: configService.get<string>('EVALUATION_SERVICE_URL'),
           },
         }),
         inject: [ConfigService],

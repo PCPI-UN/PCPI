@@ -1,11 +1,13 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Inject,
   OnModuleInit,
 } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import * as ExcelJS from 'exceljs';
 import { CreateEventDTO } from './dto/events/create-event.dto';
 import { DeleteEventDTO } from './dto/events/delete-event.dto';
 import { GetEventDTO } from './dto/events/get-event.dto';
@@ -139,17 +141,73 @@ import {
 } from '@app/common/generated/event';
 import { CreateRankingEventDTO } from './dto/ranking-event/create-ranking-event.dto';
 import { UpdateRankingEventDTO } from './dto/ranking-event/update-ranking-event.dto';
+import {
+  EVALUATION_SERVICE_NAME,
+  EvaluationServiceClient,
+  TIE_BREAK_SERVICE_NAME,
+  TieBreakServiceClient,
+} from '@app/common/generated/evaluation';
+import { ProjectComplete } from '@app/common/generated/project';
+import {
+  GetRankingReportDto,
+  RankingReportFormat,
+} from './dto/ranking-report/get-ranking-report.dto';
+
+type RankingScope = 'admin' | 'public';
+
+/**
+ * Internal normalized row used while building and sorting ranking data.
+ */
+interface RankingReportRow {
+  projectId: number;
+  projectName: string;
+  projectCode?: string;
+  participantNames: string[];
+  categoryId: number;
+  category: string;
+  position: number;
+  individualGrades: number[];
+  averageGrade: number;
+  tieBreakOrder?: number;
+}
+
+export interface RankingReportResult {
+  eventId: number;
+  eventName: string;
+  scope: RankingScope;
+  categoryId?: number;
+  configuration: {
+    visiblePublic: boolean;
+    positions: number;
+    gradeVisible: boolean;
+  };
+  items: Array<{
+    projectId: number;
+    projectCode?: string;
+    projectName: string;
+    participantNames: string[];
+    categoryId: number;
+    category: string;
+    position: number;
+    individualGrades?: number[];
+    averageGrade?: number;
+  }>;
+}
 
 @Injectable()
 export class EventService implements OnModuleInit {
   private eventService!: EventServiceClient;
   private authService!: AuthServiceClient;
+  private evaluationService!: EvaluationServiceClient;
+  private tieBreakService!: TieBreakServiceClient;
   private statusCache: EventStatusMapping[] | null = null;
   private rolesCache: any[] | null = null;
 
   constructor(
     @Inject(EVENT_SERVICE_NAME) private readonly eventClient: ClientGrpc,
     @Inject(AUTH_SERVICE_NAME) private readonly authClient: ClientGrpc,
+    @Inject(EVALUATION_SERVICE_NAME)
+    private readonly evaluationClient: ClientGrpc,
     private readonly projectsService: ProjectsService,
     private readonly listConfirmedJurorsByEventUseCase: ListConfirmedJurorsByEventUseCase,
   ) {}
@@ -159,6 +217,408 @@ export class EventService implements OnModuleInit {
       this.eventClient.getService<EventServiceClient>(EVENT_SERVICE_NAME);
     this.authService =
       this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
+    this.evaluationService =
+      this.evaluationClient.getService<EvaluationServiceClient>(
+        EVALUATION_SERVICE_NAME,
+      );
+    this.tieBreakService =
+      this.evaluationClient.getService<TieBreakServiceClient>(
+        TIE_BREAK_SERVICE_NAME,
+      );
+  }
+
+  /**
+   * Normalizes category labels used in ranking outputs.
+   */
+  private normalizeCategoryName(name?: string): string {
+    if (!name || !name.trim()) {
+      return 'Sin categoria';
+    }
+    return name.trim();
+  }
+
+  /**
+   * Produces a unified participant list for a project, including both
+   * confirmed and pending members.
+   */
+  private getProjectParticipantNames(project: ProjectComplete): string[] {
+    const confirmed = (project.participants ?? [])
+      .map((participant) => {
+        const firstName = participant.firstName?.trim() ?? '';
+        const lastName = participant.lastName?.trim() ?? '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        return fullName || participant.email || '';
+      })
+      .filter((value) => value.length > 0);
+
+    const pending = (project.pendingParticipants ?? [])
+      .map((participant) => {
+        const firstName = participant.firstName?.trim() ?? '';
+        const lastName = participant.lastName?.trim() ?? '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        return fullName || participant.email || '';
+      })
+      .filter((value) => value.length > 0);
+
+    return [...confirmed, ...pending];
+  }
+
+  /**
+   * Paginates through all projects for an event (optionally by category).
+   */
+  private async listAllProjectsByEvent(
+    eventId: number,
+    categoryId?: number,
+  ): Promise<ProjectComplete[]> {
+    let currentPage = 1;
+    const itemsPerPage = 50;
+    let totalPages = 1;
+    const projects: ProjectComplete[] = [];
+
+    do {
+      const response = await this.projectsService.listProjectsByEvent(eventId, {
+        courseId: categoryId,
+        currentPage,
+        itemsPerPage,
+      });
+
+      projects.push(...(response.items ?? []));
+      totalPages = response.totalPages || 1;
+      currentPage += 1;
+    } while (currentPage <= totalPages);
+
+    return projects;
+  }
+
+  /**
+   * Ranking comparator rules:
+   * 1) Higher average first.
+   * 2) Tie-break order from tie-break table (lower order wins).
+   * 3) Stable lexical fallback by project name.
+   * 4) Final numeric fallback by project id.
+   */
+  private compareRankingRows(a: RankingReportRow, b: RankingReportRow): number {
+    if (a.averageGrade !== b.averageGrade) {
+      return b.averageGrade - a.averageGrade;
+    }
+
+    const tieA = a.tieBreakOrder ?? Number.POSITIVE_INFINITY;
+    const tieB = b.tieBreakOrder ?? Number.POSITIVE_INFINITY;
+
+    if (tieA !== tieB) {
+      return tieA - tieB;
+    }
+
+    const nameComparison = a.projectName.localeCompare(b.projectName, 'es', {
+      sensitivity: 'base',
+    });
+    if (nameComparison !== 0) {
+      return nameComparison;
+    }
+
+    return a.projectId - b.projectId;
+  }
+
+  /**
+   * Fetches all evaluations created by a specific evaluator in an event.
+   *
+   * The evaluation-service enforces a max page size of 50, so this method
+   * paginates until all pages are consumed.
+   */
+  private async getAllEvaluationsByEvaluator(
+    eventId: number,
+    evaluatorId: number,
+  ) {
+    const pageSize = 50;
+    let page = 1;
+    let totalPages = 1;
+    const evaluations: Array<{ projectId: number; grade: number }> = [];
+
+    do {
+      const response = await firstValueFrom(
+        this.evaluationService.findEvaluationsByEvaluator({
+          userId: evaluatorId,
+          eventId,
+          page,
+          limit: pageSize,
+        }),
+      );
+
+      for (const evaluation of response.evaluations ?? []) {
+        evaluations.push({
+          projectId: evaluation.projectId,
+          grade: evaluation.grade,
+        });
+      }
+
+      totalPages = response.meta?.totalPages ?? 1;
+      page += 1;
+    } while (page <= totalPages);
+
+    return evaluations;
+  }
+
+  async generateRankingReport(
+    eventId: number,
+    query: GetRankingReportDto,
+    scope: RankingScope,
+  ): Promise<RankingReportResult> {
+    // Format validation is kept explicit so non-dto callers are also safe.
+    const format = query.format ?? RankingReportFormat.JSON;
+    if (
+      format !== RankingReportFormat.JSON &&
+      format !== RankingReportFormat.EXCEL
+    ) {
+      throw new BadRequestException('Invalid format. Use json or excel');
+    }
+
+    const [eventResponse, rankingConfigResponse, categoriesResponse] =
+      await Promise.all([
+        // Intentionally uses direct getEvent gRPC call to avoid extra catalog
+        // enrichment queries that are not needed for ranking generation.
+        firstValueFrom(this.eventService.getEvent({ id: eventId })),
+        this.getRankingEventByEventId(eventId),
+        this.listCategoriesByEvent(eventId, {
+          eventId,
+          page: 1,
+          limit: 50,
+        }),
+      ]);
+
+    const eventName =
+      eventResponse.event?.name?.trim() || `Evento ${String(eventId)}`;
+    const rankingConfig = rankingConfigResponse.rankingEvent;
+
+    if (!rankingConfig) {
+      throw new BadRequestException(
+        `Ranking configuration not found for event ${String(eventId)}`,
+      );
+    }
+
+    if (scope === 'public' && !rankingConfig.visiblePublic) {
+      throw new ForbiddenException(
+        'Public ranking is not enabled for this event',
+      );
+    }
+
+    const categories = categoriesResponse.categories ?? [];
+    const categoryNameById = new Map<number, string>(
+      categories.map((category) => [
+        category.id,
+        this.normalizeCategoryName(category.name),
+      ]),
+    );
+
+    const projects = await this.listAllProjectsByEvent(eventId, query.categoryId);
+
+    const tieBreakResponse = await firstValueFrom(
+      this.tieBreakService.listTieBreaks({
+        eventId,
+        categoryId: query.categoryId,
+      }),
+    );
+
+    const tieBreakByProjectAndCategory = new Map<string, number>();
+    for (const tieBreak of tieBreakResponse.tiebreaks ?? []) {
+      tieBreakByProjectAndCategory.set(
+        `${String(tieBreak.projectId)}:${String(tieBreak.categoryId)}`,
+        tieBreak.tiebreakOrder,
+      );
+    }
+
+    const evaluatorProjectGrades = new Map<number, Map<number, number>>();
+    const rows: RankingReportRow[] = [];
+
+    // Build ranking candidates by combining project metadata + evaluation stats.
+    for (const project of projects) {
+      const stats = await firstValueFrom(
+        this.evaluationService.getProjectStats({ projectId: project.id }),
+      );
+
+      const individualGrades: number[] = [];
+      for (const evaluatorId of stats.evaluatorIds ?? []) {
+        if (!evaluatorProjectGrades.has(evaluatorId)) {
+          const evaluatorEvaluations =
+            await this.getAllEvaluationsByEvaluator(eventId, evaluatorId);
+
+          const projectGrades = new Map<number, number>();
+          for (const evaluation of evaluatorEvaluations) {
+            if (!projectGrades.has(evaluation.projectId)) {
+              projectGrades.set(evaluation.projectId, evaluation.grade);
+            }
+          }
+
+          evaluatorProjectGrades.set(evaluatorId, projectGrades);
+        }
+
+        const grade = evaluatorProjectGrades.get(evaluatorId)?.get(project.id);
+        if (grade !== undefined) {
+          individualGrades.push(grade);
+        }
+      }
+
+      const categoryId = project.courseId;
+      const categoryName =
+        categoryNameById.get(categoryId) || `Categoria ${String(categoryId)}`;
+      const tieBreakOrder = tieBreakByProjectAndCategory.get(
+        `${String(project.id)}:${String(categoryId)}`,
+      );
+
+      rows.push({
+        projectId: project.id,
+        projectCode: project.projectCode,
+        projectName: project.name,
+        participantNames: this.getProjectParticipantNames(project),
+        categoryId,
+        category: categoryName,
+        position: 0,
+        individualGrades,
+        averageGrade: stats.averageGrade ?? 0,
+        tieBreakOrder,
+      });
+    }
+
+    // Sorting determines final ranking positions.
+    rows.sort((a, b) => this.compareRankingRows(a, b));
+    rows.forEach((row, index) => {
+      row.position = index + 1;
+    });
+
+    // Public scope can expose only top-N rows depending on configuration.
+    let visibleRows = rows;
+    if (scope === 'public' && rankingConfig.positions > 0) {
+      visibleRows = rows.slice(0, rankingConfig.positions);
+    }
+
+    // In public mode, grade fields are conditional by ranking configuration.
+    const showGrades = scope === 'admin' || rankingConfig.gradeVisible;
+
+    return {
+      eventId,
+      eventName,
+      scope,
+      categoryId: query.categoryId,
+      configuration: {
+        visiblePublic: rankingConfig.visiblePublic,
+        positions: rankingConfig.positions,
+        gradeVisible: rankingConfig.gradeVisible,
+      },
+      items: visibleRows.map((row) => ({
+        projectId: row.projectId,
+        projectCode: row.projectCode,
+        projectName: row.projectName,
+        participantNames: row.participantNames,
+        categoryId: row.categoryId,
+        category: row.category,
+        position: row.position,
+        individualGrades: showGrades ? row.individualGrades : undefined,
+        averageGrade: showGrades ? row.averageGrade : undefined,
+      })),
+    };
+  }
+
+  /**
+   * Builds an XLSX buffer from ranking JSON data.
+   * The controller is responsible for setting download headers.
+   */
+  async generateRankingExcelBuffer(report: RankingReportResult): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Ranking');
+
+    worksheet.columns = [
+      { header: 'Posición', key: 'position', width: 10 },
+      { header: 'Código', key: 'projectCode', width: 10 },
+      { header: 'Proyecto', key: 'projectName', width: 32 },
+      { header: 'Categoría', key: 'category', width: 24 },
+      { header: 'Participantes', key: 'participantNames', width: 48 },
+      { header: 'Calificaciones', key: 'individualGrades', width: 28 },
+      { header: 'Puntaje Final', key: 'averageGrade', width: 14 },
+    ];
+
+    for (const item of report.items) {
+      worksheet.addRow({
+        position: item.position,
+        projectCode: item.projectCode || '',
+        projectName: item.projectName,
+        category: item.category,
+        participantNames: item.participantNames.join(', '),
+        individualGrades: item.individualGrades?.length
+          ? item.individualGrades.join(', ')
+          : '',
+        averageGrade:
+          item.averageGrade !== undefined
+            ? Number(item.averageGrade.toFixed(2))
+            : '',
+      });
+    }
+
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+    worksheet.autoFilter = 'A1:G1';
+
+    const headerRow = worksheet.getRow(1);
+    headerRow.height = 20;
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF5B9BD5' },
+      };
+      cell.alignment = {
+        horizontal: 'center',
+        vertical: 'middle',
+        wrapText: true,
+      };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF9CC2E5' } },
+        left: { style: 'thin', color: { argb: 'FF9CC2E5' } },
+        bottom: { style: 'thin', color: { argb: 'FF9CC2E5' } },
+        right: { style: 'thin', color: { argb: 'FF9CC2E5' } },
+      };
+    });
+
+    for (let rowIndex = 2; rowIndex <= worksheet.rowCount; rowIndex += 1) {
+      const row = worksheet.getRow(rowIndex);
+      row.eachCell((cell, columnNumber) => {
+        cell.alignment = {
+          horizontal: columnNumber <= 2 ? 'center' : 'left',
+          vertical: 'middle',
+          wrapText: true,
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFD9E2F3' } },
+          left: { style: 'thin', color: { argb: 'FFD9E2F3' } },
+          bottom: { style: 'thin', color: { argb: 'FFD9E2F3' } },
+          right: { style: 'thin', color: { argb: 'FFD9E2F3' } },
+        };
+        if (rowIndex % 2 === 0) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFF7FBFF' },
+          };
+        }
+      });
+    }
+
+    worksheet.getColumn(1).width = 10;
+    worksheet.getColumn(1).alignment = {
+      horizontal: 'center',
+      vertical: 'middle',
+    };
+    worksheet.getColumn(2).width = 10;
+    worksheet.getColumn(2).alignment = {
+      horizontal: 'center',
+      vertical: 'middle',
+    };
+    worksheet.getColumn(3).width = 32;
+    worksheet.getColumn(4).width = 24;
+    worksheet.getColumn(5).width = 48;
+    worksheet.getColumn(6).width = 28;
+    worksheet.getColumn(7).width = 14;
+
+    const rawBuffer = await workbook.xlsx.writeBuffer();
+    return Buffer.from(rawBuffer);
   }
 
   private mapCourseForFrontend(
@@ -200,12 +660,12 @@ export class EventService implements OnModuleInit {
       this.listCategoriesByEvent(eventId, {
         eventId,
         page: 1,
-        limit: 1000,
+        limit: 50,
       }),
       this.listEventInscriptionDetails({
         eventId,
         page: 1,
-        limit: 1000,
+        limit: 50,
       }),
     ]);
 
@@ -215,7 +675,7 @@ export class EventService implements OnModuleInit {
         this.listCategoryAwards({
           categoryId: category.id,
           page: 1,
-          limit: 1000,
+          limit: 50,
         }),
       ),
     );
