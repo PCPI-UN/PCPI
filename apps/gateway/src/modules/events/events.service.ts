@@ -143,6 +143,7 @@ import {
 } from '@app/common/generated/event';
 import { CreateRankingEventDTO } from './dto/ranking-event/create-ranking-event.dto';
 import { UpdateRankingEventDTO } from './dto/ranking-event/update-ranking-event.dto';
+import { ProjectStateFilter } from '../projects/dto/list-projects-by-event.dto';
 import {
   EVALUATION_SERVICE_NAME,
   EvaluationServiceClient,
@@ -168,6 +169,7 @@ interface RankingReportRow {
   categoryId: number;
   category: string;
   position: number;
+  evaluationCount: number;
   individualGrades: number[];
   averageGrade: number;
   tieBreakOrder?: number;
@@ -191,6 +193,7 @@ export interface RankingReportResult {
     categoryId: number;
     category: string;
     position: number;
+    evaluationCount: number;
     individualGrades?: number[];
     averageGrade?: number;
   }>;
@@ -282,6 +285,7 @@ export class EventService implements OnModuleInit {
         courseId: categoryId,
         currentPage,
         itemsPerPage,
+        state: ProjectStateFilter.APPROVED,
       });
 
       projects.push(...(response.items ?? []));
@@ -474,6 +478,7 @@ export class EventService implements OnModuleInit {
         categoryId,
         category: categoryName,
         position: 0,
+        evaluationCount: stats.evaluationCount ?? individualGrades.length,
         individualGrades,
         averageGrade: stats.averageGrade ?? 0,
         tieBreakOrder,
@@ -513,6 +518,7 @@ export class EventService implements OnModuleInit {
         categoryId: row.categoryId,
         category: row.category,
         position: row.position,
+        evaluationCount: row.evaluationCount,
         individualGrades: showGrades ? row.individualGrades : undefined,
         averageGrade: showGrades ? row.averageGrade : undefined,
       })),
@@ -533,6 +539,7 @@ export class EventService implements OnModuleInit {
       { header: 'Proyecto', key: 'projectName', width: 32 },
       { header: 'Categoría', key: 'category', width: 24 },
       { header: 'Participantes', key: 'participantNames', width: 48 },
+      { header: 'Evaluaciones', key: 'evaluationCount', width: 14 },
       { header: 'Calificaciones', key: 'individualGrades', width: 28 },
       { header: 'Puntaje Final', key: 'averageGrade', width: 14 },
     ];
@@ -544,6 +551,7 @@ export class EventService implements OnModuleInit {
         projectName: item.projectName,
         category: item.category,
         participantNames: item.participantNames.join(', '),
+        evaluationCount: item.evaluationCount,
         individualGrades: item.individualGrades?.length
           ? item.individualGrades.join(', ')
           : '',
@@ -555,7 +563,7 @@ export class EventService implements OnModuleInit {
     }
 
     worksheet.views = [{ state: 'frozen', ySplit: 1 }];
-    worksheet.autoFilter = 'A1:G1';
+    worksheet.autoFilter = 'A1:H1';
 
     const headerRow = worksheet.getRow(1);
     headerRow.height = 20;
@@ -616,8 +624,9 @@ export class EventService implements OnModuleInit {
     worksheet.getColumn(3).width = 32;
     worksheet.getColumn(4).width = 24;
     worksheet.getColumn(5).width = 48;
-    worksheet.getColumn(6).width = 28;
-    worksheet.getColumn(7).width = 14;
+    worksheet.getColumn(6).width = 14;
+    worksheet.getColumn(7).width = 28;
+    worksheet.getColumn(8).width = 14;
 
     const rawBuffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(rawBuffer);
