@@ -143,7 +143,6 @@ import {
 } from '@app/common/generated/event';
 import { CreateRankingEventDTO } from './dto/ranking-event/create-ranking-event.dto';
 import { UpdateRankingEventDTO } from './dto/ranking-event/update-ranking-event.dto';
-import { ProjectStateFilter } from '../projects/dto/list-projects-by-event.dto';
 import {
   EVALUATION_SERVICE_NAME,
   EvaluationServiceClient,
@@ -285,7 +284,6 @@ export class EventService implements OnModuleInit {
         courseId: categoryId,
         currentPage,
         itemsPerPage,
-        state: ProjectStateFilter.APPROVED,
       });
 
       projects.push(...(response.items ?? []));
