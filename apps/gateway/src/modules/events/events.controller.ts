@@ -880,6 +880,13 @@ export class EventsController {
     example: 3,
   })
   @ApiQuery({
+    name: 'state',
+    required: false,
+    enum: ['UNDER_REVIEW', 'APPROVED', 'REJECTED', 'REQUEST_CHANGES'],
+    description: 'Filter projects by state before generating the ranking',
+    example: 'APPROVED',
+  })
+  @ApiQuery({
     name: 'format',
     required: false,
     enum: RankingReportFormat,
@@ -1006,6 +1013,13 @@ export class EventsController {
     type: Number,
     description: 'Alias for categoryId',
     example: 3,
+  })
+  @ApiQuery({
+    name: 'state',
+    required: false,
+    enum: ['UNDER_REVIEW', 'APPROVED', 'REJECTED', 'REQUEST_CHANGES'],
+    description: 'Filter projects by state before generating the ranking',
+    example: 'APPROVED',
   })
   @ApiQuery({
     name: 'format',

@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, IsOptional, IsPositive } from 'class-validator';
+import { ProjectStateFilter } from '../../../projects/dto/list-projects-by-event.dto';
 
 /**
  * Supported output formats for ranking report generation.
@@ -18,6 +19,7 @@ export enum RankingReportFormat {
  * Notes:
  * - categoryId is optional and narrows the report to a single category.
  * - category_id is accepted as an alias for backward compatibility.
+ * - state filters projects before the ranking is computed.
  * - format defaults to JSON when omitted.
  */
 export class GetRankingReportDto {
@@ -31,6 +33,15 @@ export class GetRankingReportDto {
   @IsInt()
   @IsPositive()
   categoryId?: number;
+
+  @ApiPropertyOptional({
+    description: 'Filter projects by state before generating the ranking',
+    enum: ProjectStateFilter,
+    example: ProjectStateFilter.APPROVED,
+  })
+  @IsOptional()
+  @IsEnum(ProjectStateFilter)
+  state?: ProjectStateFilter;
 
   @ApiPropertyOptional({
     description: 'Output format for ranking report',

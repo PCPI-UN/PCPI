@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  NotFoundException,
   Injectable,
   Inject,
   OnModuleInit,
@@ -23,6 +24,7 @@ import { ListCoursesDTO } from './dto/courses/list-course.dto';
 import { ListCoursesForDropdownDTO } from './dto/courses/list-courses-for-dropdown.dto';
 import { UpdateCourseDTO } from './dto/courses/update-course.dto';
 import { ProjectsService } from '../projects/projects.service';
+import { ProjectStateFilter } from '../projects/dto/list-projects-by-event.dto';
 import {
   CreateAwardWinnerDTO,
   CreateCategoryAwardDTO,
@@ -273,6 +275,7 @@ export class EventService implements OnModuleInit {
   private async listAllProjectsByEvent(
     eventId: number,
     categoryId?: number,
+    state?: ProjectStateFilter,
   ): Promise<ProjectComplete[]> {
     let currentPage = 1;
     const itemsPerPage = 50;
@@ -282,6 +285,7 @@ export class EventService implements OnModuleInit {
     do {
       const response = await this.projectsService.listProjectsByEvent(eventId, {
         courseId: categoryId,
+        state,
         currentPage,
         itemsPerPage,
       });
@@ -413,7 +417,11 @@ export class EventService implements OnModuleInit {
       ]),
     );
 
-    const projects = await this.listAllProjectsByEvent(eventId, query.categoryId);
+    const projects = await this.listAllProjectsByEvent(
+      eventId,
+      query.categoryId,
+      query.state,
+    );
 
     const tieBreakResponse = await firstValueFrom(
       this.tieBreakService.listTieBreaks({
@@ -1394,20 +1402,49 @@ export class EventService implements OnModuleInit {
   }
 
   async createRankingEvent(dto: CreateRankingEventDTO): Promise<RankingEventResponse> {
+    const existingRankingEvent = await firstValueFrom(
+      this.eventService.getRankingEventByEventId({
+        eventId: dto.eventId,
+      } as GetRankingEventByEventIdRequest),
+    ).catch((error) => {
+      if (this.isGrpcNotFoundError(error)) {
+        return null;
+      }
+
+      throw error;
+    });
+
+    const updatePayload: UpdateRankingEventDTO = {
+      positions: dto.positions,
+      visiblePublic: dto.visiblePublic,
+      gradeVisible: dto.gradeVisible,
+    };
+
+    if (existingRankingEvent?.rankingEvent) {
+      return this.updateRankingEvent(existingRankingEvent.rankingEvent.id, updatePayload);
+    }
+
     return firstValueFrom(
       this.eventService.createRankingEvent(dto as CreateRankingEventRequest),
     );
   }
 
   async updateRankingEvent(id: number, dto: UpdateRankingEventDTO): Promise<RankingEventResponse> {
+    const rankingEvent = await this.resolveRankingEventIdentifier(id);
+
     return firstValueFrom(
-      this.eventService.updateRankingEvent({ ...dto, id } as UpdateRankingEventRequest),
+      this.eventService.updateRankingEvent({
+        ...dto,
+        id: rankingEvent.id,
+      } as UpdateRankingEventRequest),
     );
   }
 
   async getRankingEvent(id: number): Promise<RankingEventResponse> {
+    const rankingEvent = await this.resolveRankingEventIdentifier(id);
+
     return firstValueFrom(
-      this.eventService.getRankingEvent({ id } as GetRankingEventRequest),
+      this.eventService.getRankingEvent({ id: rankingEvent.id } as GetRankingEventRequest),
     );
   }
 
@@ -1418,9 +1455,51 @@ export class EventService implements OnModuleInit {
   }
 
   async deleteRankingEvent(id: number): Promise<DeleteRankingEventResponse> {
+    const rankingEvent = await this.resolveRankingEventIdentifier(id);
+
     return firstValueFrom(
-      this.eventService.deleteRankingEvent({ id } as DeleteRankingEventRequest),
+      this.eventService.deleteRankingEvent({ id: rankingEvent.id } as DeleteRankingEventRequest),
     );
+  }
+
+  private async resolveRankingEventIdentifier(
+    id: number,
+  ): Promise<NonNullable<RankingEventResponse['rankingEvent']>> {
+    const byIdResponse = await firstValueFrom(
+      this.eventService.getRankingEvent({ id } as GetRankingEventRequest),
+    ).catch((error) => {
+      if (this.isGrpcNotFoundError(error)) {
+        return null;
+      }
+
+      throw error;
+    });
+
+    if (byIdResponse?.rankingEvent) {
+      return byIdResponse.rankingEvent;
+    }
+
+    const byEventIdResponse = await firstValueFrom(
+      this.eventService.getRankingEventByEventId({ eventId: id } as GetRankingEventByEventIdRequest),
+    ).catch((error) => {
+      if (this.isGrpcNotFoundError(error)) {
+        return null;
+      }
+
+      throw error;
+    });
+
+    if (byEventIdResponse?.rankingEvent) {
+      return byEventIdResponse.rankingEvent;
+    }
+
+    throw new NotFoundException(
+      `Ranking configuration not found for identifier ${String(id)}`,
+    );
+  }
+
+  private isGrpcNotFoundError(error: unknown): boolean {
+    return typeof error === 'object' && error !== null && 'code' in error && (error as { code?: number }).code === 5;
   }
 
   /**
